@@ -1,0 +1,2 @@
+# AISH.jl
+AI SH to do EVERYTHING on PC
