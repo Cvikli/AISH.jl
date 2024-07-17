@@ -1,0 +1,1 @@
+readline_improved() = readline(stdin) # TODO this has to be improved to work in REPL correctly too!

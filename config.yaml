@@ -1,0 +1,19 @@
+# Audio settings
+audio:
+  channels: 1
+  frame_rate: 16000
+  chunk_size: 320  # 20ms of audio at 16kHz
+  format: "int16"  # Corresponds to pyaudio.paInt16
+
+# Deepgram transcription settings
+deepgram:
+  model: "nova-2"
+  language: "hu"
+  # language: "en-US"
+  encoding: "linear16"
+
+# Deepgram transcription settings
+google:
+  # language: "en-US"  
+  language: "hu-HU" 
+  model: "default"  # or specify a specific model
