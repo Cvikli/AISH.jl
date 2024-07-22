@@ -13,3 +13,17 @@ https://github.com/jiaaro/pydub#getting-ffmpeg-set-up
 apt-get install libav-tools libavcodec-extra
 ####    OR    #####
 apt-get install ffmpeg libavcodec-extra
+
+
+
+
+# BENCHMARKING
+
+# FINE TUNEING
+
+# VOICE INPUT
+
+# RAG
+
+# STREAMING
+# Multi SH run

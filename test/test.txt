@@ -1,1 +1,18 @@
 Please list the files in the current folders and every subdirectories folders in a structural way.
+
+
+
+list the files in this folder and subfolders
+
+
+
+I think you should know which text belong to which file too? So could you somehow note which content belongs to wich file so you could understand it more better.
+
+Could you get the list of files in the current folder and subfolders and its contents from the .jl files? Also keep in mind that you have to have the path to the file and its content to be sure that you know what to reuse. Also please ignore the .git and .vscode folder. Please remember these files as these can be reused later on! 
+
+
+find . -type f \( -name "*.jl" -o -name "Project.toml" -o -name "Manifest.toml" \) -not -path "*/.git/*" -not -path "*/.vscode/*" -not -path "*/test/*" -not -path "*/python/*" -print0 | while IFS= read -r -d '' file; do echo "File: $file"; echo "Contents:"; cat "$file"; echo -e "\n---\n"; done
+
+
+
+You need to know every important file and everything that can be important about the project. For julia project could you create an bash command that is able to list the file and their path with their content? Or if there is better way for you to know about each file and their contents then please tell me.
