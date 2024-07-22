@@ -24,7 +24,7 @@ start_conversation(state::AIState) = begin
     # user_message = get_random_speech()
     user_message = readline_improved()
     print("\e[0m")  # reset text style
-		user_message=strip(user_message)
+		user_message = strip(user_message)
 		println(user_message)
 		println()
 	
