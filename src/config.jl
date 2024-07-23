@@ -7,8 +7,26 @@ get_pwd()                      = strip(pwd())
 #   return strip(read(cmd, String))
 # end
 function get_git_files(path=".")
-  cmd = `find "$path" \( -name "*.jl" -o -name "Project.toml" \) -type f -print0 | xargs -0 git -C "$path" check-ignore --stdin -z -v ` # | cut -z -f2- | tr '\0' '\n'`
-  return split(strip(read(cmd, String)), '\n')
+  original_dir = pwd()
+  cd(path)
+
+  # Find all .jl and Project.toml files
+  find_cmd = `find . \( -name "*.jl" -o -name "Project.toml" \) -type f`
+  all_files = readlines(find_cmd)
+
+  # Filter out git-ignored files
+  not_ignored = String[]
+  for file in all_files
+      check_ignore_cmd = `git check-ignore -q $file`
+      if !success(check_ignore_cmd)
+          push!(not_ignored, file)
+      end
+  end
+
+  cd(original_dir)
+
+  # Remove leading "./" from file paths
+  return map(f -> startswith(f, "./") ? f[3:end] : f, not_ignored)
 end
 
 filter_test_files(files) = filter(f -> !startswith(f, "test/"), files)
@@ -25,11 +43,10 @@ end
 
 function get_all_project_with_URIs(path=".")
   files = get_git_files(path)
-  display(files)
+  # display(files)
 
   filtered_files = filter_test_files(files)
-  display(filtered_files)
-  @assert false
+  # display(filtered_files)
 
   result = map(file -> format_file_content(path, file), filtered_files)
 
@@ -44,7 +61,12 @@ const ainame::String = lowercase(ChatSH)
 
 
 SYSTEM_PROMPT(whole_project) = """You are $ChatSH, an AI language model that specializes in assisting users with tasks on their system using SHELL commands. 
-You 's interpreter can only process one SHELL block per answer so you should always put every important thing that has to be run to fulfill the user query into that one SHELL block.
+
+For code changes that has to be applied try to answer with sh script: ```sh
+cat > file_name <<-"EOL"
+file_content
+EOL
+
 You have to figure out what SHELL command could fulfill the task and always try to use one SHELL script to run the code, which means you start the answer with opening sh block: "```sh" and end the block with this: "```" like you always do when you provide SHELL BLOCK.
 You MUST NEVER attempt to install new tools. Assume they're available.
 You MUST answers it with a concise, objective, factual, correct and useful response.
@@ -72,57 +94,13 @@ You stop to discuss trade-offs and implementation options if there are choices t
 Between the <SYSTEM> </SYSTEM> block you get the the SHELL BLOCK result. This response can be the RESULT of the proposed SHELL commands or the ERROR messages that you can use to correct your answer!
 Between the <USER> </USER> block you get the USER request. This is what you have to fulfill.
 
-
+Soem common mistake:
+Please make sure if you use the \$ in the string between " then escape it with \\
+The regex match return with SubString so it has to be converted to String or handled appropriately. 
+Don't write "keep the rest of the file", instead always copy the rest of the file. 
 
 # EXAMPLE 1:
 For demo purpose your example answers will be in <$ChatSH> </$ChatSH> block for each USER request.
-
-<USER>
-Show me local files.
-</USER>
-
-<$ChatSH>
-```sh
-ls
-```
-</$ChatSH>
-
-
-<SYSTEM>
-example.gif example.txt example_dir/
-</SYSTEM>
-<USER>
-Is there any text file?
-</USER>
-
-<$ChatSH>
-Yes, there is a file named example.txt in the current directory
-</$ChatSH>
-
-<USER>
-Show me the contents of example.txt.
-</USER>
-
-<$ChatSH>
-```sh
-cat example.txt
-```
-</$ChatSH>
-
-<SYSTEM>
-The names "John Doe" for males, "Jane Doe" or "Jane Roe" for females, or "Jonnie Doe" and "Janie Doe" for children, or just "Doe" non-gender-specifically are used as placeholder names for a party whose true identity is unknown or must be withheld in a legal action, case, or discussion.
-</SYSTEM>
-<USER>
-Move the text file to that dir.
-</USER>
-
-<$ChatSH>
-```sh
-mv example.txt example_dir/
-```
-</$ChatSH>
-
-# EXAMPLE 2:
 
 <USER>
 Fix main.ts
@@ -130,7 +108,6 @@ Fix main.ts
 
 <$ChatSH>
 ```sh
-cat main.ts
 tsc --noEmit main.ts
 ```
 </$ChatSH>
@@ -150,39 +127,7 @@ map.ts:7:22 - error TS2345: Argument of type '(val: T) => U' is not assignable t
                        ~~~
 </SYSTEM>
 
-<$ChatSH>
-```sh
-ls
-```
-</$ChatSH>
-
-<SYSTEM>
-list.ts main.ts map.ts
-</SYSTEM>
-
-<$ChatSH>
-```sh
-cat map.ts
-```
-</$ChatSH>
-
-<SYSTEM>
-importt List from './list';
-
-function map<T, U>(list: List<T>, fun: (val: T) => U): List<U> {
-  switch (list.\$) {
-    case "cons":
-      let head = fun(list.head);
-      let tail = map(fun, list.tail);
-      return { \$: "cons", head, tail };
-    case "nil":
-      return { \$: "nil" };
-  }
-}
-
-export default map;
-</SYSTEM>
-
+(You know what is in the map.ts file so you can immediately correct it)
 <$ChatSH>
 ```sh
 cat > map.ts <<-"EOL"
@@ -208,10 +153,6 @@ tsc --noEmit map.ts
 <SYSTEM>
 
 </SYSTEM>
-
-<$ChatSH>
-Done.
-</$ChatSH
 
 ## NOTES:
 

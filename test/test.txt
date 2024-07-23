@@ -49,3 +49,10 @@ function readline_improved()
         println("Empty input. Please enter a message.")
     end
 end
+
+
+
+I want a file diff tracker that would be able to create a diff view of the specified codeblocks. For this I need you to figure out how could I get the codeblock which I am about to execute. And how would you be able to get the current file content that I am about to overwrite. Then I need a git diff or any tool that is able to present a very clever diff for me. So I could understand which line is getting replaced by which. So this should be a merged view basically in the end where I see the line those are common but then if they are not equal... or even with character difference then I could see the removed and the added line next to each other. For this I created the file_diff_tracker.jl that you have to use to implement this function. Could you implement this and go step by step?
+
+
+

@@ -18,6 +18,7 @@ apt-get install ffmpeg libavcodec-extra
 
 
 # BENCHMARKING
+# BENCHMARKING JOBBAN!
 
 # FINE TUNEING
 
@@ -30,5 +31,17 @@ apt-get install ffmpeg libavcodec-extra
 
 # Update the SYSTEM_PROMPT AS THE FILES CHANGE
 
-# DIFF view!! VERY narrow version... so literally the characters those changes... Also using colors.
+# DIFF view!! VERY narrow version... so literally the characters those changes... Also using colors. COMPARE!!
 
+# print the output after the run bash commands. 
+
+# LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
+
+
+# What should I know about this solution... 
+
+# Handle server overloaded which is 529 Unknown Code 
+
+
+
+# READLINE repair like you did before with REPL!

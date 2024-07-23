@@ -1,12 +1,9 @@
-using REPL
-using InteractiveUtils
-using PromptingTools
-using PromptingTools: SystemMessage, UserMessage
+using PromptingTools: SystemMessage, UserMessage, AbstractChatMessage
 
 # AI State struct
 mutable struct AIState
     conversation::Vector{PromptingTools.AbstractChatMessage}
-    last_output::String
+    last_output::Vector{String}
     model::String
 end
 
@@ -15,7 +12,7 @@ function initialize_ai_state(MODEL = "claude")
     system_prompt = SYSTEM_PROMPT(get_all_project_with_URIs())
     AIState(
         [SystemMessage(system_prompt)],
-        "",
+        String[],
         MODEL,
     )
 end
