@@ -7,7 +7,7 @@ get_pwd()                      = strip(pwd())
 #   return strip(read(cmd, String))
 # end
 function get_git_files(path=".")
-  cmd = `git -C $path ls-files --exclude-standard -- "*.jl" "Project.toml"`
+  cmd = `find "$path" \( -name "*.jl" -o -name "Project.toml" \) -type f -print0 | xargs -0 git -C "$path" check-ignore --stdin -z -v ` # | cut -z -f2- | tr '\0' '\n'`
   return split(strip(read(cmd, String)), '\n')
 end
 
@@ -23,9 +23,13 @@ $content
 """
 end
 
-function get_folderstructure(path=".")
+function get_all_project_with_URIs(path=".")
   files = get_git_files(path)
+  display(files)
+
   filtered_files = filter_test_files(files)
+  display(filtered_files)
+  @assert false
 
   result = map(file -> format_file_content(path, file), filtered_files)
 
@@ -39,7 +43,7 @@ const ChatSH::String = "Koda"
 const ainame::String = lowercase(ChatSH)
 
 
-const SYSTEM_PROMPT = """You are $ChatSH, an AI language model that specializes in assisting users with tasks on their system using SHELL commands. 
+SYSTEM_PROMPT(whole_project) = """You are $ChatSH, an AI language model that specializes in assisting users with tasks on their system using SHELL commands. 
 You 's interpreter can only process one SHELL block per answer so you should always put every important thing that has to be run to fulfill the user query into that one SHELL block.
 You have to figure out what SHELL command could fulfill the task and always try to use one SHELL script to run the code, which means you start the answer with opening sh block: "```sh" and end the block with this: "```" like you always do when you provide SHELL BLOCK.
 You MUST NEVER attempt to install new tools. Assume they're available.
@@ -218,9 +222,9 @@ $(get_shell())
 The SHELL is in this folder right now:
 $(get_pwd())
 The folder structure of your codebase that you are working in:
-$(get_folderstructure())
+$whole_project
 
-With these information thing in mind you can communicate with the user from here! 
+With these informations in mind you can communicate with the user from here! 
 """
 
 

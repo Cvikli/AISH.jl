@@ -33,21 +33,7 @@ end
 #%%
 ```
 
-This function does the following:
-
-1. It first checks if the input vector `temps` is empty. If it is, it returns a named tuple with all values set to `nothing`.
-
-2. If `temps` is not empty, it calculates the mean (average), maximum, and minimum temperatures using functions from the `Statistics` package.
-
-3. To determine the trend, it splits the data into two halves and compares their means:
-   - If the means are approximately equal (within a tolerance of 0.1), it's considered stable.
-   - If the second half's mean is greater, it's considered increasing.
-   - If the first half's mean is greater, it's considered decreasing.
-   - If there's only one temperature in the list, it's considered stable by default.
-
-4. Finally, it returns a named tuple with all the calculated values.
-
-You can use this function like this:
+This function...
 
 ```julia
 #%%

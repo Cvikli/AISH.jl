@@ -27,3 +27,8 @@ apt-get install ffmpeg libavcodec-extra
 
 # STREAMING
 # Multi SH run
+
+# Update the SYSTEM_PROMPT AS THE FILES CHANGE
+
+# DIFF view!! VERY narrow version... so literally the characters those changes... Also using colors.
+

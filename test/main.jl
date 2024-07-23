@@ -16,8 +16,17 @@ display(ai_state.conversation[1:end])
 
 #%%
 get(ENV, "ANTHROPIC_API_KEY", "")
+#%%
+get(ENV, "OPENAI_API_KEY", "")
 
 #%%
+get(ENV, "PATH", "")
+
+#%%
+
+
+#%%
+
 using AISH: extract_code
 extract_code("```sh\nls\n```")
 # ann = ai"Capital of france"

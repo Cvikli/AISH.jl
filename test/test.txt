@@ -16,3 +16,36 @@ find . -type f \( -name "*.jl" -o -name "Project.toml" -o -name "Manifest.toml" 
 
 
 You need to know every important file and everything that can be important about the project. For julia project could you create an bash command that is able to list the file and their path with their content? Or if there is better way for you to know about each file and their contents then please tell me.
+
+
+
+cat > src/input_source/keyboard.jl <<-"EOL"
+using REPL
+using REPL.LineEdit
+
+function readline_improved()
+    # Check if we're in a regular terminal or VSCode
+    if isdefined(Base, :active_repl)
+        repl = Base.active_repl
+        terminal = repl.t
+    else
+        terminal = TTYTerminal("", stdin, stdout, stderr)
+    end
+
+    prompt = "➜ "
+    
+    while true
+        user_input = if isdefined(Base, :active_repl)
+            readline(terminal, prompt; color=:cyan)
+        else
+            print("\e[36m$prompt\e[0m")  # teal arrow
+            readline()
+        end
+
+        user_input = strip(user_input)
+        if !isempty(user_input)
+            return user_input
+        end
+        println("Empty input. Please enter a message.")
+    end
+end

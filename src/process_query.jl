@@ -9,8 +9,12 @@ process_question(state) = begin
   code_blocks = extract_all_code(assistant_message.content)
   all_outputs = String[]
 
+  changed = false
+
   if !isempty(code_blocks)
     for (index, code) in enumerate(code_blocks)
+      @show code[1:6]
+      !startswith(code, "cat > ") && continue
       println("\e[34mCode block $index:\e[0m")
       println("\e[2m$code\e[0m")
       println("\e[31mPress enter to execute this block, 'S' to skip, or 'Q' to quit.\e[0m")
@@ -25,6 +29,8 @@ process_question(state) = begin
         continue
       elseif answer !== ""
         println("Unknown command!!  If you want to run then don't send S neither Q")
+      else
+        changed = true
       end
 
       try
@@ -40,12 +46,13 @@ process_question(state) = begin
     end
 
     state.last_output = join(all_outputs, "\n\n")
-  else
+    println("\n\e[35mFinal Output:\e[0m")
+    println(state.last_output)
+    else
     state.last_output = ""
   end
 
-  println("\n\e[35mFinal Output:\e[0m")
-  println(state.last_output)
+  changed && update_system_prompt!(state)
 end
 
 function extract_all_code(text)
