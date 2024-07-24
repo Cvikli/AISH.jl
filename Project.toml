@@ -5,6 +5,7 @@ version = "0.1.0"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 Pipe = "b98c9c47-44ae-5843-9183-064241ee97a0"
 PromptingTools = "670122d1-24a8-4d70-bfce-740807c42192"
