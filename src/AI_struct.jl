@@ -10,11 +10,13 @@ end
 # Initialize AI State
 function initialize_ai_state(MODEL = "claude")
     system_prompt = SYSTEM_PROMPT(get_all_project_with_URIs())
-    AIState(
+    state = AIState(
         [SystemMessage(system_prompt)],
         String[],
         MODEL,
     )
+    println("\e[32mAI State initialized successfully.\e[0m")  # Green text
+    return state
 end
 
 # Update system prompt

@@ -13,7 +13,7 @@ function process_question(state::AIState)
     changed = false
 
     for (index, code) in enumerate(code_blocks)
-        process_code_block!(index, code, all_outputs, changed)
+        changed |= process_code_block!(index, code, all_outputs)
     end
 
     state.last_output = all_outputs
@@ -22,37 +22,18 @@ function process_question(state::AIState)
     changed && update_system_prompt!(state)
 end
 
-function process_code_block!(index, code, all_outputs, changed)
-    !startswith(code, "cat > ") && return
+function process_code_block!(index, code, all_outputs)
+    !startswith(code, "cat > ") && return false
 
     println("\e[34mCode block $index:\e[0m")
     println("\e[2m$code\e[0m")
     
     file_diff = generate_file_diff(String(code))  # Convert SubString to String
-    !isnothing(file_diff) && display_file_diff(file_diff)
+    isnothing(file_diff) && return false
+
+    display_file_diff(file_diff)
     
-    println("\e[31mPress enter to execute this block, 'S' to skip.\e[0m")
-
-    if should_skip_code()
-        push!(all_outputs, "[Skipped]")
-        println("\e[35mCurrent output:\e[0m\n$(all_outputs[end])")
-        return
-    end
-
-    changed = true
-    execute_code_block(code, all_outputs)
-end
-
-function should_skip_code()
-    answer = lowercase(strip(readline()))
-    if answer in ["q", "s", "n", "no"]
-        println("Skipping this code block.")
-        return true
-    elseif answer !== ""
-        println("Unknown command! If you want to run then don't send S neither Q")
-        return should_skip_code()  # Recursive call for invalid input
-    end
-    return false
+    return true
 end
 
 function execute_code_block(code, all_outputs)
@@ -62,7 +43,7 @@ function execute_code_block(code, all_outputs)
     catch error
         error_output = strip(sprint(showerror, error))
         push!(all_outputs, "[Error]\n$error_output")
-        @warn("DANGEROUS AS no backtrace is printed here!!")
+        @warn("Error occurred during execution: $error_output")
     end
     println("\e[35mCurrent output:\e[0m\n$(all_outputs[end])")
 end

@@ -56,3 +56,20 @@ I want a file diff tracker that would be able to create a diff view of the speci
 
 
 
+
+
+invalid_request_error
+HTTP/1.1 400 Bad Request
+Date: Tue, 23 Jul 2024 17:50:24 GMT
+Content-Type: application/json
+Content-Length: 187
+Connection: keep-alive
+x-should-retry: false
+request-id: req_01RauZn4dvTiRmesKzk8i5AR
+x-cloud-trace-context: 4be9c8a7a19e84a0707a0ae8eecbe349
+via: 1.1 google
+CF-Cache-Status: DYNAMIC
+Server: cloudflare
+CF-RAY: 8a7d8331dc5ac2c8-VIE
+
+{"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Claude API. Please go to Plans & Billing to upgrade or purchase credits."}}""")555

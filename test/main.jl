@@ -24,8 +24,38 @@ get(ENV, "OPENAI_API_KEY", "")
 get(ENV, "PATH", "")
 
 #%%
+using Term.Prompts
 
+prompt = Prompt("Simple, right?");
+prompt |> ask
 
+#%%
+using REPL.Terminals
+function clear_line()
+    # terminal = Terminals.TTYTerminal("", stdin, stdout, stderr)
+    Terminals.clear_line(Base.active_repl.t)
+end
+
+#%%
+readline(Base.active_repl.t; keep=true)
+#%%
+asdf1 = clear_line()
+asdf2 = readline()
+asdf3 = clear_line()
+asdf4 = readline()
+asdf3 = clear_line()
+asdf5 = readline()
+asdf3 = clear_line()
+;
+#%%
+@show asdf1
+@show asdf2
+@show asdf3
+@show asdf4
+@show asdf5
+@show asdf6
+#%%
+#%%
 #%%
 
 using AISH: extract_code

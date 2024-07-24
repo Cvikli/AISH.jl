@@ -17,10 +17,10 @@ function get_git_files(path=".")
   # Filter out git-ignored files
   not_ignored = String[]
   for file in all_files
-      check_ignore_cmd = `git check-ignore -q $file`
-      if !success(check_ignore_cmd)
-          push!(not_ignored, file)
-      end
+    check_ignore_cmd = `git check-ignore -q $file`
+    if !success(check_ignore_cmd)
+      push!(not_ignored, file)
+    end
   end
 
   cd(original_dir)
