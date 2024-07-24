@@ -3,7 +3,6 @@ using PromptingTools: SystemMessage, UserMessage, AbstractChatMessage
 # AI State struct
 mutable struct AIState
     conversation::Vector{PromptingTools.AbstractChatMessage}
-    last_output::Vector{String}
     model::String
 end
 
@@ -12,7 +11,6 @@ function initialize_ai_state(MODEL = "claude")
     system_prompt = SYSTEM_PROMPT(get_all_project_with_URIs())
     state = AIState(
         [SystemMessage(system_prompt)],
-        String[],
         MODEL,
     )
     println("\e[32mAI State initialized successfully.\e[0m")  # Green text
