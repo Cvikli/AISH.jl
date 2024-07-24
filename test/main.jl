@@ -8,7 +8,10 @@ ai_state = initialize_ai_state()
 # start_conversation(ai_state)
 #%%
 
+start_conversation(ai_state, resume=false)
+#%%
 start_conversation(ai_state)
+
 
 
 #%%

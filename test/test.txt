@@ -58,6 +58,7 @@ I want a file diff tracker that would be able to create a diff view of the speci
 
 
 
+https://docs.anthropic.com/en/api/errors
 invalid_request_error
 HTTP/1.1 400 Bad Request
 Date: Tue, 23 Jul 2024 17:50:24 GMT
@@ -72,4 +73,22 @@ CF-Cache-Status: DYNAMIC
 Server: cloudflare
 CF-RAY: 8a7d8331dc5ac2c8-VIE
 
-{"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Claude API. Please go to Plans & Billing to upgrade or purchase credits."}}""")555
+{"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Claude API. Please go to Plans & Billing to upgrade or purchase credits."}}""")
+
+
+
+--auto-merge
+
+
+
+change everything to double space...
+change the if that is exclusive then please 
+
+
+
+
+
+
+
+
+

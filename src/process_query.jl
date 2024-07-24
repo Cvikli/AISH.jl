@@ -1,58 +1,46 @@
-include("file_diff_tracker.jl")
+using PromptingTools: AIMessage
 
 function process_question(state::AIState)
-    println("Thinking...")
+  println("Thinking...")
 
-    assistant_message = aigenerate(state.conversation, model=state.model)
-    push!(state.conversation, assistant_message)
-    println("\e[32m\$\e[0m $(assistant_message.content)")  # Green $ symbol
-    println()
+  assistant_message = safe_aigenerate(state.conversation, model=state.model)
+  println("\e[32m¬ \e[0m$(assistant_message.content)")
+  println()
 
-    code_blocks = extract_all_code(assistant_message.content)
-    all_outputs = String[]
-    changed = false
+  updated_content = update_message_with_outputs(assistant_message.content)
+  println(updated_content)
 
-    for (index, code) in enumerate(code_blocks)
-        changed |= process_code_block!(index, code, all_outputs)
-    end
+  push!(state.conversation, AIMessage(updated_content, 
+                                      assistant_message.status,
+                                      assistant_message.tokens,
+                                      assistant_message.elapsed,
+                                      assistant_message.cost,
+                                      assistant_message.log_prob,
+                                      assistant_message.finish_reason,
+                                      assistant_message.run_id,
+                                      assistant_message.sample_id,
+                                      assistant_message._type))
 
-    state.last_output = all_outputs
-    display_final_outputs(state.last_output)
-
-    changed && update_system_prompt!(state)
+  update_system_prompt!(state)
 end
 
-function process_code_block!(index, code, all_outputs)
-    !startswith(code, "cat > ") && return false
-
-    println("\e[34mCode block $index:\e[0m")
-    println("\e[2m$code\e[0m")
-    
-    file_diff = generate_file_diff(String(code))  # Convert SubString to String
-    isnothing(file_diff) && return false
-
-    display_file_diff(file_diff)
-    
-    return true
+function update_message_with_outputs(content)
+  return replace(content, r"```sh\n([\s\S]*?)\n```" => matchedtxt -> begin
+    code = matchedtxt[7:end-3]
+    output = execute_code_block(code)
+    "$matchedtxt\n```sh_run_results\n$output\n```\n"
+  end)
 end
 
-function execute_code_block(code, all_outputs)
+function execute_code_block(code)
+  withenv("GTK_PATH" => "") do
     try
-        output = strip(read(`bash -c $code`, String))
-        push!(all_outputs, output)
+      return strip(read(`bash -c $code`, String))
     catch error
-        error_output = strip(sprint(showerror, error))
-        push!(all_outputs, "[Error]\n$error_output")
-        @warn("Error occurred during execution: $error_output")
+      error_output = strip(sprint(showerror, error))
+      @warn("Error occurred during execution: $error_output")
+      return "[Error] $error_output\n"
     end
-    println("\e[35mCurrent output:\e[0m\n$(all_outputs[end])")
+  end
 end
 
-function display_final_outputs(outputs)
-    println("\n\e[35mFinal Outputs:\e[0m")
-    for (index, output) in enumerate(outputs)
-        println("Output $index:\n$output\n")
-    end
-end
-
-extract_all_code(text) = [String(strip(m.captures[1])) for m in eachmatch(r"```sh\n([\s\S]*?)\n```", text)]
