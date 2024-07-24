@@ -4,7 +4,7 @@ module AISH
 using REPL
 using InteractiveUtils
 using PromptingTools
-using PromptingTools: SystemMessage, UserMessage
+using PromptingTools: SystemMessage, UserMessage, AIMessage
 
 include("includes.jl")
 
@@ -12,13 +12,18 @@ function start_conversation(state::AIState; resume::Bool=true)
   println("Welcome to $ChatSH AI. Model: $(state.model)")
   
   if resume
-    last_message = get_last_user_message()
-    if !isnothing(last_message)
-      println("Resuming with last user message: $last_message")
-      push!(state.conversation, UserMessage(strip(last_message)))
+    if !isempty(state.conversation) && state.conversation[end] isa UserMessage
+      println("Resuming with last unprocessed user message: $(state.conversation[end].content)")
       process_question(state)
     else
-      println("No previous message found. Starting a new conversation.")
+      last_message = get_last_user_message()
+      if !isnothing(last_message)
+        println("Resuming with last user message: $last_message")
+        push!(state.conversation, UserMessage(strip(last_message)))
+        process_question(state)
+      else
+        println("No previous message found. Starting a new conversation.")
+      end
     end
   end
   
