@@ -1,0 +1,11 @@
+Commit Messages must have a short concise summary about what will be the implication of the change that is less than 30 characters. 
+- Each change have to be as concise as possible with in one or two words per significant changes using informal tone.
+- Select the most important changes. 
+- Write a summary as concisely as possible. 
+- Don't write out the file that is changed also don't bother with details. ONLY write the change or if it is better then the effect of the change in correspondence to the code. 
+- Don't write description. ONLY Summary! 
+- Do not duplicate things or describe the same thing with other words.
+- Don't write: Effect, just state the effect immediately, it is trivial that we are talking about changes and its effect. Also don't note the filename or what file was changed just simply write the effect of the change!
+- Also please don't write out what function changed, we only need the effect of the changes if you can describe what did it change in overall of the code based on its context of the code.
+- Order the changes based on importance.
+- Don't force the usage of quation mark
