@@ -81,3 +81,20 @@ typeof(strip(x
 #%%
 
 run(`bash -c "which meld"`)
+
+#%%
+try
+cmd = """
+read -q "?continue? (y) " && cat > README_FINAL.md <<-"EOL"
+content
+EOL
+"""
+run(`zsh -c $cmd`)
+catch error
+    @show error
+    @show error.procs
+    @show error.procs[1].exitcode
+    ProcessFailedException
+    error_output = strip(sprint(showerror, error))
+    @warn("Error occurred during execution: $error_output")
+  end

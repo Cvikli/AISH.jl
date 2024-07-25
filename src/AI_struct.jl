@@ -23,3 +23,12 @@ function update_system_prompt!(state::AIState)
     state.conversation[1] = SystemMessage(new_system_prompt)
     println("\e[33mSystem prompt updated due to file changes.\e[0m")
 end
+
+# Add user message to conversation
+function add_user_message!(state::AIState, user_message::String; save_message::Bool=true)
+    push!(state.conversation, UserMessage(strip(user_message)))
+    if save_message
+        save_user_message(user_message)
+    end
+end
+

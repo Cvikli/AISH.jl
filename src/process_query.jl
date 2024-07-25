@@ -33,10 +33,13 @@ function update_message_with_outputs(content)
 end
 
 function execute_code_block(code)
+  isconfirming = startswith(code, "read")
   withenv("GTK_PATH" => "") do
     try
-      return strip(read(`bash -c $code`, String))
+      shell = isconfirming ? "zsh" : "bash" # We use BASH most of the case. But for confirming the 'cat' we have to use zsh as it supports this arguments 
+      return strip(read(`$shell -c $code`, String))
     catch error
+      error isa ProcessFailedException && !isempty(error.procs) && error.procs[1].exitcode == 1 && isconfirming && return "ProcessExited(1) which can be still okay, we just cancelled the run"
       error_output = strip(sprint(showerror, error))
       @warn("Error occurred during execution: $error_output")
       return "[Error] $error_output\n"

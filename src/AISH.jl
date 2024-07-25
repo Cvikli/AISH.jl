@@ -17,7 +17,7 @@ function start_conversation(state::AIState; resume::Bool=true)
     last_message = get_last_user_message()
     if !isempty(last_message)
       println("Resuming with last user message: $last_message")
-      push!(state.conversation, UserMessage(strip(last_message)))
+      add_user_message!(state, last_message, save_message=false)
       process_question(state)
     else
       println("No previous message found. Starting a new conversation.")
@@ -33,8 +33,7 @@ function start_conversation(state::AIState; resume::Bool=true)
     user_message = readline_improved()
     print("\e[0m")  # reset text style
   
-    push!(state.conversation, UserMessage(strip(user_message)))
-    save_user_message(state.conversation[end].content)
+    add_user_message!(state, user_message)
     length(state.conversation) > 12 && (state.conversation = [state.conversation[1],state.conversation[4:end]...])
     println()
     process_question(state)
