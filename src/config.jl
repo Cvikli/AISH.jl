@@ -1,18 +1,27 @@
+PROJECT_PATH::String = "."
+set_project_path(path) = (global PROJECT_PATH = path)
 
 get_system()                   = strip(read(`uname -a`, String))
 get_shell()                    = strip(read(`$(ENV["SHELL"]) --version`, String))
 get_pwd()                      = strip(pwd())
+
 # get_folderstructure(path=".")  = begin
 #   cmd = `cd $path && git ls-files -z --exclude-standard -- '*.jl' 'Project.toml' | grep -zZv '^test/' | xargs -0 -I {} bash -c 'echo -e "\n\nFile: {}"; echo "============================"; cat "{}"'`
 #   return strip(read(cmd, String))
 # end
-function get_git_files(path=".")
+function get_project_files(path) 
   original_dir = pwd()
   cd(path)
-
   # Find all .jl and Project.toml files
   find_cmd = `find . \( -name "*.jl" -o -name "Project.toml" \) -type f`
   all_files = readlines(find_cmd)
+  cd(original_dir)
+  return all_files
+end
+function filter_git_files(all_files, path=".")
+  original_dir = pwd()
+  cd(path)
+
 
   # Filter out git-ignored files
   not_ignored = String[]
@@ -41,15 +50,11 @@ $content
 """
 end
 
-function get_all_project_with_URIs(path=".")
-  files = get_git_files(path)
-  # display(files)
-
+function get_all_project_with_URIs(path=PROJECT_PATH)
+  all_files = get_project_files(path)
+  files = filter_git_files(all_files, path)
   filtered_files = filter_test_files(files)
-  # display(filtered_files)
-
   result = map(file -> format_file_content(path, file), filtered_files)
-
   return join(result, "\n")
 end
 
@@ -60,7 +65,7 @@ const ChatSH::String = "Koda"
 const ainame::String = lowercase(ChatSH)
 
 
-SYSTEM_PROMPT(whole_project) = """You are $ChatSH, an AI language model that specializes in assisting users with tasks on their system using SHELL commands. 
+SYSTEM_PROMPT(path) = """You are $ChatSH, an AI language model that specializes in assisting users with tasks on their system using SHELL commands. 
 
 To create new file use cat like this:
 ```sh
@@ -128,7 +133,7 @@ $(get_shell())
 The SHELL is in this folder right now:
 $(get_pwd())
 The folder structure of your codebase that you are working in:
-$whole_project
+$(get_all_project_with_URIs(path))
 
 With these informations in mind you can communicate with the user from here! 
 """

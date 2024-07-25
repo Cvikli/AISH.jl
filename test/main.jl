@@ -1,6 +1,3 @@
-using RelevanceStacktrace
-
-using Revise
 using AISH: start_conversation, initialize_ai_state
 
 ai_state = initialize_ai_state()
@@ -10,6 +7,7 @@ ai_state = initialize_ai_state()
 
 start_conversation(ai_state, resume=false)
 #%%
+
 start_conversation(ai_state)
 
 
