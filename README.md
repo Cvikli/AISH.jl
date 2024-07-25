@@ -17,12 +17,8 @@ apt-get install ffmpeg libavcodec-extra
 
 
 
-# BENCHMARKING
-# BENCHMARKING full scale!!
-
 # FINE TUNEING
 
-# VOICE INPUT
 
 # RAG
 
@@ -68,3 +64,13 @@ illetve jó lenne ha lenne egy indítási mód hogy ha be lenne ragadva egy User
 # format the code... improve spacing
 # simplify the code...without changing the behaviour
 # take all the using and import into the include.jl main file. 
+
+# BENCHMARKING
+# BENCHMARKING full scale!!
+
+# GUI
+
+# RAG...
+
+# VOICE INPUT
+# voice input!!

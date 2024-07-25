@@ -1,10 +1,10 @@
 using PromptingTools
 using HTTP
 
-function safe_aigenerate(conversation; model, max_retries=3)
+function safe_aigenerate(conversation; model, max_retries=3, return_all=false)
     for attempt in 1:max_retries
         try
-            return aigenerate(conversation, model=model)
+            return aigenerate(conversation, model=model, return_all=return_all)
         catch e
             if e isa HTTP.StatusError && e.status in [500, 529]
                 if attempt < max_retries
