@@ -3,13 +3,15 @@ using JuliaLLMLeaderboard
 using RelevanceStacktrace
 using PromptingTools
 using TOML
+using DataStructures: OrderedDict
 
 using JuliaLLMLeaderboard: find_definitions
 
 include("generic_benchmark.jl")
+include("utils.jl")
 
 # Global variable to store benchmark results
-BENCHMARK_RESULTS::Dict{String, Dict{String, Any}} = Dict{String, Dict{String, Any}}()
+BENCHMARK_RESULTS::OrderedDict{String, Dict{String, Any}} = OrderedDict{String, Dict{String, Any}}()
 
 function benchmark_event_scheduler()
     println("Benchmark started...")
