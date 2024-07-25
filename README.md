@@ -83,11 +83,9 @@ AI SH to do EVERYTHING on PC
 It is actually ChatSH but a little bit rethinked version!
 
 
-## Install
 
-
+Lot of them is already ready...
 ## TODO
-- FINE TUNEING
 - RAG
 - STREAMING
 - Multi SH run
@@ -95,6 +93,12 @@ It is actually ChatSH but a little bit rethinked version!
 - DIFF view!! VERY narrow version... so literally the characters those changes... Also using colors. COMPARE!!
 - LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
 - error management... Claude is down... then...
+- BENCHMARKING
+- FINE TUNEING
+- GUI
+- VOICE INPUT
+- READLINE repair like you did before with REPL!
+- modify the cat > ... to meld...
 
 
 Default talks like:
@@ -113,29 +117,6 @@ Default talks like:
 
 
 
-Handle server overloaded which is 529 Unknown Code with retry later in some second. . Not the anthropic_error_handler.jl is extremly bad. Please correct that safe_aigenerate function to work appropriately. Also be simple and concise. Also use this safe call in the process-query.jl
-
-# READLINE repair like you did before with REPL!
-
-
-# modify the cat > ... to meld...
-# meld updated_filecontent original_file
-
-ments le egy fájlba (a conversation mappán belül) az összes userMessage-t azonnal amint lehet. Hogy ha lefagyna a query akkor tudjuk onnan megkeresni mi volt a legutolsó 
-illetve jó lenne ha lenne egy indítási mód hogy ha be lenne ragadva egy UserMessage akkor azt tudnánk egyből futtatni újra. 
 
 
 
-# now we can remove the <SYSTEM>last_output prompting from the project. As we always insert the output after each codeblock immediately. Could you help me in this?
-
-# default talks like: 
-
-# BENCHMARKING
-# BENCHMARKING full scale!!
-
-# GUI
-
-# RAG...
-
-# VOICE INPUT
-# voice input!!
