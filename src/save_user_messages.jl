@@ -10,9 +10,9 @@ end
 
 function get_last_user_message()
     filename = joinpath("conversation", "user_messages.log")
-    isfile(filename) || return nothing
+    isfile(filename) || return ""
     lines = readlines(filename)
-    isempty(lines) && return nothing
+    isempty(lines) && return ""
     last_line = lines[end]
     return split(last_line, ": ", limit=2)[2]
 end
