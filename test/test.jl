@@ -73,3 +73,11 @@ This line was changed in the feature branch.
 This is the third line.
 
 could you remove kdiff3 from the merge tool options?
+#%%
+run(`bash -c 'diff --help'`)
+x="  code_content "
+typeof(strip(x
+))
+#%%
+
+run(`bash -c "which meld"`)
