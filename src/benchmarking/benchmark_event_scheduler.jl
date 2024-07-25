@@ -4,59 +4,40 @@ using RelevanceStacktrace
 using PromptingTools
 using TOML
 
+using JuliaLLMLeaderboard: find_definitions
+
+include("generic_benchmark.jl")
+
+# Global variable to store benchmark results
+BENCHMARK_RESULTS::Dict{String, Dict{String, Any}} = Dict{String, Dict{String, Any}}()
+
 function benchmark_event_scheduler()
-  # Load definition
-  fn_definition = joinpath(dirname(dirname(pathof(JuliaLLMLeaderboard))),
-      "code_generation",
-      "utility_functions",
-      "event_scheduler",
-      "definition.toml")
-  println("Definition file: $fn_definition")
-  definition = TOML.parsefile(fn_definition)["code_generation"]  
+    println("Benchmark started...")
+    fn_definitions = find_definitions(joinpath(dirname(dirname(pathof(JuliaLLMLeaderboard))),"code_generation/"))
 
-  # Initialize AI state
-  ai_state = initialize_ai_state()  
+    for fn_definition in fn_definitions
+        definition = TOML.parsefile(fn_definition)["code_generation"]
+        name = definition["name"]
 
-  # Prepare conversation
-  full_msg = definition["prompt"]
-  push!(ai_state.conversation, PromptingTools.UserMessage("<USER>\n$(full_msg)\n</USER>"))  
+        if haskey(BENCHMARK_RESULTS, name) &&
+           BENCHMARK_RESULTS[name]["examples_executed"] == BENCHMARK_RESULTS[name]["examples_count"] &&
+           BENCHMARK_RESULTS[name]["unit_tests_passed"] == BENCHMARK_RESULTS[name]["unit_tests_count"]
+            println("Skipping $name - All tests already passed.")
+        else
+            result = run_generic_benchmark(fn_definition)
+            BENCHMARK_RESULTS[name] = Dict(
+                "examples_executed" => result.examples_executed,
+                "examples_count" => result.examples_count,
+                "unit_tests_passed" => result.unit_tests_passed,
+                "unit_tests_count" => result.unit_tests_count,
+                "parsed" => result.parsed,
+                "executed" => result.executed,
+                "elapsed_seconds" => result.elapsed_seconds,
+                "cost" => result.cost,
+                "prompt_label" => result.prompt_label
+            )
+        end
+    end
 
-  # Benchmark the AI generation
-  conversation = aigenerate($ai_state.conversation, model=$ai_state.model, return_all=true)
-  extract_julia_code(conversation[end].content)  
-
-  # Print benchmark results
-  println("Benchmark results:")  
-
-  # Evaluate 1SHOT
-  conversation_mod = deepcopy(conversation)
-  conversation_mod[end] = PromptingTools.AIMessage(
-      extract_julia_code(conversation_mod[end].content),
-      conversation_mod[end].status,
-      conversation_mod[end].tokens,
-      conversation_mod[end].elapsed,
-      conversation_mod[end].cost,
-      conversation_mod[end].log_prob,
-      conversation_mod[end].finish_reason,
-      conversation_mod[end].run_id,
-      conversation_mod[end].sample_id,
-      conversation_mod[end]._type
-  )  
-
-  eval_result = evaluate_1shot(
-      conversation=conversation_mod,
-      fn_definition=fn_definition,
-      definition=definition,
-      model=ai_state.model,
-      prompt_label="event_scheduler",
-      device="HM-PC",
-      schema="-",
-      prompt_strategy="1SHOT",
-      verbose=false,
-      capture_stdout=false
-  )  
-
-  println("\nEvaluation result:")
-  display(eval_result)
+    return BENCHMARK_RESULTS
 end
-
