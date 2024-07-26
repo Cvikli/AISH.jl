@@ -8,6 +8,7 @@ include("../src/benchmarking/benchmark_event_scheduler.jl")
 include("../src/benchmarking/benchmark_event_scheduler.jl")
 
 benchmark_event_scheduler()
+save_benchmark_result()
 
 
 #%%

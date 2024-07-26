@@ -58,7 +58,7 @@ function save_benchmark_result(benchmark_results::OrderedDict{String, Dict{Strin
     )
     
     # Write the content to the file in TOML format
-    open(filename, "w") do file
+    open("benchmarks/" * filename, "w") do file
         TOML.print(file, result)
     end
     
