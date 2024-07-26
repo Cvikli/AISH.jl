@@ -1,0 +1,39 @@
+2024-07-24_19-23-58: could you simplify the save_user_messages.jl?
+2024-07-24_19-24-59: could you remove the save_user_message(state.conversation[end].content) function from the process_questions and put it into the AISH.jl
+2024-07-24_19-26-36: could you make the resume_last shorter?
+2024-07-24_19-34-52: does the code handle if there is a stucked conversation from the user into the conversation list of the aistate?
+2024-07-24_19-38-33: ok then now let's continue
+2024-07-24_19-39-37: but you didn1t give me any advice on if it can happen that there is a UserMessage in the end of the conversation that wasn't answered and it will be answered if we leave resume true
+2024-07-24_19-50-29: but please look for what is the real error in the safe_aigenerate, so when the error is 529 or 500 then we could retry but in the other cases it isn't necessary
+2024-07-25_12-14-46: if resume is false then it can happen that we continue with a UserMessage in the conversation that would cause two UserMessage in the end of conversation. Could you repair this mistake and make sure that we handle this case too in a very simple way?
+2024-07-25_12-18-50: could you improve the get_last_message to return with ""
+2024-07-25_12-19-35: but now update the code to handle this empty string!
+2024-07-25_12-24-01: I have a benchmark_event_scheduler could you improve our benchmarking system to be more scaling?
+2024-07-25_12-26-43: update the generic_benchmark.jl based on the AISH.jl conversation managemnt
+2024-07-25_15-53-24: Create a global variable that store the results of the benchmark evaluation. Make it to be a Dict, so if the examples_executed and unit_tests_passed are equal with the expected examples_count and unit_tests_count, then we wouldn't rerun these tests again ad again.
+2024-07-25_15-55-25: also you can remove the eval_results from the benchmark_event_scheduler from now
+2024-07-25_15-56-53: Could you modify my print that would be able to handle the new global state of the benchamarks: print_score(res) = println("Parsed: $(res.parsed) Executed: $(res.executed), P: $(res.unit_tests_passed)/$(res.unit_tests_count), E: $(res.examples_executed)/$(res.examples_count), $(res.elapsed_seconds)s, \$$(res.cost) Label: $(res.prompt_label) ")
+2024-07-25_16-03-26: could you please clean the code a little bit in the utils.jl? Also could you please modify the global object to OrderedDict as I need this to be organizes always the same
+2024-07-26_10-45-39: Please correct the get_project_files function to ba able to match on .js files too
+2024-07-26_10-48-45: configuring the project throught command line arguments: PROJECT_PATH
+2024-07-26_11-05-45: Please correct the get_project_files function to ba able to match on .js files too
+2024-07-26_11-08-18: could you create a command that is able to find all the project file that can come in case of any project or we should do another way for this?
+2024-07-26_11-11-09: I would like toCould you split the config.jl file with the prompting and the basic configs to two separate?
+2024-07-26_11-16-12: Could you instead of searching for all the files and excluding some of them create a way to match on the most typical project files and programming language file. It can be a hell big of a list of type of files, it is okay. The more you tell the better we will be.
+2024-07-26_11-18-58: could you make the list more compact in the get_project_files function? So it would take less space?
+2024-07-26_11-33-36: I feel like there are project files and extension mismatched here. So please correct that the extension to be handled as extension and project file to be handled as project files :)
+2024-07-26_11-39-42: simplify the get_project_files(path) to one liner also put the PROJECT_FILES default vaoue to the arguments
+2024-07-26_11-41-17: simplify the is_porject_file to oneliner too
+2024-07-26_11-44-02: simplify the format_file_content to one liner (of course the string doesn't have to be one liner)
+2024-07-26_11-51-54: the filter_test_files should be also more generic, so could you create a const global variable for this segment too, that we would be able to filter each of the folder that is in that folder? Also I need a ignore file version for this too.
+2024-07-26_11-57-18: please create separate function for ignoring files and for ignoring the folders. Use the startwith and endswith for them. Also try to make it to be an oneliner. Also don't create a files for these. So for now let's just create a const global variable for these
+2024-07-26_14-07-22: modify the ignore folder to have the filter files filter in it and the ignore_file to have the filter file ignoring in it too. And then do the two filetr in the get_all_project_with_URIs. Also please do it in oneliner
+2024-07-26_14-09-29: could you make a oneliner or two liner from the filter_git_files too?
+2024-07-26_14-12-08: could you please do the with(cd path) in the filter_git_files folder?
+2024-07-26_14-16-18: could you implement a feature that makes our project be able to use the arguments for the PROJECT_PATH so it could be set via command line
+2024-07-26_14-19-42: what was with the AI_config?
+2024-07-26_15-22-50: please create a function that can save the benchmark result: println("Pass: $(format_percentage(passed/all_passed)),  Exec: $(format_percentage(exec/all_exec))") to file with date. Also it would be nice if it would automatically log the current git commit there too.
+2024-07-26_15-26-11: also could you save the score and max score for each prompt_label? So it would be great to see the score of eald be nice if you would save the whole BENCHMARK_RESULTS basically there and it would be reloadable for comparing purposes of every single run in the end.
+2024-07-26_15-29-11: Could you use the raw BENCHMARK_RESULTS basically. So modify the save_benchmark_result accordingly. So I could save each.
+2024-07-26_15-30-54: could you change the save_benchmark_result so that I only have to pass the BENCHMARK_RESULTS into it, also it could be default value. So this way we would recalculate all the pass_percentage and exec_percentage each time?
+2024-07-26_15-32-40: also put the git_commit into the file_name. Also the date_str would be okay if isn't paranthesized in the string at interpolation
