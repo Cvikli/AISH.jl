@@ -24,7 +24,7 @@ const FILE_EXTENSIONS = [
     "fasl", "jl", "r", "R", "Rmd", "mat", "asm", "s", "dart", "sql", "md", "markdown",
     "rst", "adoc", "tex", "sty", "gradle", "sbt", "xml"
 ]
-const FILTERED_FOLDERS = ["test", "tests", "spec", "specs", "examples", "docs", "python"]
+const FILTERED_FOLDERS = ["test", "tests", "spec", "specs", "examples", "docs", "python", "benchmarks"]
 const IGNORED_FILE_PATTERNS = [".log", "config.ini", "secrets.yaml", "Manifest.toml"]
 
 is_project_file(lowered_file) = lowered_file in PROJECT_FILES || any(endswith(lowered_file, "." * ext) for ext in FILE_EXTENSIONS)

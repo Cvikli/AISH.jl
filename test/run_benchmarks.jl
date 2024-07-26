@@ -38,6 +38,8 @@ println("Pass: $(format_percentage(passed/all_passed)),  Exec: $(format_percenta
 include("../src/benchmarking/benchmark_event_scheduler.jl")
 save_benchmark_result()
 #%%
+save_benchmark_result()
+#%%
 pwd()
 #%%
 # Pass: 69.12%,  Exec: 77.55%
