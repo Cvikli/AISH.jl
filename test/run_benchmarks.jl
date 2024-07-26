@@ -3,10 +3,15 @@
 include("../src/benchmarking/benchmark_event_scheduler.jl")
 
 
-ress = benchmark_event_scheduler()
+#%%
+
+include("../src/benchmarking/benchmark_event_scheduler.jl")
+
+benchmark_event_scheduler()
 
 
 #%%
+BENCHMARK_RESULTS
 #%%
 
 
@@ -29,31 +34,20 @@ println("Pass: $(format_percentage(passed/all_passed)),  Exec: $(format_percenta
 
 
 #%%
-
-#%%
-
-
-
-
-
-
-
-
-
-#%%
 include("../src/benchmarking/benchmark_event_scheduler.jl")
-using Revise
-test_str = """
-```sh
-read -q "?continue? (y) " && cat > markdown_utils.jl <<-"EOL"
-function extract_julia_code(md::String)
-    code_blocks = match.(r"```julia\n(.*?)\n```"s, md)
-    valid_blocks = filter(x -> x !== nothing, code_blocks)
-    extracted_code = map(m -> m.captures[1], valid_blocks)
-    return join(extracted_code, "\n")
-end
-EOL
-```
-"""
+save_benchmark_result()
+#%%
+pwd()
+#%%
+# Pass: 69.12%,  Exec: 77.55%
 
-extract_sh_block_to_julia_code(test_str)
+#%%
+
+
+
+
+
+
+
+
+

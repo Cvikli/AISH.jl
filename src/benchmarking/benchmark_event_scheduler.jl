@@ -40,6 +40,5 @@ function benchmark_event_scheduler()
             )
         end
     end
-
-    return BENCHMARK_RESULTS
+    return
 end
