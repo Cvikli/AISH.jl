@@ -38,7 +38,7 @@ filter_gitignore_files(all_files, path=".") = cd(path) do
   filter(file -> !success(`git check-ignore -q $file`), all_files)
 end
 
-ignore_folder(file) = any(startswith(file, folder) for folder in FILTERED_FOLDERS)
+ignore_folder(file) = any(folder -> folder in splitpath(file), FILTERED_FOLDERS)
 ignore_file(file) = any(endswith(file, pattern) for pattern in IGNORED_FILE_PATTERNS)
 
 # TODO make sure the # is a comment in that specific language!!
