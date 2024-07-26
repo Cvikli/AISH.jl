@@ -84,7 +84,7 @@ It is actually ChatSH but a little bit rethinked version!
 
 
 
-Lot of them is already ready...
+Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 ## TODO
 - RAG
 - STREAMING
@@ -99,6 +99,8 @@ Lot of them is already ready...
 - VOICE INPUT
 - READLINE repair like you did before with REPL!
 - modify the cat > ... to meld...
+- configuring the project throught command line arguments: PROJECT_PATH
+- If you don't want to WRITE out the entire file THEN find a new way of diff! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
 
 
 Default talks like:
@@ -113,10 +115,10 @@ Default talks like:
   - organizing calendar
   - organizing TODO list
   - messenger communication automation
-  - 
+  - website/internet search and surfing
 
 
-
+- project file search improvement.
 
 
 

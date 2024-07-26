@@ -1,8 +1,11 @@
 using AISH: start_conversation, initialize_ai_state
+using AISH: start_conversation, initialize_ai_state, set_project_path
 
+# set_project_path("../diacoach/src/")
+# set_project_path(".")
 ai_state = initialize_ai_state()
-;
 
+;
 #%%
 
 start_conversation(ai_state, resume=false)
@@ -15,6 +18,12 @@ start_conversation(ai_state)
 
 #%%
 Revise.retry()
+#%%
+using AISH: get_all_project_with_URIs
+
+println(get_all_project_with_URIs())
+
+#%%
 #%%
 
 display(ai_state.conversation[1:end])

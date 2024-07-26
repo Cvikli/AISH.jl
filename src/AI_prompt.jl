@@ -1,71 +1,5 @@
-PROJECT_PATH::String = "."
-set_project_path(path) = (global PROJECT_PATH = path)
 
-get_system()                   = strip(read(`uname -a`, String))
-get_shell()                    = strip(read(`$(ENV["SHELL"]) --version`, String))
-get_pwd()                      = strip(pwd())
-
-# get_folderstructure(path=".")  = begin
-#   cmd = `cd $path && git ls-files -z --exclude-standard -- '*.jl' 'Project.toml' | grep -zZv '^test/' | xargs -0 -I {} bash -c 'echo -e "\n\nFile: {}"; echo "============================"; cat "{}"'`
-#   return strip(read(cmd, String))
-# end
-function get_project_files(path) 
-  original_dir = pwd()
-  cd(path)
-  # Find all .jl and Project.toml files
-  find_cmd = `find . \( -name "*.jl" -o -name "Project.toml" \) -type f`
-  all_files = readlines(find_cmd)
-  cd(original_dir)
-  return all_files
-end
-function filter_git_files(all_files, path=".")
-  original_dir = pwd()
-  cd(path)
-
-
-  # Filter out git-ignored files
-  not_ignored = String[]
-  for file in all_files
-    check_ignore_cmd = `git check-ignore -q $file`
-    if !success(check_ignore_cmd)
-      push!(not_ignored, file)
-    end
-  end
-
-  cd(original_dir)
-
-  # Remove leading "./" from file paths
-  return map(f -> startswith(f, "./") ? f[3:end] : f, not_ignored)
-end
-
-filter_test_files(files) = filter(f -> !startswith(f, "test/"), files)
-
-function format_file_content(path, file)
-  content = read(joinpath(path, file), String)
-  return """
-
-File: $file
-============================
-$content
-"""
-end
-
-function get_all_project_with_URIs(path=PROJECT_PATH)
-  all_files = get_project_files(path)
-  files = filter_git_files(all_files, path)
-  filtered_files = filter_test_files(files)
-  result = map(file -> format_file_content(path, file), filtered_files)
-  return join(result, "\n")
-end
-
-# const ChatSH::String = "Vex"
-# const ChatSH::String = "Zono"
-# const ChatSH::String = "Pixel"
-const ChatSH::String = "Koda"
-const ainame::String = lowercase(ChatSH)
-
-
-SYSTEM_PROMPT(path) = """You are $ChatSH, an AI language model that specializes in assisting users with tasks on their system using SHELL commands. 
+SYSTEM_PROMPT() = """You are $ChatSH, an AI language model that specializes in assisting users with tasks on their system using SHELL commands. 
 
 To create new file use cat like this:
 ```sh
@@ -74,11 +8,11 @@ file_content
 EOL
 ```
 
-To update the file use meld merge tool like this:
+To modify or update an existing file use meld merge tool like this:
 ```sh
 meld file_path <(cat <<-"EOL"
 file_content
-EOF
+EOL
 )
 ```
 
@@ -112,7 +46,7 @@ You stop to discuss trade-offs and implementation options if there are choices t
 Common mistake: 
 Please make sure if you use the \$ in the string between string literal ("") then don't forget to escape it with the characters: \\   
 The regex match return with SubString a strip(...) also return with SubString, so converted every SubString to String or write Union{String, SubString} or no type annotation to function to write correct code! 
-Don't write "keep the rest of the file", instead always copy the rest of the file. 
+
 
 Be always the shortest possible. Don't force logger system and error management if it is not really necessary or directly asked.
 Always try to be flat. So if you can do something in that function then do it in a oneliner instead of create a new function that is called. But of course just don't force it! 
@@ -129,13 +63,10 @@ $(get_shell())
 The SHELL is in this folder right now:
 $(get_pwd())
 The folder structure of your codebase that you are working in:
-$(get_all_project_with_URIs(path))
+$(get_all_project_with_URIs(PROJECT_PATH))
 
 
 You have to met with all the criterium from above!
 With these informations in mind you can communicate with the user from here! 
 User requests arrive these are what you have to fulfill.
 """
-
-# 
-
