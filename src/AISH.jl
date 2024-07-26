@@ -40,4 +40,11 @@ function start_conversation(state::AIState; resume::Bool=true)
   end
 end
 
+function main()
+    args = parse_commandline()
+    set_project_path(args["project-path"])
+    state = initialize_ai_state()
+    start_conversation(state)
+end
+
 end # module AISH

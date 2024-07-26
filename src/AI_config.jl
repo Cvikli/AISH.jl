@@ -53,7 +53,6 @@ function get_all_project_with_URIs(path=PROJECT_PATH)
   all_files = get_project_files(path)
   files = filter_gitignore_files(all_files, path)
   filtered_files = filter(f -> !ignore_folder(f) && !ignore_file(f), files)
-  println.(filtered_files)
   result = map(file -> format_file_content(path, file), filtered_files)
   return join(result, "\n")
 end

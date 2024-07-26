@@ -1,6 +1,7 @@
 include("AI_config.jl")
 include("AI_prompt.jl")
 include("AI_struct.jl")
+include("arg_parser.jl")
 
 include("error_managers/anthropic_error_handler.jl")
 
