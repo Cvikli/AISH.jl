@@ -50,28 +50,3 @@ function run_generic_benchmark(definition_file::String)
 	print_score(eval_result)
 	eval_result
 end
-
-#%%
-# function to_pig_latin(word::String)
-# 	vowels = ['a', 'e', 'i', 'o', 'u']
-# 	if isempty(word)
-# 			return word
-# 	elseif lowercase(word[1]) in vowels
-# 			return word * "way"
-# 	else
-# 			first_vowel_index = findfirst(char -> lowercase(char) in vowels, word)
-# 			if isnothing(first_vowel_index)
-# 					return word * "ay"
-# 			else
-# 					return word[first_vowel_index:end] * word[1:first_vowel_index-1] * "ay"
-# 			end
-# 	end
-# end
-
-# function pig_latinify(words::Vector{String})
-# 	result = similar(words)
-# 	@threads for i in eachindex(words)
-# 			result[i] = to_pig_latin(words[i])
-# 	end
-# 	return result
-# end

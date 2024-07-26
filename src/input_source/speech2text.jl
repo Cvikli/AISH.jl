@@ -1,6 +1,6 @@
 using Pipe
 
-#TODO this should work like it return with the recognized prompt.
+# TODO this should work like it return with the recognized prompt.
 
 function speech2text(AI)
     cmd = `python3 python/main.py`
