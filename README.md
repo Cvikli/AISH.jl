@@ -109,6 +109,10 @@ Default talks like:
 - simplify the code...without changing the behaviour
 - take all the using and import into the include.jl main file. 
 
+THE DEFAULT TALKS IS BASICALLY C O T!... OMG :D OMG omg... omg... 
+in the end it all breaks down to "chains with confirmations by the US!"
+Finding what "stable state can we manually automatically validate" and traveling from stable states to stable states...
+
 
 - AI assistent functionalities
   - mail read
