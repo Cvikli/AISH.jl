@@ -123,7 +123,6 @@ Default talks like:
 
 
 - default arg to be the project path...
-- work till the task isn't ready CoT
 - the sshresult is somehow duplicating...
 - Thinking should be an interactive line that shows basically progress... But in the end it disappear
 
@@ -134,3 +133,13 @@ Default talks like:
 
 - Canceling a query should be possible somehow! Do we have "stop" API?
 https://api.claude.ai/api/organizations/d9192fb1-1546-491e-89f2-d3432c9695d2/chat_conversations/f2f779eb-49c5-4605-b8a5-009cdb88fe20/stop_response
+
+- work till the task isn't ready CoT
+problem ->
+  - solve
+  - how to run
+  - how to test
+  - did it succeed?
+  - jump to 1.
+- multilanguage support. So for now Julia... next Javascript.. next python... next DOCS for it... so it will be up for the community!
+
