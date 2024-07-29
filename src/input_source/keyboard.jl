@@ -1,41 +1,13 @@
 using REPL
-using REPL.LineEdit
 
 function readline_improved()
-    # Set up a prompt string
-    prompt_str = "➜ "
-
-    # Create a custom keymap
-
-    # Create a custom on_done function
-    function on_done(s, buf, ok)
-        if !ok
-            return :abort
-        end
-        return String(buf)
+    println("Enter your multiline input (press Enter on an empty line to finish):")
+    buffer = IOBuffer()
+    print("➜ ")
+    while true
+        batch = readavailable(stdin)
+        length(batch) == 1 && batch[1] == 0x0a && break
+        write(buffer, batch)
     end
-
-    # Create a custom REPL mode
-    mode = LineEdit.Prompt(
-        prompt_str,
-        prompt_prefix = "\e[36m",
-        prompt_suffix = "\e[0m",
-        on_done = on_done,
-    )
-
-    terminal = REPL.Terminals.TTYTerminal("", stdin, stdout, stderr)
-
-    # Create a ModalInterface with our single mode
-    mi = ModalInterface([mode])
-
-    s = LineEdit.init_state(terminal, mi)
-    LineEdit.edit_insert(s, "")  # Ensure the buffer is initialized
-    what = LineEdit.prompt!(terminal, mi, s)
-
-    # Get the input from the buffer
-    input = String(take!(LineEdit.buffer(s)))
-    @show input
-
-    # Return the input as a string
-    return strip(input, '\n')
+    return String(take!(buffer))
 end
