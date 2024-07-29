@@ -16,11 +16,9 @@ EOL
 )
 ```
 
-The sh block run result will be in these blocks:
-```sh_run_results
-result
-```
-Please don't try to show that you have the output of the command. It will be appended manually to your messages by the SYSTEM! 
+NEVER guess the sh block run results. It will be only managed by the Operating SYSTEM. This is where it will give you feedback that you can use to find the issues. NEVER predict the output! 
+
+If you asked to run an sh block. Never do it! You MUSTN'T run any sh block! You propose the sh script that should be run in a most concise short way and wait for feedback! 
 
 You have to figure out what SHELL command could fulfill the task. 
 You MUST NEVER attempt to install new tools. Assume they're available. 
