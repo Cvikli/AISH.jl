@@ -63,26 +63,8 @@ This will output:
 ```
 (average = nothing, max = nothing, min = nothing, trend = nothing)
 
-
-CopyThis is the first line.
-<<<<<<< HEAD
-This line was changed in the main branch.
-=======
-This line was changed in the feature branch.
->>>>>>> feature-branch
-This is the third line.
-
-could you remove kdiff3 from the merge tool options?
-#%%
-run(`bash -c 'diff --help'`)
-x="  code_content "
-typeof(strip(x
-))
 #%%
 
-run(`bash -c "which meld"`)
-
-#%%
 try
 cmd = """
 read -q "?continue? (y) " && cat > README_FINAL.md <<-"EOL"

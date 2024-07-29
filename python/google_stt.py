@@ -6,16 +6,15 @@ import yaml
 from google.cloud import speech_v1p1beta1 as speech
 
 import os
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "diabtrend-db-8213ca3be14e.json"
 
 
 class SpeechRecognizer:
     def __init__(self, config_file):
-        with open(config_file, 'r') as file:
+        with open(config_file+".yaml", 'r') as file:
             self.config = yaml.safe_load(file)
-        with open(config_file+"_private", 'r') as file:
+        with open(config_file+"_private.yaml", 'r') as file:
             self.config_private = yaml.safe_load(file)
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = config["google_credentials_path"]
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.config["google"]["credentials_path"]
         self.client = speech.SpeechClient()
         self.audio = None
         self.stream = None
@@ -93,7 +92,7 @@ class SpeechRecognizer:
                 self.audio.terminate()
 
 async def main():
-    recognizer = SpeechRecognizer('config.yaml')
+    recognizer = SpeechRecognizer('config')
     await recognizer.run()
 
 asyncio.run(main())

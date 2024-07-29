@@ -122,3 +122,11 @@ Default talks like:
 
 
 
+- default arg to be the project path...
+- work till the task isn't ready CoT
+- the sshresult is somehow duplicating...
+- Thinking should be an interactive line that shows basically progress... But in the end it disappear
+- Canceling a query should be possible somehow! Do we have "stop" API?
+- Multiline input is necessary....
+- cd into the project path... so everything will be realtive to that! :D
+- 
