@@ -2,27 +2,22 @@ using REPL
 using REPL.LineEdit
 
 function readline_improved()
-    # Set up a prompt
-    prompt = "➜ "
+    # Set up a prompt string
+    prompt_str = "➜ "
 
     # Create a custom keymap
     keymap = Dict{Any,Any}(
-        # Enter key behavior
         '\r' => function (s,o...)
             if isempty(LineEdit.buffer(s))
-                LineEdit.transition(s, :done)
                 return :done
             end
-            LineEdit.edit_insert(s, '\n')
-            return nothing
+            return :done
         end,
-        # Ctrl+D behavior
-        '^D' => function (s,o...)
+        Char(4) => function (s,o...)
             if !isempty(LineEdit.buffer(s))
                 LineEdit.edit_insert(s, "")
                 return nothing
             else
-                LineEdit.transition(s, :done)
                 return :done
             end
         end
@@ -31,13 +26,14 @@ function readline_improved()
     # Create a custom on_done function
     function on_done(s, buf, ok)
         if !ok
-            return LineEdit.transition(s, :abort)
+            return :abort
         end
-        return LineEdit.transition(s, :done)
+        return String(buf)
     end
 
     # Create a custom REPL mode
-    mode = LineEdit.Prompt(prompt;
+    mode = LineEdit.Prompt(
+        prompt_str,
         prompt_prefix = "\e[36m",
         prompt_suffix = "\e[0m",
         keymap_dict = keymap,
@@ -45,11 +41,25 @@ function readline_improved()
     )
 
     # Set up the terminal
-    t = REPL.Terminals.TTYTerminal("", stdin, stdout, stderr)
+    if isdefined(Base, :active_repl)
+        repl = Base.active_repl
+        terminal = repl.t
+    else
+        terminal = REPL.Terminals.TTYTerminal("", stdin, stdout, stderr)
+    end
 
-    # Run the REPL mode
-    line = LineEdit.prompt(t, mode, true)
+    # Create a ModalInterface with our single mode
+    mi = ModalInterface([mode])
+
+    s = LineEdit.init_state(terminal, mi)
+    LineEdit.edit_insert(s, "")  # Ensure the buffer is initialized
+    LineEdit.prompt!(terminal, mi, s)
+
+    # Get the input from the buffer
+    input = String(take!(LineEdit.buffer(s)))
+    @show input
 
     # Return the input as a string
-    return line === nothing ? "" : String(line)
+    @assert false
+    return strip(input)
 end
