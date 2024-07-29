@@ -46,18 +46,19 @@ function start_conversation(state::AIState; resume::Bool=true)
     # user_message = get_random_speech()
     user_message = readline_improved()
     print("\e[0m")  # reset text style
-  
+
     add_user_message!(state, user_message)
     length(state.conversation) > 12 && (state.conversation = [state.conversation[1],state.conversation[4:end]...])
-    println()
     process_question(state)
   end
 end
 
 function main()
-    args = parse_commandline()
-    set_project_path(args["project-path"])
-    state = initialize_ai_state()
+  args = parse_commandline()
+  set_project_path(args["project-path"])
+  initialize_ai_state()
+  start_conversation(ai_state, resume=false)
+
 end
 
 end # module AISH
