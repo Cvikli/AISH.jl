@@ -126,7 +126,11 @@ Default talks like:
 - work till the task isn't ready CoT
 - the sshresult is somehow duplicating...
 - Thinking should be an interactive line that shows basically progress... But in the end it disappear
-- Canceling a query should be possible somehow! Do we have "stop" API?
+
+
 - Multiline input is necessary....
 - cd into the project path... so everything will be realtive to that! :D
-- 
+
+
+- Canceling a query should be possible somehow! Do we have "stop" API?
+https://api.claude.ai/api/organizations/d9192fb1-1546-491e-89f2-d3432c9695d2/chat_conversations/f2f779eb-49c5-4605-b8a5-009cdb88fe20/stop_response
