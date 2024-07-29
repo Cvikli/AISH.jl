@@ -54,7 +54,11 @@ function save_benchmark_result(benchmark_results::OrderedDict{String, Dict{Strin
         "prompt_results" => benchmark_results
     )
     
-    open("benchmarks/" * filename, "w") do file
+    benchmark_dir = joinpath(@__DIR__, "..", "..", "benchmarks")
+    mkpath(benchmark_dir)
+    filepath = joinpath(benchmark_dir, filename)
+    
+    open(filepath, "w") do file
         TOML.print(file, result)
     end
     
