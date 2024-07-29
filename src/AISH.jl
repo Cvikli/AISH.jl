@@ -38,7 +38,8 @@ function start_conversation(state::AIState; resume::Bool=true)
     end
   end
   
-  isdefined(Base, :active_repl) && println("Press [Enter] to interrupt the REPL line and get into the conversation!")
+  isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
+  println("Your multiline input (empty line to finish):")
   while true
     print("\e[36m➜ \e[0m")  # teal arrow
     print("\e[1m")  # bold text
@@ -56,9 +57,9 @@ end
 function main()
   args = parse_commandline()
   set_project_path(args["project-path"])
-  initialize_ai_state()
+  ai_state = initialize_ai_state()
   start_conversation(ai_state, resume=false)
-
+  ai_state
 end
 
 end # module AISH
