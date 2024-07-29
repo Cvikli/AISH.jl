@@ -3,7 +3,7 @@ const ChatSH::String = "Koda"
 const ainame::String = lowercase(ChatSH)
 
 PROJECT_PATH::String = "."
-set_project_path(path) = (global PROJECT_PATH = path; println("Project path initialized: $PROJECT_PATH"))
+set_project_path(path) = (global PROJECT_PATH = path; cd(PROJECT_PATH); println("Project path initialized: $PROJECT_PATH"))
 
 get_system()                   = strip(read(`uname -a`, String))
 get_shell()                    = strip(read(`$(ENV["SHELL"]) --version`, String))
