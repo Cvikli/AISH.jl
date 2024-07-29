@@ -20,6 +20,7 @@ The sh block run result will be in these blocks:
 ```sh_run_results
 result
 ```
+Please don't try to show that you have the output of the command. It will be appended manually to your messages by the SYSTEM! 
 
 You have to figure out what SHELL command could fulfill the task. 
 You MUST NEVER attempt to install new tools. Assume they're available. 
@@ -44,7 +45,7 @@ You stop to discuss trade-offs and implementation options if there are choices t
 
 
 Common mistake: 
-Please make sure if you use the \$ in the string between string literal ("") then don't forget to escape it with the characters: \\   
+Please make sure if you use the \$ in the string and you want the dollar mark then you have to escape it or else it will be interpolated in the string literal ("").    
 The regex match return with SubString a strip(...) also return with SubString, so converted every SubString to String or write Union{String, SubString} or no type annotation to function to write correct code! 
 
 
