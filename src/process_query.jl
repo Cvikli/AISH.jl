@@ -35,15 +35,21 @@ end
 function execute_code_block(code)
   isconfirming = startswith(code, "read")
   withenv("GTK_PATH" => "") do
-    try
-      shell = isconfirming ? "zsh" : "bash" # We use BASH most of the case. But for confirming the 'cat' we have to use zsh as it supports this arguments 
-      return strip(read(`$shell -c $code`, String))
-    catch error
-      error isa ProcessFailedException && !isempty(error.procs) && error.procs[1].exitcode == 1 && isconfirming && return "ProcessExited(1) which can be still okay, we just cancelled the run"
-      error_output = strip(sprint(showerror, error))
-      @warn("Error occurred during execution: $error_output")
-      return "[Error] $error_output\n"
-    end
+    shell = isconfirming ? "zsh" : "bash" # We use BASH most of the case. But for confirming the 'cat' we have to use zsh as it supports this arguments 
+    return cmd_all_info(`$shell -c $code`)
   end
 end
 
+function cmd_all_info(cmd::Cmd, output = IOBuffer(), error = IOBuffer())
+  err=nothing
+  process=nothing
+  try
+    process = run(pipeline(ignorestatus(cmd), stdout=output, stderr=error))
+  catch e; err = e; end
+  return "$((
+    stdout=String(take!(output)),
+    stderr=String(take!(error)),
+    exit_code=isnothing(process) ? -1 : process.exitcode,
+    exception=err
+  ))"
+end
