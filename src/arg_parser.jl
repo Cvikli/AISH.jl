@@ -7,12 +7,12 @@ function parse_commandline()
         "project-path"
             help = "Set the project path"
             arg_type = String
-            default = "."
+            default = ""
             required = false
         "--project-path", "-p"
             help = "Set the project path (alternative way)"
             arg_type = String
-            default = "."
+            default = ""
         "--resume", "-r"
             help = "Flag to resume last conversation"
             action = :store_true

@@ -17,6 +17,7 @@ AISH.jl (AI Shell) is a Julia package that provides an interactive AI-powered co
 - Conversation logging
 
 ## Installation
+We use `meld`, `zsh`
 
 ```julia
 using Pkg

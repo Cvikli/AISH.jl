@@ -24,13 +24,11 @@ function process_question(state::AIState)
   update_system_prompt!(state)
 end
 
-function update_message_with_outputs(content)
-  return replace(content, r"```sh\n([\s\S]*?)\n```" => matchedtxt -> begin
+update_message_with_outputs(content) = return replace(content, r"```sh\n([\s\S]*?)\n```" => matchedtxt -> begin
     code = matchedtxt[7:end-3]
     output = execute_code_block(code)
     "$matchedtxt\n```sh_run_results\n$output\n```\n"
   end)
-end
 
 function execute_code_block(code)
   isconfirming = startswith(code, "read")

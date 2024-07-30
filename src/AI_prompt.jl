@@ -61,9 +61,10 @@ The used SHELL is:
 $(get_shell())
 The SHELL is in this folder right now:
 $(get_pwd())
-The folder structure of your codebase that you are working in:
-$(get_all_project_with_URIs(PROJECT_PATH))
-
+""" *
+PROJECT_PATH=="" ? "" : """The folder structure of your codebase that you are working in:
+$(get_all_project_with_URIs(PROJECT_PATH))""" *
+"""
 
 You have to met with all the criterium from above!
 With these informations in mind you can communicate with the user from here! 
