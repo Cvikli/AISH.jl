@@ -13,6 +13,9 @@ function parse_commandline()
             help = "Set the project path (alternative way)"
             arg_type = String
             default = "."
+        "--resume", "-r"
+            help = "Flag to resume last conversation"
+            action = :store_true
     end
 
     return parse_args(s)

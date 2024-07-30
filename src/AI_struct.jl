@@ -7,7 +7,7 @@ mutable struct AIState
 end
 
 # Initialize AI State
-function initialize_ai_state(MODEL = "claude")
+function initialize_ai_state(MODEL = "claude-3-5-sonnet-20240620")
     system_prompt = SYSTEM_PROMPT()
     state = AIState(
         [SystemMessage(system_prompt)],

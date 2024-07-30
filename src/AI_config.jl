@@ -24,19 +24,28 @@ const FILE_EXTENSIONS = [
     "fasl", "jl", "r", "R", "Rmd", "mat", "asm", "s", "dart", "sql", "md", "markdown",
     "rst", "adoc", "tex", "sty", "gradle", "sbt", "xml"
 ]
-const FILTERED_FOLDERS = ["test", "tests", "spec", "specs", "examples", "docs", "python", "benchmarks"]
+const FILTERED_FOLDERS = ["test", "tests", "spec", "specs", "examples", "docs", "python", "benchmarks", "node_modules"]
 const IGNORED_FILE_PATTERNS = [".log", "config.ini", "secrets.yaml", "Manifest.toml"]
 
 is_project_file(lowered_file) = lowered_file in PROJECT_FILES || any(endswith(lowered_file, "." * ext) for ext in FILE_EXTENSIONS)
+ignore_file(file) = any(endswith(file, pattern) for pattern in IGNORED_FILE_PATTERNS)
+is_gitignore_file(file) = success(`git check-ignore -q $file`)
 
-get_project_files(path=PROJECT_PATH) = [joinpath(root, file) for (root, _, files) in walkdir(path) for file in files if is_project_file(lowercase(basename(file)))]
-
-filter_gitignore_files(all_files, path=".") = cd(path) do
-  filter(file -> !success(`git check-ignore -q $file`), all_files)
+function get_project_files(path=PROJECT_PATH)
+    files = String[]
+    for (root, dir, files_in_dir) in walkdir(path)
+        any(d -> d in FILTERED_FOLDERS, splitpath(root)) && continue
+        dir in FILTERED_FOLDERS && (continue)
+        for file in files_in_dir
+            file_path = joinpath(root, file)
+            if is_project_file(lowercase(file)) && !ignore_file(file_path) && !is_gitignore_file(file)
+                push!(files, file_path)
+            end
+        end
+    end
+    return files
 end
 
-ignore_folder(file) = any(folder -> folder in splitpath(file), FILTERED_FOLDERS)
-ignore_file(file) = any(endswith(file, pattern) for pattern in IGNORED_FILE_PATTERNS)
 
 # TODO make sure the # is a comment in that specific language!!
 format_file_content(path, file) = """
@@ -48,9 +57,7 @@ $(read(joinpath(path, file), String))
 
 function get_all_project_with_URIs(path=PROJECT_PATH)
   all_files = get_project_files(path)
-  files = filter_gitignore_files(all_files, path)
-  filtered_files = filter(f -> !ignore_folder(f) && !ignore_file(f), files)
-  result = map(file -> format_file_content(path, file), filtered_files)
+  result = map(file -> format_file_content(path, file), all_files)
   return join(result, "\n")
 end
 

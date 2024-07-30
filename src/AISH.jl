@@ -58,7 +58,7 @@ function main()
   args = parse_commandline()
   set_project_path(args["project-path"])
   ai_state = initialize_ai_state()
-  start_conversation(ai_state, resume=false)
+  start_conversation(ai_state, resume=args["resume"])
   ai_state
 end
 

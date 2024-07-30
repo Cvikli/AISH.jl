@@ -14,8 +14,10 @@ function get_last_user_message()
     isfile(filename) || return ""
     lines = readlines(filename)
     isempty(lines) && return ""
-    last_line = lines[end]
-    return split(last_line, ": ", limit=2)[2]
+    pattern = r"(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}): (.+?)(?=\s+\d{4}-\d{2}-\d{2}|$)"
+    matches = collect(eachmatch(pattern, join(lines,"\n")))
+    # [(DateTime(m[1], "yyyy-mm-dd_HH-MM-SS"), m[2]) for m in matches]
+    return last(matches)[2]
 end
 
 

@@ -114,13 +114,6 @@ in the end it all breaks down to "chains with confirmations by the US!"
 Finding what "stable state can we manually automatically validate" and traveling from stable states to stable states...
 
 
-- AI assistent functionalities
-  - mail read
-  - organizing calendar
-  - organizing TODO list
-  - messenger communication automation
-  - website/internet search and surfing
-
 
 - project file search improvement.
 
@@ -146,4 +139,19 @@ problem ->
   - did it succeed?
   - jump to 1.
 - multilanguage support. So for now Julia... next Javascript.. next python... next DOCS for it... so it will be up for the community!
+
+
+- empty run
+- simplify the answer... shorter... filter sentences should be minimized! 
+- ctrl + c handling...
+
+
+- AI assistent functionalities
+  - mail read
+  - organizing calendar
+  - organizing TODO list
+  - messenger communication automation
+  - website/internet search and surfing
+
+
 
