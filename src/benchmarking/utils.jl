@@ -27,23 +27,23 @@ end
 
 function save_benchmark_result(benchmark_results::OrderedDict{String, Dict{String, Any}} = BENCHMARK_RESULTS)
     date_str = Dates.format(Dates.now(), "yymmdd_HHMM")
-    
+
     git_commit = try
         readchomp(`git rev-parse --short HEAD`)
     catch
         "Unknown"
     end
-    
+
     total_passed = sum(res["unit_tests_passed"] for (_, res) in benchmark_results)
     total_all_passed = sum(res["unit_tests_count"] for (_, res) in benchmark_results)
     total_exec = sum(res["examples_executed"] for (_, res) in benchmark_results)
     total_all_exec = sum(res["examples_count"] for (_, res) in benchmark_results)
-    
+
     pass_percentage = @sprintf("%.2f", (total_passed / total_all_passed) * 100)
     exec_percentage = @sprintf("%.2f", (total_exec / total_all_exec) * 100)
-    
+
     filename = "bench_$(pass_percentage)_$(exec_percentage)_$(date_str)_$(git_commit).toml"
-    
+
     result = OrderedDict(
         "metadata" => Dict(
             "date" => date_str,
@@ -53,22 +53,22 @@ function save_benchmark_result(benchmark_results::OrderedDict{String, Dict{Strin
         ),
         "prompt_results" => benchmark_results
     )
-    
+
     benchmark_dir = joinpath(@__DIR__, "..", "..", "benchmarks")
     mkpath(benchmark_dir)
     filepath = joinpath(benchmark_dir, filename)
-    
+
     open(filepath, "w") do file
         TOML.print(file, result)
     end
-    
+
     println("Benchmark results saved to $filename")
     return filename
 end
 
 function print_benchmark_results(filename::String)
     results = TOML.parsefile(filename)
-    
+
     println("Benchmark Results Summary")
     println("=========================")
     println("Date: $(results["metadata"]["date"])")
@@ -77,7 +77,7 @@ function print_benchmark_results(filename::String)
     println("Overall Exec: $(results["metadata"]["overall_exec"])")
     println("Score: $(results["metadata"]["score"])")
     println("\nIndividual Benchmark Scores:")
-    
+
     for (prompt_label, res) in results["prompt_results"]
         println("\n$prompt_label:")
         print_score(res)
@@ -87,7 +87,7 @@ end
 function print_all_benchmark_results()
     benchmark_dir = "benchmarks"
     benchmark_files = filter(f -> startswith(f, "bench_") && endswith(f, ".toml"), readdir(benchmark_dir))
-    
+
     for file in sort(benchmark_files, rev=true)
         println("\n\nProcessing file: $file")
         print_benchmark_results(joinpath(benchmark_dir, file))

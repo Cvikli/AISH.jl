@@ -10,40 +10,42 @@ function process_question(state::AIState)
   updated_content = update_message_with_outputs(assistant_message.content)
   println(updated_content)
 
-  push!(state.conversation, AIMessage(updated_content, 
-                                      assistant_message.status,
-                                      assistant_message.tokens,
-                                      assistant_message.elapsed,
-                                      assistant_message.cost,
-                                      assistant_message.log_prob,
-                                      assistant_message.finish_reason,
-                                      assistant_message.run_id,
-                                      assistant_message.sample_id,
-                                      assistant_message._type))
+  push!(state.conversation, AIMessage(updated_content,
+    assistant_message.status,
+    assistant_message.tokens,
+    assistant_message.elapsed,
+    assistant_message.cost,
+    assistant_message.log_prob,
+    assistant_message.finish_reason,
+    assistant_message.run_id,
+    assistant_message.sample_id,
+    assistant_message._type))
 
   update_system_prompt!(state)
 end
 
 update_message_with_outputs(content) = return replace(content, r"```sh\n([\s\S]*?)\n```" => matchedtxt -> begin
-    code = matchedtxt[7:end-3]
-    output = execute_code_block(code)
-    "$matchedtxt\n```sh_run_results\n$output\n```\n"
-  end)
+  code = matchedtxt[7:end-3]
+  output = execute_code_block(code)
+  "$matchedtxt\n```sh_run_results\n$output\n```\n"
+end)
 
 function execute_code_block(code)
   isconfirming = startswith(code, "read")
   withenv("GTK_PATH" => "") do
-    shell = isconfirming ? "zsh" : "bash" # We use BASH most of the case. But for confirming the 'cat' we have to use zsh as it supports this arguments 
+    shell = isconfirming ? "zsh" : "bash" # We use BASH most of the case. But for confirming the 'cat' we have to use zsh as it supports this arguments
     return cmd_all_info(`$shell -c $code`)
   end
 end
 
-function cmd_all_info(cmd::Cmd, output = IOBuffer(), error = IOBuffer())
-  err=nothing
-  process=nothing
+function cmd_all_info(cmd::Cmd, output=IOBuffer(), error=IOBuffer())
+  err = nothing
+  process = nothing
   try
     process = run(pipeline(ignorestatus(cmd), stdout=output, stderr=error))
-  catch e; err = e; end
+  catch e
+    err = e
+  end
   return "$((
     stdout=String(take!(output)),
     stderr=String(take!(error)),

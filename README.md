@@ -87,50 +87,43 @@ It is actually ChatSH but a little bit rethinked version!
 
 Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 ## TODO
-- RAG
+- RAG (EasyRAG)
 - STREAMING
-- Multi SH run
-- Update the SYSTEM_PROMPT AS THE FILES CHANGE
-- DIFF view!! VERY narrow version... so literally the characters those changes... Also using colors. COMPARE!!
-- LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
-- error management... Claude is down... then...
-- BENCHMARKING
-- FINE TUNEING
-- GUI
-- VOICE INPUT
-- READLINE repair like you did before with REPL!
-- modify the cat > ... to meld...
-- configuring the project throught command line arguments: PROJECT_PATH
+- GUI (AIApp)
+- VOICE INPUT (should be in the AIApp)
+- FINE TUNEING BENCHMARKING
 - If you don't want to WRITE out the entire file THEN find a new way of diff! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
+- LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
+✓ Multi SH can be handled
+✓ Update the SYSTEM_PROMPT AS THE FILES CHANGE
+✓ DIFF view!! VERY narrow version... so literally the characters those changes... Also using colors. COMPARE!!
+✓ error management... Claude is down... then...
+✓ BENCHMARKING
+✓ READLINE repair like you did before with REPL!
+✓ modify the cat > ... to meld...
+✓ configuring the project throught command line arguments: PROJECT_PATH
+✓ project file search improvement.
+✓ default arg to be the project path...
+✓ the sshresult is somehow duplicating...
+-✓ Thinking should be an interactive line that shows basically progress... But in the end it disappear
+✓ Multiline input is necessary....
+✓ cd into the project path... so everything will be realtive to that! :D
+✓ empty run
+✓ ctrl + c handling...
+✓ multilanguage support
+- layered AI... so we would have one that produce sh blocks but the internal core should talk with code blocks later on. 
+- simplify the answer... shorter... filter sentences should be minimized!
+- Canceling a query should be possible somehow! Do we have "stop" API? example: https://api.claude.ai/api/organizations/d9192fb1-1546-491e-89f2-d3432c9695d2/chat_conversations/f2f779eb-49c5-4605-b8a5-009cdb88fe20/stop_response
 
+-Default talks like:
+  - What should I know about this solution...
+  - format the code... improve spacing
+  - simplify the code...without changing the behaviour
+  - take all the using and import into the include.jl main file.
 
-Default talks like:
-- What should I know about this solution... 
-- format the code... improve spacing
-- simplify the code...without changing the behaviour
-- take all the using and import into the include.jl main file. 
-
-THE DEFAULT TALKS IS BASICALLY C O T!... OMG :D OMG omg... omg... 
+THE DEFAULT TALKS IS BASICALLY C O T!... OMG :D OMG omg... omg...
 in the end it all breaks down to "chains with confirmations by the US!"
 Finding what "stable state can we manually automatically validate" and traveling from stable states to stable states...
-
-
-
-- project file search improvement.
-
-
-
-- default arg to be the project path...
-- the sshresult is somehow duplicating...
-- Thinking should be an interactive line that shows basically progress... But in the end it disappear
-
-
-- Multiline input is necessary....
-- cd into the project path... so everything will be realtive to that! :D
-
-
-- Canceling a query should be possible somehow! Do we have "stop" API?
-https://api.claude.ai/api/organizations/d9192fb1-1546-491e-89f2-d3432c9695d2/chat_conversations/f2f779eb-49c5-4605-b8a5-009cdb88fe20/stop_response
 
 - work till the task isn't ready CoT
 problem ->
@@ -142,10 +135,6 @@ problem ->
 - multilanguage support. So for now Julia... next Javascript.. next python... next DOCS for it... so it will be up for the community!
 
 
-- empty run
-- simplify the answer... shorter... filter sentences should be minimized! 
-- ctrl + c handling...
-
 
 - AI assistent functionalities
   - mail read
@@ -154,5 +143,15 @@ problem ->
   - messenger communication automation
   - website/internet search and surfing
 
+- we need custom benchmark examples...
+- - like modifying the code to achieve a state...
+- - test cases should be automatically generated on codebases. If it reach the appropriate state in 1 prompt or not. Also we should modify the prompt till it would be achievable by human. 
+- - sh code modification and code validation... 
+- - also maybe CoT... so it could solve in certain steps. We would accept longer resolution (Feature: CoT is required for this) 
 
+# Why Julia?
+
+Because julia is the most descriptive, simple language while keeping literally C/C++ speed. This means drastically faster development and understandable code. Also it has crazy stuffs starting with Revise and many more, (julia-awesome overview will be linked for extrem productivity)
+
+Also for humans and for AI the context length is limited, this way we can get always on the top for both "user". :D
 

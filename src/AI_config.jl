@@ -1,17 +1,16 @@
-
 const ChatSH::String = "Koda"
 const ainame::String = lowercase(ChatSH)
 
 PROJECT_PATH::String = ""
 set_project_path(path) = begin
-    global PROJECT_PATH = path; 
-    PROJECT_PATH!=="" && (cd(PROJECT_PATH); println("Project path initialized: $(pwd())"))
+    global PROJECT_PATH = path
+    PROJECT_PATH !== "" && (cd(PROJECT_PATH); println("Project path initialized: $(pwd())"))
 end
 
 
-get_system()                   = strip(read(`uname -a`, String))
-get_shell()                    = strip(read(`$(ENV["SHELL"]) --version`, String))
-get_pwd()                      = strip(pwd())
+get_system() = strip(read(`uname -a`, String))
+get_shell() = strip(read(`$(ENV["SHELL"]) --version`, String))
+get_pwd() = strip(pwd())
 
 
 const PROJECT_FILES = [
@@ -52,20 +51,29 @@ end
 
 
 # TODO make sure the # is a comment in that specific language!!
-format_file_content(path, file) = """
+function format_file_content(file)
+    content = read(file, String)
 
-============================
-# File: $path/$file
-$(read(joinpath(path, file), String))
-"""
+    ext = lowercase(splitext(file)[2])
+    comment_map = Dict(
+        ".jl" => ("#", ""), ".py" => ("#", ""), ".sh" => ("#", ""), ".bash" => ("#", ""), ".zsh" => ("#", ""), ".r" => ("#", ""), ".rb" => ("#", ""),
+        ".js" => ("//", ""), ".ts" => ("//", ""), ".cpp" => ("//", ""), ".c" => ("//", ""), ".java" => ("//", ""), ".cs" => ("//", ""), ".php" => ("//", ""), ".go" => ("//", ""), ".rust" => ("//", ""), ".swift" => ("//", ""),
+        ".html" => ("<!--", "-->"), ".xml" => ("<!--", "-->")
+    )
 
-function get_all_project_with_URIs(path=PROJECT_PATH)
-  all_files = get_project_files(path)
-  result = map(file -> format_file_content(path, file), all_files)
-  return join(result, "\n")
+    comment_prefix, comment_suffix = get(comment_map, ext, ("#", ""))
+
+    return """
+    $(comment_prefix)File Name: $file$comment_suffix
+    $(comment_prefix)Content: $comment_suffix
+    $content
+    ========================================
+    """
 end
 
-
-
-# 
+function get_all_project_with_URIs(path=PROJECT_PATH)
+    all_files = get_project_files(path)
+    result = map(file -> format_file_content(file), all_files)
+    return join(result, "\n")
+end
 

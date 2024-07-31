@@ -18,8 +18,8 @@ include("input_source/dummy_text.jl")
 include("input_source/keyboard.jl")
 include("input_source/detect_command.jl")
 
+include("user_messages.jl")
 
-include("save_user_messages.jl")
 include("process_query.jl")
 
 handle_interrupt(sig::Int32) = (println("\nExiting gracefully. Good bye! :)"); exit(0))
@@ -28,8 +28,10 @@ function start_conversation(state::AIState; resume::Bool=true)
   ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,)))
 
   println("Welcome to $ChatSH AI. Model: $(state.model)")
-  
-  while !isempty(state.conversation) && state.conversation[end] isa UserMessage; pop!(state.conversation); end
+
+  while !isempty(state.conversation) && state.conversation[end] isa UserMessage
+    pop!(state.conversation)
+  end
 
   if resume
     last_message = get_last_user_message()
@@ -41,7 +43,7 @@ function start_conversation(state::AIState; resume::Bool=true)
       println("No previous message found. Starting a new conversation.")
     end
   end
-  
+
   isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
   println("Your multiline input (empty line to finish):")
   while true
@@ -53,7 +55,7 @@ function start_conversation(state::AIState; resume::Bool=true)
     print("\e[0m")  # reset text style
 
     add_user_message!(state, user_message)
-    length(state.conversation) > 12 && (state.conversation = [state.conversation[1],state.conversation[4:end]...])
+    length(state.conversation) > 12 && (state.conversation = [state.conversation[1], state.conversation[4:end]...])
     process_question(state)
   end
 end
