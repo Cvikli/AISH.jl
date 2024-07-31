@@ -13,10 +13,7 @@ include("arg_parser.jl")
 
 include("error_managers/anthropic_error_handler.jl")
 
-include("input_source/speech2text.jl")
-include("input_source/dummy_text.jl")
 include("input_source/keyboard.jl")
-include("input_source/detect_command.jl")
 
 include("user_messages.jl")
 
@@ -49,8 +46,6 @@ function start_conversation(state::AIState; resume::Bool=true)
   while true
     print("\e[36m➜ \e[0m")  # teal arrow
     print("\e[1m")  # bold text
-    # user_message = speech2text()
-    # user_message = get_random_speech()
     user_message = readline_improved()
     print("\e[0m")  # reset text style
 
