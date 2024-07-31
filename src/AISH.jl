@@ -22,7 +22,11 @@ include("input_source/detect_command.jl")
 include("save_user_messages.jl")
 include("process_query.jl")
 
+handle_interrupt(sig::Int32) = (println("\nExiting gracefully. Good bye! :)"); exit(0))
+
 function start_conversation(state::AIState; resume::Bool=true)
+  ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,)))
+
   println("Welcome to $ChatSH AI. Model: $(state.model)")
   
   while !isempty(state.conversation) && state.conversation[end] isa UserMessage; pop!(state.conversation); end

@@ -5,7 +5,7 @@ const ainame::String = lowercase(ChatSH)
 PROJECT_PATH::String = ""
 set_project_path(path) = begin
     global PROJECT_PATH = path; 
-    PROJECT_PATH!=="" && cd(PROJECT_PATH); println("Project path initialized: $(pwd())")
+    PROJECT_PATH!=="" && (cd(PROJECT_PATH); println("Project path initialized: $(pwd())"))
 end
 
 
