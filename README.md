@@ -155,3 +155,16 @@ Because julia is the most descriptive, simple language while keeping literally C
 
 Also for humans and for AI the context length is limited, this way we can get always on the top for both "user". :D
 
+
+
+
+
+handle these:
+read -q "?Continue? (y) " && meld src/api_routes.jl <(cat <<-"EOL"
+# ... (existing content)
+
+# Add this line near the top of the file, after the imports
+is_ai_state_initialized() = !isnothing(ai_state)
+
+# ... (rest of the existing content)
+EOL
