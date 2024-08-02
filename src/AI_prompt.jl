@@ -71,6 +71,13 @@ $(get_all_project_with_URIs(PROJECT_PATH))""" *
 """
 
 In spite of the programming language you should always try to use the sh blocks that was told to you to solve the tasks! 
+Also for file modification use:
+```sh
+meld file_path <(cat <<-"EOL"
+new_file_content
+EOL
+)
+```
 With these informations in mind you can communicate with the user from here!
 User requests arrive these are what you have to fulfill.
 """
