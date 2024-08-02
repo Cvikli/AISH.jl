@@ -26,16 +26,13 @@ function start_conversation(state::AIState; resume::Bool=true)
 
   println("Welcome to $ChatSH AI. Model: $(state.model)")
 
-  while !isempty(cur_conv(state)) && cur_conv(state)[end].role == :user; pop!(cur_conv(state)); end
+  while !isempty(cur_conv_msgs(state)) && cur_conv_msgs(state)[end].role == :user; pop!(cur_conv_msgs(state)); end
 
   if resume
-    loaded_conversation = load_conversation(state.selected_conv_id)
+    loaded_conversation = get_conversation_history(state.selected_conv_id)
     if !isempty(loaded_conversation)
-      state.conversation[state.selected_conv_id] = loaded_conversation
+      state.conversation[state.selected_conv_id].messages = loaded_conversation
       println("Resumed conversation with ID: $(state.selected_conv_id)")
-      if should_append_new_message(loaded_conversation)
-        add_user_message!(state, loaded_conversation[end])
-      end
       process_question(state)
     else
       println("No previous conversation found. Starting a new conversation.")
@@ -49,8 +46,8 @@ function start_conversation(state::AIState; resume::Bool=true)
     print("\e[1m")  # bold text
     user_message = readline_improved()
     print("\e[0m")  # reset text style
-
-    add_user_message!(state, user_message)
+    isempty(strip(user_message)) && continue
+    add_n_save_user_message!(state, user_message)
     limit_user_messages(state)
     
     process_question(state)

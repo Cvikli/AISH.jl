@@ -1,5 +1,6 @@
 using PromptingTools
 using PromptingTools: role4render, AnthropicSchema
+using PromptingTools: SystemMessage, UserMessage, AIMessage
 using HTTP
 using JSON
 

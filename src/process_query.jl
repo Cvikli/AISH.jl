@@ -1,29 +1,25 @@
 
 process_query(ai_state, user_message) = begin
-  add_user_message!(ai_state, user_message)
-  save_user_message(ai_state, user_message)
+  add_n_save_user_message!(ai_state, user_message)
   response = process_question(ai_state)
-  save_ai_message(ai_state, response)
+  add_n_save_ai_message!(ai_state, response)
   response
 end
 
 function process_question(state::AIState)
   println("Thinking...")
 
-  assistant_message = safe_aigenerate(cur_conv(state), model=state.model)
+  assistant_message = safe_aigenerate(cur_conv_msgs(state), model=state.model)
   # println("\e[32m¬ \e[0m$(assistant_message.content)")
   # println()
 
   updated_content = update_message_with_outputs(assistant_message.content)
   println("\e[32m¬ \e[0m$(updated_content)")
 
-  push!(cur_conv(state), Message(now(), :ai, updated_content))
-
-  # Save AI message
-  save_ai_message(state, updated_content)
+  add_n_save_ai_message!(state, updated_content)
 
   update_system_prompt!(state)
-  return updated_content
+  return cur_conv_msgs(state)[end]
 end
 
 update_message_with_outputs(content) = return replace(content, r"```sh\n([\s\S]*?)\n```" => matchedtxt -> begin
