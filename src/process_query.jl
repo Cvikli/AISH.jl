@@ -3,10 +3,11 @@ using PromptingTools: AIMessage
 process_query(ai_state, user_message) = begin
   add_user_message!(ai_state, user_message)
   save_user_message(ai_state.selected_conv_id, user_message)
-  process_question(ai_state)
+  response = process_question(ai_state)
   save_ai_message(ai_state.selected_conv_id, response)
   response
 end
+
 function process_question(state::AIState)
   println("Thinking...")
 
@@ -17,21 +18,13 @@ function process_question(state::AIState)
   updated_content = update_message_with_outputs(assistant_message.content)
   println("\e[32m¬ \e[0m$(updated_content)")
 
-  push!(cur_conv(state), AIMessage(updated_content,
-    assistant_message.status,
-    assistant_message.tokens,
-    assistant_message.elapsed,
-    assistant_message.cost,
-    assistant_message.log_prob,
-    assistant_message.finish_reason,
-    assistant_message.run_id,
-    assistant_message.sample_id,
-    assistant_message._type))
+  push!(cur_conv(state), Message(now(), :ai, updated_content))
 
   # Save AI message
   save_ai_message(state.selected_conv_id, updated_content)
 
   update_system_prompt!(state)
+  return updated_content
 end
 
 update_message_with_outputs(content) = return replace(content, r"```sh\n([\s\S]*?)\n```" => matchedtxt -> begin

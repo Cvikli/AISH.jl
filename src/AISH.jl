@@ -15,7 +15,7 @@ include("error_managers/anthropic_error_handler.jl")
 
 include("input_source/keyboard.jl")
 
-include("user_messages.jl")
+include("messages.jl")
 
 include("process_query.jl")
 
@@ -26,7 +26,7 @@ function start_conversation(state::AIState; resume::Bool=true)
 
   println("Welcome to $ChatSH AI. Model: $(state.model)")
 
-  while !isempty(cur_conv(state)) && cur_conv(state)[end] isa UserMessage; pop!(cur_conv(state)); end
+  while !isempty(cur_conv(state)) && cur_conv(state)[end].role == :user; pop!(cur_conv(state)); end
 
   if resume
     loaded_conversation = load_conversation(state.selected_conv_id)

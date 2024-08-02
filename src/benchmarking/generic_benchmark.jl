@@ -13,13 +13,13 @@ function run_generic_benchmark(definition_file::String)
   ai_state = initialize_ai_state()
   prompt = definition["prompt"]
   println(prompt)
-  push!(ai_state.conversation, PromptingTools.UserMessage(prompt))
+  push!(ai_state.conversation[ai_state.selected_conv_id], Message(now(), :user, prompt))
 
-  conversation = safe_aigenerate(ai_state.conversation, model=ai_state.model, return_all=true)
+  conversation = safe_aigenerate(ai_state.conversation[ai_state.selected_conv_id], model=ai_state.model, return_all=true)
 
   # Evaluate 1SHOT
   conversation_mod = deepcopy(conversation)
-  conversation_mod[end] = PromptingTools.AIMessage(
+  conversation_mod[end] = AIMessage(
             extract_sh_block_to_julia_code(conversation_mod[end].content),
             conversation_mod[end].status,
             conversation_mod[end].tokens,
