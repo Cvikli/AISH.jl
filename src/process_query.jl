@@ -1,10 +1,9 @@
-using PromptingTools: AIMessage
 
 process_query(ai_state, user_message) = begin
   add_user_message!(ai_state, user_message)
-  save_user_message(ai_state.selected_conv_id, user_message)
+  save_user_message(ai_state, user_message)
   response = process_question(ai_state)
-  save_ai_message(ai_state.selected_conv_id, response)
+  save_ai_message(ai_state, response)
   response
 end
 
@@ -21,7 +20,7 @@ function process_question(state::AIState)
   push!(cur_conv(state), Message(now(), :ai, updated_content))
 
   # Save AI message
-  save_ai_message(state.selected_conv_id, updated_content)
+  save_ai_message(state, updated_content)
 
   update_system_prompt!(state)
   return updated_content

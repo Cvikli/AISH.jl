@@ -4,7 +4,7 @@ module AISH
 using REPL
 using InteractiveUtils
 using PromptingTools
-using PromptingTools: SystemMessage, UserMessage, AIMessage
+using Dates
 
 include("AI_config.jl")
 include("AI_prompt.jl")
@@ -34,8 +34,9 @@ function start_conversation(state::AIState; resume::Bool=true)
       state.conversation[state.selected_conv_id] = loaded_conversation
       println("Resumed conversation with ID: $(state.selected_conv_id)")
       if should_append_new_message(loaded_conversation)
-        process_question(state)
+        add_user_message!(state, loaded_conversation[end])
       end
+      process_question(state)
     else
       println("No previous conversation found. Starting a new conversation.")
     end

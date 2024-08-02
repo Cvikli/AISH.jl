@@ -6,30 +6,41 @@ const MESSAGE_SEPARATOR = "<<<AISH_MSG_59a3d6a1-8729-4e81-b876-b5aa5b6c9e2f>>>"
 
 generate_conversation_id() = string(UUIDs.uuid4())
 
-function save_message(conversation_id, role, message)
-    timestamp = now()
-    conversation_dir = joinpath(@__DIR__, "..", "conversation")
-    mkpath(conversation_dir)
+function save_message(state::AIState, role, message)
     
-    existing_files = filter(f -> endswith(f, "_$(conversation_id).log"), readdir(conversation_dir))
-    if isempty(existing_files)
-        first_sentence = extract_first_sentence(message)
-        first_32_chars = first(replace(first_sentence, r"[^\w\s]" => ""), 32)
-        filename = joinpath(conversation_dir, "$(Dates.format(timestamp, "yyyy-mm-dd_HH:MM:SS"))_$(first_32_chars)_$(conversation_id).log")
-    else
-        filename = joinpath(conversation_dir, sort(existing_files)[end])
+    if length(cur_conv(state)) >= 2
+        conversation_id = state.selected_conv_id
+        conversation_dir = joinpath(@__DIR__, "..", "conversation")
+        mkpath(conversation_dir)
+        first_sentence = cur_conv(state)[2]
+        first_32_chars = first(first_sentence.content, 32)
+        sanitized_chars = replace(first_32_chars, r"[^\w\s-]" => "_")
+        sanitized_chars = replace(sanitized_chars, r"\s+" => "_")
+        sanitized_chars = strip(sanitized_chars, '_')
+        
+        filename = joinpath(conversation_dir, "$(Dates.format(first_sentence.timestamp, "yyyy-mm-dd_HH:MM:SS"))_$(sanitized_chars)_$(conversation_id).log")
+        
+        if length(cur_conv(state)) == 2
+            state.conversation_sentences[conversation_id] = sanitized_chars
+            system_message = system_prompt(state)
+            open(filename, "w") do file
+                println(file, "$(system_message.timestamp) [$(system_message.role)]: $(system_message.content)")
+                println(file, MESSAGE_SEPARATOR)
+                println(file, "$(first_sentence.timestamp) [$(first_sentence.role)]: $(first_sentence.content)")
+                println(file, MESSAGE_SEPARATOR)
+            end
+        else
+            timestamp = now()
+            open(filename, "a") do file
+                println(file, "$(timestamp) [$(role)]: $(message)")
+                println(file, MESSAGE_SEPARATOR)
+            end
+        end
+        
     end
     
-    open(filename, "a") do file
-        println(file, "$(timestamp) [$(role)]: $(message)")
-        println(file, MESSAGE_SEPARATOR)
-    end
 end
 
-function extract_first_sentence(text)
-    m = match(r"^.*?[.!?\n]", text)
-    return m === nothing ? text : strip(m.match)
-end
 
 function get_conversation_history(conversation_id)
     conversation_dir = joinpath(@__DIR__, "..", "conversation")
@@ -37,6 +48,8 @@ function get_conversation_history(conversation_id)
     isempty(files) && return Message[]
     
     filename = joinpath(conversation_dir, sort(files)[end])
+    !isfile(filename) && return Message[]
+    
     content = read(filename, String)
     messages = split(content, MESSAGE_SEPARATOR, keepempty=false)
     
@@ -50,9 +63,9 @@ function get_conversation_history(conversation_id)
     end |> x -> filter(!isnothing, x)
 end
 
-save_system_message(conversation_id, message) = save_message(conversation_id, :system, message)
-save_user_message(conversation_id, message)   = save_message(conversation_id, :user, message)
-save_ai_message(conversation_id, message)     = save_message(conversation_id, :ai, message)
+save_system_message(state::AIState, message) = save_message(state, :system, message)
+save_user_message(state::AIState, message)   = save_message(state, :user, message)
+save_ai_message(state::AIState, message)     = save_message(state, :ai, message)
 
 function get_last_user_message(conversation_id)
     history = get_conversation_history(conversation_id)
@@ -64,20 +77,8 @@ function get_last_user_message(conversation_id)
     return ""
 end
 
-function load_conversation(conversation_id)
-    history = get_conversation_history(conversation_id)
-    return [
-        msg.role == :system ? SystemMessage(msg.content) :
-        msg.role == :user ? UserMessage(msg.content) :
-        msg.role == :ai ? AIMessage(msg.content) : UserMessage(msg.content)
-        for msg in history
-    ]
-end
 
-function get_all_conversations_file() 
-    conversation_dir = joinpath(@__DIR__, "..", "conversation")
-    filter(f -> occursin(r"_[\w-]+\.log$", f), readdir(conversation_dir))
-end
+get_all_conversations_file()  = joinpath(@__DIR__, "..", "conversation")
 
 function get_last_conversation_id()
     files = get_all_conversations_file()
@@ -87,9 +88,9 @@ function get_last_conversation_id()
     get_id_from_file(latest_file)    
 end
 
-get_id_from_file(filename) = (m = match(r"_(?<id>[\w-]+)\.log$", filename); return m !== nothing ? m[:id] : "")
-
 should_append_new_message(conversation) = isempty(conversation) || !(conversation[end] isa UserMessage)
+
+get_id_from_file(filename) = (m = match(r"_(?<id>[\w-]+)\.log$", filename); return m !== nothing ? m[:id] : "")
 
 function get_conversation_first_sentence(filename)
     m = match(r"\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}_(.+)_[\w-]+\.log$", filename)
@@ -98,6 +99,5 @@ end
 
 function get_all_conversations_with_sentences()
     conversation_dir = joinpath(@__DIR__, "..", "conversation")
-    files = get_all_conversations_file()
-    return Dict(get_id_from_file(f) => get_conversation_first_sentence(f) for f in files)
+    return Dict(get_id_from_file(f) => get_conversation_first_sentence(f) for f in readdir(conversation_dir))
 end
