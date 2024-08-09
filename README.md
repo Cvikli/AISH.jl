@@ -23,7 +23,7 @@ Backend server for the GUI: [AISHServer](https://github.com/Cvikli/AISHServer)
 - Conversation logging
 
 
-## Estiamtations
+## Limitation estimation (Sonnet 3.5)
 - On very basic cases it works around like 90-99% of the times. 
 - Sometimes it forces like 3-4 different solution and somehow feels like it stuck with old API document and that is the cause of the issue. 
 - Sometimes it is too hard to explain a very complex data management behind when it  just cannot create the best solution for you.
@@ -118,7 +118,9 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
 -  Thinking should be an interactive line that shows basically progress... But in the end it disappear
 
 ✓ STREAMING anthropic claude
+
 ✓ Multi SH can be handled
+
 ✓ Update the SYSTEM_PROMPT AS THE FILES CHANGE
 ✓ DIFF view!! VERY narrow version... so literally the characters those changes... Also using colors. compare!!
 ✓ error management... Claude is down... then...
