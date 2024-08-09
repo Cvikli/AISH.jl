@@ -18,11 +18,12 @@ end
     conversation::Dict{String, ConversationInfo} = Dict()
     selected_conv_id::String = ""
     model::String = ""
+    streaming::Bool = true
 end
 
 # Initialize AI State
-function initialize_ai_state(MODEL = "claude-3-5-sonnet-20240620"; resume::Bool=true)
-    state = AIState(model = MODEL)
+function initialize_ai_state(MODEL = "claude-3-5-sonnet-20240620"; resume::Bool=true, streaming::Bool=true)
+    state = AIState(model = MODEL, streaming = streaming)
     get_all_conversations_without_messages(state)
     print("\e[32mAI State initialized successfully.\e[0m ")  # Green text
 
@@ -38,7 +39,8 @@ function initialize_ai_state(MODEL = "claude-3-5-sonnet-20240620"; resume::Bool=
                 println("Processing last unanswered message: $(cur_conv_msgs(state)[end].content)")
                 process_question(state)
             else
-                println("The previous message was answered: \e[36m➜ \e[0m\"$(cur_conv_msgs(state)[end-1].content)\"")
+                println("The last user message was answered already: \e[36m➜ \e[0m\"$(cur_conv_msgs(state)[end-1].content)\"")
+                println("So continuing from here...")
             end
           else
             println("No previous messages in this conversation.")
@@ -56,6 +58,11 @@ cur_conv_msgs(state::AIState) = state.conversation[state.selected_conv_id].messa
 limit_user_messages(state::AIState) = (c = cur_conv_msgs(state); length(c) > 12 && (state.conversation[state.selected_conv_id].messages = [c[1], c[4:end]...]))
 
 system_prompt(state::AIState) = state.conversation[state.selected_conv_id].messages[1]
+
+function set_streaming!(state::AIState, value::Bool)
+    state.streaming = value
+    println("\e[33mStreaming mode set to: $(value ? "enabled" : "disabled")\e[0m")
+end
 
 function get_all_conversations_without_messages(state::AIState)
     for file in get_all_conversations_file()
@@ -89,7 +96,7 @@ function add_n_save_user_message!(state::AIState, user_message)
     save_user_message(state, msg)
 end
 function add_n_save_ai_message!(state::AIState, ai_message)
-    msg = Message(now(), :ai, strip(ai_message))
+    msg = Message(now(), :assistant, strip(ai_message))
     push!(cur_conv_msgs(state), msg)
     save_ai_message(state, msg)
 end

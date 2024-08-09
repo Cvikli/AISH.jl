@@ -47,7 +47,7 @@ save_user_message(state::AIState, message::Message) = save_message(state, messag
 save_ai_message(state::AIState, message::Message) = save_message(state, message)
 save_system_message(state::AIState, message) = save_message(state, :system, message)
 save_user_message(state::AIState, message) = save_message(state, :user, message)
-save_ai_message(state::AIState, message) = save_message(state, :ai, message)
+save_ai_message(state::AIState, message) = save_message(state, :assistant, message)
 
 get_conversation_filename(conversation_id) = (files = filter(f -> endswith(f, "_$(conversation_id).log"), get_all_conversations_file()); return isempty(files) ? nothing : joinpath(CONVERSATION_DIR, files[1]))
 get_id_from_file(filename) = (m = match(r"^\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}_(.+)_(?<id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.log$", filename); return m !== nothing ? m[:id] : "")

@@ -16,6 +16,9 @@ function parse_commandline()
         "--resume", "-r"
             help = "Flag to resume last conversation"
             action = :store_true
+        "--streaming", "-s"
+            help = "Enable streaming mode for AI responses"
+            action = :store_true
     end
 
     return parse_args(s)

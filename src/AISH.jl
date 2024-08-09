@@ -5,6 +5,7 @@ using Dates
 
 using PromptingTools
 using Anthropic
+using Anthropic: channel_to_string
 
 include("AI_config.jl")
 include("AI_prompt.jl")
@@ -24,7 +25,7 @@ handle_interrupt(sig::Int32) = (println("\nExiting gracefully. Good bye! :)"); e
 function start_conversation(state::AIState)
   ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,)))
 
-  println("Welcome to $ChatSH AI. Model: $(state.model)")
+  println("Welcome to $ChatSH AI. (using $(state.model))")
 
   while !isempty(cur_conv_msgs(state)) && cur_conv_msgs(state)[end].role == :user; pop!(cur_conv_msgs(state)); end
 
@@ -46,7 +47,7 @@ end
 function main()
   args = parse_commandline()
   set_project_path(args["project-path"])
-  ai_state = initialize_ai_state(resume=args["resume"])
+  ai_state = initialize_ai_state(resume=args["resume"], streaming=args["streaming"])
   start_conversation(ai_state)
   ai_state
 end
