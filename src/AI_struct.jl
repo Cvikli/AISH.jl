@@ -21,11 +21,33 @@ end
 end
 
 # Initialize AI State
-function initialize_ai_state(MODEL = "claude-3-5-sonnet-20240620")
+function initialize_ai_state(MODEL = "claude-3-5-sonnet-20240620"; resume::Bool=true)
     state = AIState(model = MODEL)
     get_all_conversations_without_messages(state)
-    generate_new_conversation(state)
-    println("\e[32mAI State initialized successfully.\e[0m Conversion id: $(state.selected_conv_id)")  # Green text
+    print("\e[32mAI State initialized successfully.\e[0m ")  # Green text
+
+    if resume
+        last_conv_id = resume_last_conversation(state)
+        if isempty(last_conv_id)
+          generate_new_conversation(state)
+          println("No previous conversation found. Starting a new conversation. Conversion id: $(state.selected_conv_id)")
+        else
+          println("Resumed conversation with ID: $last_conv_id")
+          if !isempty(cur_conv_msgs(state)) 
+            if cur_conv_msgs(state)[end].role == :user
+                println("Processing last unanswered message: $(cur_conv_msgs(state)[end].content)")
+                process_question(state)
+            else
+                println("The previous message was answered: \e[36m➜ \e[0m\"$(cur_conv_msgs(state)[end-1].content)\"")
+            end
+          else
+            println("No previous messages in this conversation.")
+          end
+        end
+      else
+        generate_new_conversation(state)
+        println("Conversion id: $(state.selected_conv_id)")
+      end
     return state
 end
 

@@ -22,23 +22,12 @@ include("process_query.jl")
 
 handle_interrupt(sig::Int32) = (println("\nExiting gracefully. Good bye! :)"); exit(0))
 
-function start_conversation(state::AIState; resume::Bool=true)
+function start_conversation(state::AIState)
   ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,)))
 
   println("Welcome to $ChatSH AI. Model: $(state.model)")
 
   while !isempty(cur_conv_msgs(state)) && cur_conv_msgs(state)[end].role == :user; pop!(cur_conv_msgs(state)); end
-
-  if resume
-    loaded_conversation = get_conversation_history(state.selected_conv_id)
-    if !isempty(loaded_conversation)
-      state.conversation[state.selected_conv_id].messages = loaded_conversation
-      println("Resumed conversation with ID: $(state.selected_conv_id)")
-      process_question(state)
-    else
-      println("No previous conversation found. Starting a new conversation.")
-    end
-  end
 
   isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
   println("Your multiline input (empty line to finish):")
@@ -58,8 +47,8 @@ end
 function main()
   args = parse_commandline()
   set_project_path(args["project-path"])
-  ai_state = initialize_ai_state()
-  start_conversation(ai_state, resume=args["resume"])
+  ai_state = initialize_ai_state(resume=args["resume"])
+  start_conversation(ai_state)
   ai_state
 end
 

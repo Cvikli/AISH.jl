@@ -25,7 +25,6 @@ function process_question(state::AIState)
 
   add_n_save_ai_message!(state, updated_content)
 
-  update_system_prompt!(state)
   return cur_conv_msgs(state)[end]
 end
 

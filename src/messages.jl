@@ -53,6 +53,7 @@ get_conversation_filename(conversation_id) = (files = filter(f -> endswith(f, "_
 get_id_from_file(filename) = (m = match(r"^\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}_(.+)_(?<id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.log$", filename); return m !== nothing ? m[:id] : "")
 get_timestamp_from_file(filename) = (m = match(r"^(\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2})_", filename); return m !== nothing ? DateTime(m[1], "yyyy-mm-dd_HH:MM:SS") : nothing)
 get_conversation_from_file(filename) = (m = match(r"\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}_(.+)_[\w-]+\.log$", filename); return m !== nothing ? m[1] : "")
+
 function get_conversation_history(conversation_id)
     conversation_dir = joinpath(@__DIR__, "..", "conversation")
     files = filter(f -> endswith(f, "_$(conversation_id).log"), readdir(conversation_dir))
@@ -71,4 +72,15 @@ function get_conversation_history(conversation_id)
             nothing
         end
     end)
+end
+function resume_last_conversation(state::AIState)
+    isempty(state.conversation) && return ""
+
+    latest_conv = findmax(conv -> conv.timestamp, state.conversation)
+    latest_conv_id = latest_conv[2]
+    
+    state.selected_conv_id = latest_conv_id
+    state.conversation[latest_conv_id].messages = get_conversation_history(latest_conv_id)
+    
+    return latest_conv_id
 end
