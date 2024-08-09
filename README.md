@@ -113,6 +113,10 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
 - If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
 - layered AI... so we would have one that produce sh blocks but the internal core should talk with code blocks later on. 
 - simplify the answer... shorter... filter sentences should be minimized!
+- forbid the system to generate this many extra token! Also the bare minimum is to forbid the AI to create ```sh_run_results blocks...
+- LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
+-  Thinking should be an interactive line that shows basically progress... But in the end it disappear
+
  ✓ STREAMING anthropic claude
  ✓ Multi SH can be handled
  ✓ Update the SYSTEM_PROMPT AS THE FILES CHANGE
@@ -131,9 +135,6 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
  ✓ ctrl + c handling...
  ✓ multilanguage support
  ✓ resume conversation
- - ✓ Thinking should be an interactive line that shows basically progress... But in the end it disappear
-- forbid the system to generate this many extra token! Also the bare minimum is to forbid the AI to create ```sh_run_results blocks...
-- LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
 
 -Default talks like:
   - What should I know about this solution...
