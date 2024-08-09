@@ -105,72 +105,69 @@ It is actually ChatSH but a little bit rethinked version!
 
 Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 ## TODO
-- RAG (EasyRAG)
-- GUI (AIApp)
-- BENCHMARKING advanced even modular...
-- FINE TUNEING
-- token + cost(maybe calculation?) + elapsed time registration for messages...
-- If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
-- layered AI... so we would have one that produce sh blocks but the internal core should talk with code blocks later on. 
-- simplify the answer... shorter... filter sentences should be minimized!
-- forbid the system to generate this many extra token! Also the bare minimum is to forbid the AI to create ```sh_run_results blocks...
-- LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
--  Thinking should be an interactive line that shows basically progress... But in the end it disappear
+- [ ] RAG (EasyRAG)
+- [-] GUI (AIApp)
+- [ ] BENCHMARKING advanced even modular...
+- [ ] FINE TUNEING
+- [ ] token + cost(maybe calculation?) + elapsed time registration for messages...
+- [ ] If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
+- [ ] layered AI... so we would have one that produce sh blocks but the internal core should talk with code blocks later on. 
+- [ ] simplify the answer... shorter... filter sentences should be minimized!
+- [ ] forbid the system to generate this many extra token! Also the bare minimum is to forbid the AI to create ```sh_run_results blocks...
+- [ ] LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
+- [ ] Thinking should be an interactive line that shows basically progress... But in the end it disappear
+- [x] STREAMING anthropic claude
+- [x] Multi SH can be handled
+- [x] Update the SYSTEM_PROMPT AS THE FILES CHANGE
+- [x] DIFF view!! VERY narrow version... so literally the characters those changes... Also using colors. compare!!
+- [x] error management... Claude is down... then...
+- [x] BENCHMARKING basic... LLMLeaderboard
+- [x] READLINE repair like you did before with REPL!
+- [x] modify the cat > ... to meld...
+- [x] configuring the project throught command line arguments: PROJECT_PATH
+- [x] project file search improvement.
+- [x] default arg to be the project path...
+- [x] the sshresult is somehow duplicating...
+- [x] Multiline input is necessary....
+- [x] cd into the project path... so everything will be realtive to that! :D
+- [x] empty run
+- [x] ctrl + c handling...
+- [x] multilanguage support
+- [x] resume conversation
 
-✓ STREAMING anthropic claude
-
-✓ Multi SH can be handled
-
-✓ Update the SYSTEM_PROMPT AS THE FILES CHANGE
-✓ DIFF view!! VERY narrow version... so literally the characters those changes... Also using colors. compare!!
-✓ error management... Claude is down... then...
-✓ BENCHMARKING basic... LLMLeaderboard
-✓ READLINE repair like you did before with REPL!
-✓ modify the cat > ... to meld...
-✓ configuring the project throught command line arguments: PROJECT_PATH
-✓ project file search improvement.
-✓ default arg to be the project path...
-✓ the sshresult is somehow duplicating...
-✓ Multiline input is necessary....
-✓ cd into the project path... so everything will be realtive to that! :D
-✓ empty run
-✓ ctrl + c handling...
-✓ multilanguage support
-✓ resume conversation
-
--Default talks like:
-  - What should I know about this solution...
-  - format the code... improve spacing
-  - simplify the code...without changing the behaviour
-  - take all the using and import into the include.jl main file.
+-[ ] Default talks like:
+  - [ ] What should I know about this solution...
+  - [ ] format the code... improve spacing
+  - [ ] simplify the code...without changing the behaviour
+  - [ ] take all the using and import into the include.jl main file.
 
 THE DEFAULT TALKS IS BASICALLY C O T!... OMG :D OMG omg... omg...
 in the end it all breaks down to "chains with confirmations by the US!"
 Finding what "stable state can we manually automatically validate" and traveling from stable states to stable states...
 
-- work till the task isn't ready CoT
+- [ ] work till the task isn't ready CoT
 problem ->
-  - solve
-  - how to run
-  - how to test
-  - did it succeed?
-  - jump to 1.
+  - [ ] solve
+  - [ ] how to run
+  - [ ] how to test
+  - [ ] did it succeed?
+  - [ ] jump to 1.
 - multilanguage support. So for now Julia... next Javascript.. next python... next DOCS for it... so it will be up for the community!
 
 
 
-- AI assistent functionalities
-  - mail read
-  - organizing calendar
-  - organizing TODO list
-  - messenger communication automation
-  - website/internet search and surfing
+- [ ] AI assistent functionalities
+  - [ ] mail read
+  - [ ] organizing calendar
+  - [ ] organizing TODO list
+  - [ ] messenger communication automation
+  - [ ] website/internet search and surfing
 
-- we need custom benchmark examples...
-- - like modifying the code to achieve a state...
-- - test cases should be automatically generated on codebases. If it reach the appropriate state in 1 prompt or not. Also we should modify the prompt till it would be achievable by human. 
-- - sh code modification and code validation... 
-- - also maybe CoT... so it could solve in certain steps. We would accept longer resolution (Feature: CoT is required for this) 
+- [ ] we need custom benchmark examples...
+  - [ ] like modifying the code to achieve a state...
+  - [ ] test cases should be automatically generated on codebases. If it reach the appropriate state in 1 prompt or not. Also we should modify the prompt till it would be achievable by human. 
+  - [ ] sh code modification and code validation... 
+  - [ ] also maybe CoT... so it could solve in certain steps. We would accept longer resolution (Feature: CoT is required for this) 
 
 # Why Julia?
 
