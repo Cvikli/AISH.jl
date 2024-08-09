@@ -32,6 +32,7 @@ Backend server for the GUI: [AISHServer](https://github.com/Cvikli/AISHServer)
 - Also it writes a little lengthy code and then we have to order it to simplify it. It simplify codes EXTREMLY well but make sure it doesn't change the functionality when it simplifies it (also you can order it to keep the same functionality when simplifing).
 - Refactoring have to be one by one as too big refactoring won't fit into the answer and it can be problematic by time. 
 - It forces pattern that are actually very good but it can overmodularize your project. It will even know it is overmodularized if you ask it and it can make it more flat if you ask. :D   
+- If there are duplicated files and codes that cause the AI to lose the reight structure and the right place to modify the codebase. (So like test files... or archived folders can be dangerous)
 
 ## Installation
 We use `meld`, `zsh`
@@ -105,33 +106,34 @@ It is actually ChatSH but a little bit rethinked version!
 Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 ## TODO
 - RAG (EasyRAG)
-✓ STREAMING anthropic claude
 - GUI (AIApp)
-- VOICE INPUT (should be in the AIApp)
-- FINE TUNEING BENCHMARKING
-- If you don't want to WRITE out the entire file THEN find a new way of diff! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
-- LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
-✓ Multi SH can be handled
-✓ Update the SYSTEM_PROMPT AS THE FILES CHANGE
-✓ DIFF view!! VERY narrow version... so literally the characters those changes... Also using colors. COMPARE!!
-✓ error management... Claude is down... then...
-✓ BENCHMARKING
-✓ READLINE repair like you did before with REPL!
-✓ modify the cat > ... to meld...
-✓ configuring the project throught command line arguments: PROJECT_PATH
-✓ project file search improvement.
-✓ default arg to be the project path...
-✓ the sshresult is somehow duplicating...
--✓ Thinking should be an interactive line that shows basically progress... But in the end it disappear
-✓ Multiline input is necessary....
-✓ cd into the project path... so everything will be realtive to that! :D
-✓ empty run
-✓ ctrl + c handling...
-✓ multilanguage support
+- BENCHMARKING advanced even modular...
+- FINE TUNEING
+- token + cost(maybe calculation?) + elapsed time registration for messages...
+- If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
 - layered AI... so we would have one that produce sh blocks but the internal core should talk with code blocks later on. 
 - simplify the answer... shorter... filter sentences should be minimized!
-- Canceling a query should be possible somehow! Do we have "stop" API? example: https://api.claude.ai/api/organizations/d9192fb1-1546-491e-89f2-d3432c9695d2/chat_conversations/f2f779eb-49c5-4605-b8a5-009cdb88fe20/stop_response
-✓ resume conversation
+ ✓ STREAMING anthropic claude
+ ✓ Multi SH can be handled
+ ✓ Update the SYSTEM_PROMPT AS THE FILES CHANGE
+ ✓ DIFF view!! VERY narrow version... so literally the characters those changes... Also using colors. COMPARE!!
+ ✓ error management... Claude is down... then...
+ ✓ BENCHMARKING basic... LLMLeaderboard
+ ✓ READLINE repair like you did before with REPL!
+ ✓ modify the cat > ... to meld...
+ ✓ configuring the project throught command line arguments: PROJECT_PATH
+ ✓ project file search improvement.
+ ✓ default arg to be the project path...
+ ✓ the sshresult is somehow duplicating...
+ ✓ Multiline input is necessary....
+ ✓ cd into the project path... so everything will be realtive to that! :D
+ ✓ empty run
+ ✓ ctrl + c handling...
+ ✓ multilanguage support
+ ✓ resume conversation
+ - ✓ Thinking should be an interactive line that shows basically progress... But in the end it disappear
+- forbid the system to generate this many extra token! Also the bare minimum is to forbid the AI to create ```sh_run_results blocks...
+- LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
 
 -Default talks like:
   - What should I know about this solution...
