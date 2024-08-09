@@ -37,19 +37,6 @@ update_message_with_outputs(content) = return replace(content, r"```sh\n([\s\S]*
   "$matchedtxt\n```sh_run_results\n$output\n```\n"
 end)
 
-function execute_code_block(code)
-  no_confirm_needed = startswith(code, "meld")
-  withenv("GTK_PATH" => "") do
-    println("\e[32m\$(code)\e[0m")
-    if !no_confirm_needed
-      print("\e[33mContinue? (y) \e[0m")  # Yellow color for the question
-      if readchomp(`zsh -c "read -q '?'; echo \$?"`) != "0"
-        return "Operation cancelled by user."
-      end
-    end
-    return cmd_all_info(`zsh -c $code`)
-  end
-end
 execute_code_block(code) = withenv("GTK_PATH" => "") do
   println("\e[32m\$code\e[0m")
   return if startswith(code, "meld") || (print("\e[33mContinue? (y) \e[0m"); readchomp(`zsh -c "read -q '?'; echo \$?"`) != "0") 
