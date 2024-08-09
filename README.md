@@ -6,6 +6,12 @@ AI SH to do EVERYTHING on PC
 
 AISH.jl (AI Shell) is a Julia package that provides an interactive AI-powered command-line interface for assisting users with system tasks using shell commands.
 
+GUI: [AISHApp](https://github.com/Cvikli/AISHApp)
+Backend server for the GUI: [AISHServer](https://github.com/Cvikli/AISHServer)
+
+## DEMO
+
+
 ## Features
 
 - AI-powered shell assistant
@@ -15,6 +21,17 @@ AISH.jl (AI Shell) is a Julia package that provides an interactive AI-powered co
 - Dynamic system prompts
 - Shell command execution
 - Conversation logging
+
+
+## Estiamtations
+- On very basic cases it works around like 90-99% of the times. 
+- Sometimes it forces like 3-4 different solution and somehow feels like it stuck with old API document and that is the cause of the issue. 
+- Sometimes it is too hard to explain a very complex data management behind when it  just cannot create the best solution for you.
+- Also lot of time it writes stuff that does somehow similar functionality than some part of a code or it forget to use a state of a variable which is not really related but actually will hold useful information in that stage of the code which could reduce some calculation, in these cases we have to point out to use the values in those storages.
+- It sometimes too precise and even put the type annotation in the functions args which isn't always a good pattern, so that should be somehow ordered to be more lazy. 
+- Also it writes a little lengthy code and then we have to order it to simplify it. It simplify codes EXTREMLY well but make sure it doesn't change the functionality when it simplifies it (also you can order it to keep the same functionality when simplifing).
+- Refactoring have to be one by one as too big refactoring won't fit into the answer and it can be problematic by time. 
+- It forces pattern that are actually very good but it can overmodularize your project. It will even know it is overmodularized if you ask it and it can make it more flat if you ask. :D   
 
 ## Installation
 We use `meld`, `zsh`
@@ -88,7 +105,7 @@ It is actually ChatSH but a little bit rethinked version!
 Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 ## TODO
 - RAG (EasyRAG)
-- STREAMING
+✓ STREAMING anthropic claude
 - GUI (AIApp)
 - VOICE INPUT (should be in the AIApp)
 - FINE TUNEING BENCHMARKING
@@ -114,6 +131,7 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
 - layered AI... so we would have one that produce sh blocks but the internal core should talk with code blocks later on. 
 - simplify the answer... shorter... filter sentences should be minimized!
 - Canceling a query should be possible somehow! Do we have "stop" API? example: https://api.claude.ai/api/organizations/d9192fb1-1546-491e-89f2-d3432c9695d2/chat_conversations/f2f779eb-49c5-4605-b8a5-009cdb88fe20/stop_response
+✓ resume conversation
 
 -Default talks like:
   - What should I know about this solution...
