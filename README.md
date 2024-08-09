@@ -33,6 +33,7 @@ Backend server for the GUI: [AISHServer](https://github.com/Cvikli/AISHServer)
 - Refactoring have to be one by one as too big refactoring won't fit into the answer and it can be problematic by time. 
 - It forces pattern that are actually very good but it can overmodularize your project. It will even know it is overmodularized if you ask it and it can make it more flat if you ask. :D   
 - If there are duplicated files and codes that cause the AI to lose the reight structure and the right place to modify the codebase. (So like test files... or archived folders can be dangerous)
+- Files over 250 lines are not easy for the AI to edit... But lot of case it handle it with "rest of the code" and so on.
 
 ## Installation
 We use `meld`, `zsh`
@@ -48,6 +49,7 @@ https://github.com/jiaaro/pydub#getting-ffmpeg-set-up
 apt-get install libav-tools libavcodec-extra
 ####    OR    #####
 apt-get install ffmpeg libavcodec-extra -->
+
 
 ## Usage
 

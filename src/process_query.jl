@@ -38,26 +38,39 @@ update_message_with_outputs(content) = return replace(content, r"```sh\n([\s\S]*
 end)
 
 function execute_code_block(code)
-  isconfirming = startswith(code, "read")
+  no_confirm_needed = startswith(code, "meld")
   withenv("GTK_PATH" => "") do
-    shell = isconfirming ? "zsh" : "bash" # We use BASH most of the case. But for confirming the 'cat' we have to use zsh as it supports this arguments
-    println("\e[32m$code\e[0m")
-    return cmd_all_info(`$shell -c $code`)
+    println("\e[32m\$(code)\e[0m")
+    if !no_confirm_needed
+      print("\e[33mContinue? (y) \e[0m")  # Yellow color for the question
+      if readchomp(`zsh -c "read -q '?'; echo \$?"`) != "0"
+        return "Operation cancelled by user."
+      end
+    end
+    return cmd_all_info(`zsh -c $code`)
+  end
+end
+execute_code_block(code) = withenv("GTK_PATH" => "") do
+  println("\e[32m\$code\e[0m")
+  return if startswith(code, "meld") || (print("\e[33mContinue? (y) \e[0m"); readchomp(`zsh -c "read -q '?'; echo \$?"`) != "0") 
+    cmd_all_info(`zsh -c $code`) 
+  else
+    "Operation cancelled by user."
   end
 end
 
+
 function cmd_all_info(cmd::Cmd, output=IOBuffer(), error=IOBuffer())
-  err = nothing
-  process = nothing
+  err, process = nothing, nothing
   try
     process = run(pipeline(ignorestatus(cmd), stdout=output, stderr=error))
   catch e
     err = e
   end
-  return "$((
-    stdout=String(take!(output)),
-    stderr=String(take!(error)),
-    exit_code=isnothing(process) ? -1 : process.exitcode,
-    exception=err
-  ))"
+  exitcode = isnothing(process) ? "" : ",\nexit code=$(process.exitcode)"
+  except   = isnothing(err)     ? "" : ",\nexception=$err"
+  return """
+stdout=String(take!(output)),
+stderr=String(take!(error))$(exitcode)$(except)
+"""
 end

@@ -5,7 +5,7 @@ SYSTEM_PROMPT() = """You are $ChatSH, an AI language model that specializes in a
 
 To create new file use cat like this:
 ```sh
-read -q "?continue? (y) " && cat > file_path <<-"EOF"
+cat > file_path <<-"EOF"
 new_file_content
 EOF
 ```
