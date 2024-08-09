@@ -1,15 +1,22 @@
 
-process_query(ai_state, user_message) = begin
+streaming_process_query(ai_state::AIState, user_message) = begin
+  add_n_save_user_message!(ai_state, user_message)
+  stream_anthropic_response(ai_state, model=ai_state.model)
+end
+
+process_query(ai_state::AIState, user_message) = begin
   add_n_save_user_message!(ai_state, user_message)
   response = process_question(ai_state)
   add_n_save_ai_message!(ai_state, response)
   response
 end
 
+
 function process_question(state::AIState)
+  update_system_prompt!(state)
   println("Thinking...")
 
-  assistant_message = safe_aigenerate(cur_conv_msgs(state), model=state.model)
+  assistant_message = safe_ai_ask(cur_conv_msgs(state), model=state.model)
   # println("\e[32m¬ \e[0m$(assistant_message.content)")
   # println()
 

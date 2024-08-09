@@ -57,6 +57,21 @@ empty_temps = Float64[]
 empty_result = weather_data_analyzer(empty_temps)
 println(empty_result)
 #%%
+using AISH: stream_anthropic_response
+
+# Example usage
+prompt = "Hello, tell me a short story"
+resp = stream_anthropic_response(prompt)
+@show "finished"
+
+for text in (resp)
+    print("    : ")
+    println(text)
+end
+@show "???????"
+#%%
+
+#%%
 ```
 
 This will output:

@@ -168,3 +168,13 @@ is_ai_state_initialized() = !isnothing(ai_state)
 
 # ... (rest of the existing content)
 EOL
+
+
+
+
+- Benchmarking
+
+
+
+
+could you repair the previous conversation resume to search for the last conversation by date which is read out from the file name and then continue it. If the last conversation is a UserMessage then continue it from then.

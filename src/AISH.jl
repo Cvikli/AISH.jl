@@ -11,7 +11,8 @@ include("AI_prompt.jl")
 include("AI_struct.jl")
 include("arg_parser.jl")
 
-include("error_managers/anthropic_error_handler.jl")
+include("anthropic/error_handler.jl")
+include("anthropic/streaming.jl")
 
 include("input_source/keyboard.jl")
 

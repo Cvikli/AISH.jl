@@ -4,7 +4,7 @@ using PromptingTools: SystemMessage, UserMessage, AIMessage
 using HTTP
 using JSON
 
-function safe_aigenerate(conversation; model, max_retries=3, return_all=false)
+function safe_ai_ask(conversation; model, max_retries=3, return_all=false)
     for attempt in 1:max_retries
         try
             # Convert Message to AbstractChatMessage
@@ -23,7 +23,9 @@ function safe_aigenerate(conversation; model, max_retries=3, return_all=false)
                     sleep(sleep_time)
                 else
                     @error "Failed after $max_retries attempts due to persistent server errors."
-                    rethrow(e)
+                    errmsg = IOBuffer()
+                    Base.showerror(errmsg, e, Base.catch_backtrace())
+                    return AIMessage(String(take!(errmsg)))
                 end
             else
                 @error "Unhandled error occurred: $(e)"

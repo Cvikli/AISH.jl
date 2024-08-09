@@ -71,7 +71,8 @@ function add_n_save_ai_message!(state::AIState, ai_message)
     push!(cur_conv_msgs(state), msg)
     save_ai_message(state, msg)
 end
-
+to_dict(state::AIState) = to_dict(cur_conv_msgs(state))
+to_dict(conversation::Vector{Message}) = [Dict("role"=> string(msg.role), "content"=>msg.content) for msg in conversation]
 function conversation_to_dict(state::AIState)
     result = Dict{String,String}[]
     for message in cur_conv_msgs(state)
