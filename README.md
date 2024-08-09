@@ -105,15 +105,37 @@ It is actually ChatSH but a little bit rethinked version!
 
 Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 ## TODO
-- [ ] RAG (EasyRAG)
-- [-] GUI (AIApp)
+- [ ] RAG (EasyRAG ongoing. Context + search tool)
+- [*] GUI (AIApp)
 - [ ] BENCHMARKING advanced even modular...
-- [ ] FINE TUNEING
+  - [ ] we need custom benchmark examples...
+  - [ ] Code creation -> Parseable -> Executeable -> Expected test result
+  - [ ] Also whole benchmark cases should be automatically generated
+  - [ ] Should handle different mode like: Code generation or even file generation (like we do with the AISH)
+  - [ ] We could use python benchmark test cases to see how far do we rate with those problem in julia! ;)
+  - [ ] like modifying the code to achieve a state...
+  - [ ] test cases should be automatically generated on codebases. If it reach the appropriate state in 1 prompt or not. Also we should modify the prompt till it would be achievable by human. 
+  - [ ] sh code modification and code validation... 
+  - [ ] also maybe CoT... so it could solve in certain steps. We would accept longer resolution (Feature: CoT is required for this) 
 - [ ] token + cost(maybe calculation?) + elapsed time registration for messages...
+- [ ] CoT
+  - [ ] problem ->
+  - [ ] solve
+  - [ ] how to run
+  - [ ] how to test
+  - [ ] did it succeed?
+  - [ ] jump to "solve".
+- [ ] FINE TUNEING
+  - [ ] improve benchmark score
+  - [ ] simplify the answer... shorter... filter sentences should be minimized!
+  - [ ] forbid the system to generate this many extra token in the end! 
+  - [ ] forbid the AI to create ```sh_run_results blocks...
+- [ ] multilanguage support. 
+  - [ ] So for now Julia... 
+  - [ ] next Javascript.. 
+  - [ ] next python... 
+  - [ ] next DOCS for it... so it will be up for the community!
 - [ ] If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
-- [ ] layered AI... so we would have one that produce sh blocks but the internal core should talk with code blocks later on. 
-- [ ] simplify the answer... shorter... filter sentences should be minimized!
-- [ ] forbid the system to generate this many extra token! Also the bare minimum is to forbid the AI to create ```sh_run_results blocks...
 - [ ] LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
 - [ ] Thinking should be an interactive line that shows basically progress... But in the end it disappear
 - [x] STREAMING anthropic claude
@@ -142,17 +164,9 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
   - [ ] take all the using and import into the include.jl main file.
 
 THE DEFAULT TALKS IS BASICALLY C O T!... OMG :D OMG omg... omg...
-in the end it all breaks down to "chains with confirmations by the US!"
+in the end it all breaks down to "chains with confirmations by the user!"
 Finding what "stable state can we manually automatically validate" and traveling from stable states to stable states...
 
-- [ ] work till the task isn't ready CoT
-problem ->
-  - [ ] solve
-  - [ ] how to run
-  - [ ] how to test
-  - [ ] did it succeed?
-  - [ ] jump to 1.
-- multilanguage support. So for now Julia... next Javascript.. next python... next DOCS for it... so it will be up for the community!
 
 
 
@@ -163,16 +177,6 @@ problem ->
   - [ ] messenger communication automation
   - [ ] website/internet search and surfing
 
-- [ ] we need custom benchmark examples...
-  - [ ] Code creation -> Parseable -> Executeable -> Expected test result
-  - [ ] Also whole benchmark cases should be automatically generated
-  - [ ] Should handle different mode like: Code generation or even file generation (like we do with the AISH)
-  - [ ] We could use python benchmark test cases to see how far do we rate with those problem in julia! ;)
-
-  - [ ] like modifying the code to achieve a state...
-  - [ ] test cases should be automatically generated on codebases. If it reach the appropriate state in 1 prompt or not. Also we should modify the prompt till it would be achievable by human. 
-  - [ ] sh code modification and code validation... 
-  - [ ] also maybe CoT... so it could solve in certain steps. We would accept longer resolution (Feature: CoT is required for this) 
 
 # Why Julia?
 
