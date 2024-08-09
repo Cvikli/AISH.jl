@@ -2,7 +2,6 @@
 module AISH
 
 using Dates
-using InteractiveUtils
 
 using PromptingTools
 using Anthropic
