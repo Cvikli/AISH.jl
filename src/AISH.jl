@@ -14,7 +14,7 @@ include("arg_parser.jl")
 
 include("anthropic/extending.jl")
 
-include("input_source/keyboard.jl")
+include("keyboard.jl")
 
 include("messages.jl")
 
