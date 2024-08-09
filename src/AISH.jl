@@ -1,18 +1,18 @@
 # src/AISH.jl
 module AISH
 
-using REPL
-using InteractiveUtils
-using PromptingTools
 using Dates
+using InteractiveUtils
+
+using PromptingTools
+using Anthropic
 
 include("AI_config.jl")
 include("AI_prompt.jl")
 include("AI_struct.jl")
 include("arg_parser.jl")
 
-include("anthropic/error_handler.jl")
-include("anthropic/streaming.jl")
+include("anthropic/extending.jl")
 
 include("input_source/keyboard.jl")
 
