@@ -164,6 +164,11 @@ problem ->
   - [ ] website/internet search and surfing
 
 - [ ] we need custom benchmark examples...
+  - [ ] Code creation -> Parseable -> Executeable -> Expected test result
+  - [ ] Also whole benchmark cases should be automatically generated
+  - [ ] Should handle different mode like: Code generation or even file generation (like we do with the AISH)
+  - [ ] We could use python benchmark test cases to see how far do we rate with those problem in julia! ;)
+
   - [ ] like modifying the code to achieve a state...
   - [ ] test cases should be automatically generated on codebases. If it reach the appropriate state in 1 prompt or not. Also we should modify the prompt till it would be achievable by human. 
   - [ ] sh code modification and code validation... 
