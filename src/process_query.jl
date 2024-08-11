@@ -54,10 +54,10 @@ function cmd_all_info(cmd::Cmd, output=IOBuffer(), error=IOBuffer())
   catch e
     err = e
   end
-  exitcode = isnothing(process) ? "" : ",\nexit code=$(process.exitcode)"
-  except   = isnothing(err)     ? "" : ",\nexception=$err"
+  exitcode = isnothing(process) ? "" : "\nexit code=$(process.exitcode)"
+  except   = isnothing(err)     ? "" : "\nexception=$err"
   return """
-stdout=String(take!(output)),
-stderr=String(take!(error))$(exitcode)$(except)
+stdout=$(String(take!(output)))
+stderr=$(String(take!(error)))$(exitcode)$(except)
 """
 end

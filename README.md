@@ -9,6 +9,8 @@ AISH.jl (AI Shell) is a Julia package that provides an interactive AI-powered co
 GUI: [AISHApp](https://github.com/Cvikli/AISHApp)
 Backend server for the GUI: [AISHServer](https://github.com/Cvikli/AISHServer)
 
+It is actually ChatSH but a little bit rethinked version!
+
 ## DEMO
 
 
@@ -82,11 +84,10 @@ You can modify these settings to customize the behavior of AISH.jl.
 - `src/`: Contains the main source code
   - `AISH.jl`: Main module file
   - `AI_struct.jl`: AI state structure
-  - `config.jl`: Configuration settings
+  - `AI_config.jl`+`AI_prompt.jl`: Configurations
   - `process_query.jl`: Handles processing of user queries
   - `includes.jl`: Manages file inclusions
   - `error_managers/`: Error handling utilities
-  - `input_source/`: Input processing utilities
   - `benchmarking/`: Benchmarking tools
 - `conversation/`: Stores conversation logs
 
@@ -97,16 +98,10 @@ Contributions to AISH.jl are welcome! Please feel free to submit issues, fork th
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-## AISH.jl
-AI SH to do EVERYTHING on PC
 
 
-It is actually ChatSH but a little bit rethinked version!
-
-
-
-Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 ## TODO
+Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 - [ ] RAG (EasyRAG ongoing. Context + search tool)
 - [*] GUI (AIApp)
 - [ ] BENCHMARKING advanced even modular...
