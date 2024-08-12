@@ -1,4 +1,6 @@
-using AISH: initialize_ai_state, safe_aigenerate
+using AISH: initialize_ai_state, cur_conv_msgs, anthropic_ask_safe
+using AISH: Message
+using Anthropic
 using JuliaLLMLeaderboard
 using RelevanceStacktrace
 using PromptingTools
@@ -11,16 +13,19 @@ function run_generic_benchmark(definition_file::String)
   definition = TOML.parsefile(definition_file)["code_generation"]
   @show definition["name"]
   ai_state = initialize_ai_state()
-  prompt = definition["prompt"]
-  println(prompt)
-  push!(ai_state.conversation[ai_state.selected_conv_id], Message(now(), :user, prompt))
+  user_question = definition["prompt"]
+  println(user_question)
+  push!(cur_conv_msgs(ai_state), Message(now(), :user, user_question))
 
-  conversation = safe_aigenerate(ai_state.conversation[ai_state.selected_conv_id], model=ai_state.model, return_all=true)
+  conversation = anthropic_ask_safe(ai_state, return_all=true)
 
   # Evaluate 1SHOT
   conversation_mod = deepcopy(conversation)
+  println("CODE:")
+  println(conversation_mod[end].content)
   conversation_mod[end] = AIMessage(
-            extract_sh_block_to_julia_code(conversation_mod[end].content),
+    conversation_mod[end].content,
+            # extract_sh_block_to_julia_code(conversation_mod[end].content),
             conversation_mod[end].status,
             conversation_mod[end].tokens,
             conversation_mod[end].elapsed,
@@ -42,7 +47,7 @@ function run_generic_benchmark(definition_file::String)
       schema="-",
       prompt_strategy="1SHOT",
       verbose=true,
-      capture_stdout=true
+      capture_stdout=true 
   )
 
   # println("\nEvaluation result:")

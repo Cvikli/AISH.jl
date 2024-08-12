@@ -22,6 +22,9 @@ println("ok")
 println("okMMM")
 
 
+#%%
+
+using JuliaLLMLeaderboard
 evals = run_benchmark(; models = [model],
     prompt_labels = [ai_state.conversation[1].content],
     experiment = "", auto_save = true, verbose = true, device="HM-PC",

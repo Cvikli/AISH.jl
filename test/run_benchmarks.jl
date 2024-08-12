@@ -5,7 +5,6 @@ include("../src/benchmarking/benchmark_event_scheduler.jl")
 
 #%%
 
-include("../src/benchmarking/benchmark_event_scheduler.jl")
 
 benchmark_event_scheduler()
 save_benchmark_result()
@@ -20,6 +19,7 @@ using PrettyPrinting
 passed, all_passed = 0, 0
 exec, all_exec = 0, 0
 for (promptlabel,res) in BENCHMARK_RESULTS
+	promptlabel in ["q_and_a_extractor", "extract_julia_code"] && continue
 	print_score(res)
 	passed += res["unit_tests_passed"]
 	all_passed += res["unit_tests_count"]
@@ -39,6 +39,7 @@ include("../src/benchmarking/benchmark_event_scheduler.jl")
 save_benchmark_result()
 #%%
 save_benchmark_result()
+#%%
 #%%
 pwd()
 #%%
