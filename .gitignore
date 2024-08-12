@@ -25,3 +25,7 @@ docs/site/
 Manifest.toml
 
 conversation/
+
+benchmarks/
+
+.vscode/
