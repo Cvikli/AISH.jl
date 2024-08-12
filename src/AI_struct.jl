@@ -22,7 +22,7 @@ end
 end
 
 # Initialize AI State
-function initialize_ai_state(MODEL = "claude-3-5-sonnet-20240620"; resume::Bool=true, streaming::Bool=true)
+function initialize_ai_state(MODEL = "claude-3-5-sonnet-20240620"; resume::Bool=false, streaming::Bool=true)
     state = AIState(model = MODEL, streaming = streaming)
     get_all_conversations_without_messages(state)
     print("\e[32mAI State initialized successfully.\e[0m ")  # Green text
