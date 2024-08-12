@@ -5,9 +5,7 @@ end
 
 process_query(ai_state::AIState, user_message) = begin
   add_n_save_user_message!(ai_state, user_message)
-  response = process_question(ai_state)
-  add_n_save_ai_message!(ai_state, response)
-  response
+  process_question(ai_state)
 end
 
 function process_question(state::AIState)
@@ -38,7 +36,7 @@ update_message_with_outputs(content) = return replace(content, r"```sh\n([\s\S]*
 end)
 
 execute_code_block(code) = withenv("GTK_PATH" => "") do
-  println("\e[32m\$code\e[0m")
+  println("\e[32m$(code)\e[0m")
   return if startswith(code, "meld") || (print("\e[33mContinue? (y) \e[0m"); readchomp(`zsh -c "read -q '?'; echo \$?"`) != "0") 
     cmd_all_info(`zsh -c $code`) 
   else
