@@ -13,7 +13,7 @@ function process_question(state::AIState)
 
   if state.streaming
     print("\e[32m¬ \e[0m")
-    full_response = Anthropic.ai_stream_safe(state) 
+    full_response = ai_stream_safe(state) 
     msg = channel_to_string(full_response)
   else
     println("Thinking...")  
@@ -37,10 +37,11 @@ end)
 
 execute_code_block(code) = withenv("GTK_PATH" => "") do
   println("\e[32m$(code)\e[0m")
-  return if startswith(code, "meld") || (print("\e[33mContinue? (y) \e[0m"); readchomp(`zsh -c "read -q '?'; echo \$?"`) != "0") 
+  return if startswith(code, "meld") 
     cmd_all_info(`zsh -c $code`) 
   else
-    "Operation cancelled by user."
+    print("\e[34mContinue? (y) \e[0m")
+    readchomp(`zsh -c "read -q '?'; echo \$?"`) == "0" ? cmd_all_info(`zsh -c $code`) : "Operation cancelled by user."
   end
 end
 
