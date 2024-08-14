@@ -1,4 +1,4 @@
-using AISH: start_conversation, main	
+using AISH	
 
-ai_state = main()
+ai_state = AISH.main()
 

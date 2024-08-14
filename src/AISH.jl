@@ -22,6 +22,24 @@ include("process_query.jl")
 
 handle_interrupt(sig::Int32) = (println("\nExiting gracefully. Good bye! :)"); exit(0))
 
+function initialize_project_path(ai_state::AIState)
+    if ai_state.project_path !== ""
+        cd(ai_state.project_path)
+        ai_state.project_path = pwd()
+        println("Project path initialized: ")
+    end
+end
+
+function set_project_path(ai_state::AIState, new_path::String)
+    if isdir(new_path)
+        ai_state.project_path = abspath(new_path)
+        cd(ai_state.project_path)
+        println("Project path updated: ")
+    else
+        error("Invalid project path: ")
+    end
+end
+
 function start_conversation(state::AIState)
   println("Welcome to $ChatSH AI. (using $(state.model))")
 
@@ -49,5 +67,7 @@ function main()
   start_conversation(ai_state)
   ai_state
 end
+
+export set_project_path
 
 end # module AISH
