@@ -23,7 +23,6 @@ include("process_query.jl")
 handle_interrupt(sig::Int32) = (println("\nExiting gracefully. Good bye! :)"); exit(0))
 
 function start_conversation(state::AIState)
-
   println("Welcome to $ChatSH AI. (using $(state.model))")
 
   while !isempty(cur_conv_msgs(state)) && cur_conv_msgs(state)[end].role == :user; pop!(cur_conv_msgs(state)); end
@@ -46,8 +45,7 @@ end
 function main()
   ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,))) # Nice program exit for ctrl + c.
   args = parse_commandline()
-  set_project_path(args["project-path"])
-  ai_state = initialize_ai_state(resume=args["resume"], streaming=args["streaming"])
+  ai_state = initialize_ai_state(resume=args["resume"], streaming=args["streaming"], project_path=args["project-path"])
   start_conversation(ai_state)
   ai_state
 end

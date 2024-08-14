@@ -6,7 +6,7 @@ The regex match return with SubString a strip(...) also return with SubString, s
 # Don't annotate the function arguments with types. 
 # """
 
-SYSTEM_PROMPT() = """You are $ChatSH, an AI language model that specializes in assisting the user with his task using SHELL commands.
+SYSTEM_PROMPT(path) = """You are $ChatSH, an AI language model that specializes in assisting the user with his task using SHELL commands.
 
 To create new file use cat like this:
 ```sh
@@ -64,8 +64,8 @@ $(get_shell())
 The SHELL is in this folder right now:
 $(get_pwd())
 """ *
-(PROJECT_PATH=="" ? "" : """The folder structure of your codebase that you are working in:
-$(get_all_project_with_URIs(PROJECT_PATH))""") *
+(path=="" ? "" : """The folder structure of your codebase that you are working in:
+$(get_all_project_with_URIs(path))""") *
 """
 
 In spite of the programming language you should always try to use the sh blocks that was told to you to solve the tasks! 

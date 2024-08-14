@@ -1,17 +1,15 @@
 const ChatSH::String = "Koda"
 const ainame::String = lowercase(ChatSH)
+const CONVERSATION_DIR = joinpath(@__DIR__, "..", "conversation")
 
-PROJECT_PATH::String = ""
-set_project_path(path) = begin
+function set_project_path(path)
     global PROJECT_PATH = path
     PROJECT_PATH !== "" && (cd(PROJECT_PATH); PROJECT_PATH = pwd(); println("Project path initialized: $(PROJECT_PATH)"))
 end
 
-
 get_system() = strip(read(`uname -a`, String))
 get_shell() = strip(read(`$(ENV["SHELL"]) --version`, String))
 get_pwd() = strip(pwd())
-
 
 const PROJECT_FILES = [
     "Dockerfile", "docker-compose.yml", "Makefile", "LICENSE", ".gitignore", # "README.md", 
@@ -35,7 +33,7 @@ is_project_file(lowered_file) = lowered_file in PROJECT_FILES || any(endswith(lo
 ignore_file(file) = any(endswith(file, pattern) for pattern in IGNORED_FILE_PATTERNS)
 is_gitignore_file(file) = success(`git check-ignore -q $file`)
 
-function get_project_files(path=PROJECT_PATH)
+function get_project_files(path)
     files = String[]
     for (root, dir, files_in_dir) in walkdir(path)
         any(d -> d in FILTERED_FOLDERS, splitpath(root)) && continue
@@ -70,7 +68,7 @@ function format_file_content(file)
     """
 end
 
-function get_all_project_with_URIs(path=PROJECT_PATH)
+function get_all_project_with_URIs(path)
     all_files = get_project_files(path)
     result = map(file -> format_file_content(file), all_files)
     return join(result, "\n")

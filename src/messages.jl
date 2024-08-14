@@ -1,7 +1,5 @@
 using Dates, UUIDs
 
-const CONVERSATION_DIR = joinpath(@__DIR__, "..", "conversation")
-
 get_all_conversations_file() = readdir(CONVERSATION_DIR)
 generate_conversation_id() = string(UUIDs.uuid4())
 get_message_separator(conversation_id) = "===AISH_MSG_$(conversation_id)==="
@@ -41,7 +39,6 @@ function save_message(state::AIState, role, message; timestamp=now())
     end
 end
 
-
 save_system_message(state::AIState, message::Message) = save_message(state, message)
 save_user_message(state::AIState, message::Message) = save_message(state, message)
 save_ai_message(state::AIState, message::Message) = save_message(state, message)
@@ -55,11 +52,8 @@ get_timestamp_from_file(filename) = (m = match(r"^(\d{4}-\d{2}-\d{2}_\d{2}:\d{2}
 get_conversation_from_file(filename) = (m = match(r"\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}_(.+)_[\w-]+\.log$", filename); return m !== nothing ? m[1] : "")
 
 function get_conversation_history(conversation_id)
-    conversation_dir = joinpath(@__DIR__, "..", "conversation")
-    files = filter(f -> endswith(f, "_$(conversation_id).log"), readdir(conversation_dir))
-    isempty(files) && return Message[]
-
-    filename = joinpath(conversation_dir, files[1])
+    filename = get_conversation_filename(conversation_id)
+    isnothing(filename) && return Message[]
     
     content = read(filename, String)
     messages = split(content, get_message_separator(conversation_id), keepempty=false)

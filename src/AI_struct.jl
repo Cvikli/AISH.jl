@@ -19,11 +19,13 @@ end
     selected_conv_id::String = ""
     model::String = ""
     streaming::Bool = true
+    project_path::String = ""
 end
 
 # Initialize AI State
-function initialize_ai_state(MODEL = "claude-3-5-sonnet-20240620"; resume::Bool=false, streaming::Bool=true)
-    state = AIState(model = MODEL, streaming = streaming)
+function initialize_ai_state(MODEL = "claude-3-5-sonnet-20240620"; resume::Bool=false, streaming::Bool=true, project_path::String="")
+    set_project_path(project_path)
+    state = AIState(model = MODEL, streaming = streaming, project_path = PROJECT_PATH)
     get_all_conversations_without_messages(state)
     print("\e[32mAI State initialized successfully.\e[0m ")  # Green text
 
@@ -82,11 +84,11 @@ end
 function generate_new_conversation(state::AIState)
     new_id = generate_conversation_id()
     state.selected_conv_id = new_id
-    state.conversation[new_id] = ConversationInfo(now(), "", new_id, [Message(now(), :system, SYSTEM_PROMPT())])
+    state.conversation[new_id] = ConversationInfo(now(), "", new_id, [Message(now(), :system, SYSTEM_PROMPT(state.project_path))])
 end
 
 function update_system_prompt!(state::AIState; new_system_prompt="")
-    new_system_prompt = new_system_prompt=="" ? SYSTEM_PROMPT() : new_system_prompt
+    new_system_prompt = new_system_prompt=="" ? SYSTEM_PROMPT(state.project_path) : new_system_prompt
     cur_conv_msgs(state)[1] = Message(now(), :system, new_system_prompt)
     println("\e[33mSystem prompt updated due to file changes.\e[0m")
 end
@@ -96,13 +98,16 @@ function add_n_save_user_message!(state::AIState, user_message)
     push!(cur_conv_msgs(state), msg)
     save_user_message(state, msg)
 end
+
 function add_n_save_ai_message!(state::AIState, ai_message)
     msg = Message(now(), :assistant, strip(ai_message))
     push!(cur_conv_msgs(state), msg)
     save_ai_message(state, msg)
 end
+
 to_dict(state::AIState) = to_dict(cur_conv_msgs(state))
 to_dict(conversation::Vector{Message}) = [Dict("role"=> string(msg.role), "content"=>msg.content) for msg in conversation]
+
 function conversation_to_dict(state::AIState)
     result = Dict{String,String}[]
     for message in cur_conv_msgs(state)
