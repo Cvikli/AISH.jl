@@ -72,6 +72,7 @@ function get_all_conversations_without_messages(state::AIState)
         state.conversation[id] = ConversationInfo(timestamp, sentence, id, Message[])
     end
 end
+
 function select_conversation(state::AIState, conversation_id)
     state.conversation[conversation_id].messages = get_conversation_history(conversation_id)
     state.selected_conv_id = conversation_id

@@ -14,7 +14,7 @@ get_pwd() = strip(pwd())
 
 
 const PROJECT_FILES = [
-    "Dockerfile", "docker-compose.yml", "Makefile", "README.md", "LICENSE", ".gitignore",
+    "Dockerfile", "docker-compose.yml", "Makefile", "LICENSE", ".gitignore", # "README.md", 
     "Gemfile", "Cargo.toml", "Project.toml"
 ]
 
@@ -50,8 +50,6 @@ function get_project_files(path=PROJECT_PATH)
     return files
 end
 
-
-# TODO make sure the # is a comment in that specific language!!
 function format_file_content(file)
     content = read(file, String)
 

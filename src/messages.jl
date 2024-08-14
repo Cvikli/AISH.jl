@@ -6,7 +6,7 @@ get_all_conversations_file() = readdir(CONVERSATION_DIR)
 generate_conversation_id() = string(UUIDs.uuid4())
 get_message_separator(conversation_id) = "===AISH_MSG_$(conversation_id)==="
 
-save_message(state::AIState, msg::Message) = save_message(state::AIState, msg.role, msg.content; timestamp=msg.timestamp)
+save_message(state::AIState, msg::Message) = save_message(state, msg.role, msg.content; timestamp=msg.timestamp)
 function save_message(state::AIState, role, message; timestamp=now())
     mkpath(CONVERSATION_DIR)
     conversation_id = state.selected_conv_id
@@ -73,6 +73,7 @@ function get_conversation_history(conversation_id)
         end
     end)
 end
+
 function resume_last_conversation(state::AIState)
     isempty(state.conversation) && return ""
 

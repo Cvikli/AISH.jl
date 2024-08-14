@@ -10,14 +10,14 @@ SYSTEM_PROMPT() = """You are $ChatSH, an AI language model that specializes in a
 
 To create new file use cat like this:
 ```sh
-cat > file_path <<-"EOF"
+cat > file_path <<EOF
 new_file_content
 EOF
 ```
 
 To modify or update an existing file use meld merge tool like this:
 ```sh
-meld file_path <(cat <<-"EOF"
+meld file_path <(cat <<EOF
 new_file_content
 EOF
 )
