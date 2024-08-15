@@ -123,18 +123,19 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
   - [ ] did it succeed?
   - [ ] jump to "solve".
 - [ ] FINE TUNEING
-  - [ ] improve benchmark score
+  - [x] improve benchmark score
   - [ ] simplify the answer... shorter... filter sentences should be minimized!
   - [ ] forbid the system to generate this many extra token in the end! 
-  - [ ] forbid the AI to create ```sh_run_results blocks...
+  - [x] forbid the AI to create ```sh_run_results blocks...
 - [ ] multilanguage support. 
-  - [ ] So for now Julia... 
+  - [x] So for now Julia... 
   - [ ] next Javascript.. 
   - [ ] next python... 
   - [ ] next DOCS for it... so it will be up for the community!
 - [ ] If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
 - [ ] LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
 - [ ] Thinking should be an interactive line that shows basically progress... But in the end it disappear
+- [ ] model specific max token
 - [x] STREAMING anthropic claude
 - [x] Multi SH can be handled
 - [x] Update the SYSTEM_PROMPT AS THE FILES CHANGE
@@ -151,7 +152,7 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
 - [x] cd into the project path... so everything will be realtive to that! :D
 - [x] empty run
 - [x] ctrl + c handling...
-- [x] multilanguage support
+- [x] multilanguage support at context creation (the comment)
 - [x] resume conversation
 
 -[ ] Default talks like:
