@@ -24,19 +24,18 @@ end
 
 # Initialize AI State
 function initialize_ai_state(MODEL = "claude-3-5-sonnet-20240620"; resume::Bool=false, streaming::Bool=true, project_path::String="")
-    set_project_path(project_path)
-    state = AIState(model = MODEL, streaming = streaming, project_path = PROJECT_PATH)
+    state = AIState(model = MODEL, streaming = streaming)
     get_all_conversations_without_messages(state)
-    print("\e[32mAI State initialized successfully.\e[0m ")  # Green text
+    println("\e[32mAI State initialized successfully.\e[0m ")  # Green text
 
     if resume
         last_conv_id = resume_last_conversation(state)
         if isempty(last_conv_id)
-          generate_new_conversation(state)
-          println("No previous conversation found. Starting a new conversation. Conversion id: $(state.selected_conv_id)")
+            generate_new_conversation(state)
+            println("No previous conversation found. Starting a new conversation. Conversion id: $(state.selected_conv_id)")
         else
-          println("Resumed conversation with ID: $last_conv_id")
-          if !isempty(cur_conv_msgs(state)) 
+            println("Resumed conversation with ID: $last_conv_id")
+            if !isempty(cur_conv_msgs(state)) 
             if cur_conv_msgs(state)[end].role == :user
                 println("Processing last unanswered message: $(cur_conv_msgs(state)[end].content)")
                 process_question(state)
@@ -44,14 +43,15 @@ function initialize_ai_state(MODEL = "claude-3-5-sonnet-20240620"; resume::Bool=
                 println("The last user message was answered already: \e[36m➜ \e[0m\"$(cur_conv_msgs(state)[end-1].content)\"")
                 println("So continuing from here...")
             end
-          else
+            else
             println("No previous messages in this conversation.")
-          end
+            end
         end
-      else
+    else
         generate_new_conversation(state)
         println("Conversion id: $(state.selected_conv_id)")
-      end
+    end
+    update_project_path!(state, project_path)
     return state
 end
 
@@ -85,6 +85,11 @@ function generate_new_conversation(state::AIState)
     new_id = generate_conversation_id()
     state.selected_conv_id = new_id
     state.conversation[new_id] = ConversationInfo(now(), "", new_id, [Message(now(), :system, SYSTEM_PROMPT(state.project_path))])
+end
+
+function update_project_path!(state::AIState, new_path::String)
+    state.project_path = set_project_path(new_path)
+    update_system_prompt!(state)
 end
 
 function update_system_prompt!(state::AIState; new_system_prompt="")

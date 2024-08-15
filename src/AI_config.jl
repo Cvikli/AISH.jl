@@ -1,19 +1,21 @@
-const ChatSH::String = "Koda"
+const ChatSH::String = "Orion"
 const ainame::String = lowercase(ChatSH)
 const CONVERSATION_DIR = joinpath(@__DIR__, "..", "conversation")
+
+const MAX_TOKEN = 4096 # note this should be model specific later on! Note for not streaming the limit can be higher!!???
 
 function set_project_path(path)
     global PROJECT_PATH = path
     PROJECT_PATH !== "" && (cd(PROJECT_PATH); PROJECT_PATH = pwd(); println("Project path initialized: $(PROJECT_PATH)"))
+    return PROJECT_PATH
 end
 
 get_system() = strip(read(`uname -a`, String))
 get_shell() = strip(read(`$(ENV["SHELL"]) --version`, String))
-get_pwd() = strip(pwd())
 
 const PROJECT_FILES = [
-    "Dockerfile", "docker-compose.yml", "Makefile", "LICENSE", ".gitignore", # "README.md", 
-    "Gemfile", "Cargo.toml", "Project.toml"
+    "Dockerfile", "docker-compose.yml", "Makefile", "LICENSE",  # "README.md", 
+    "Gemfile", "Cargo.toml"# , "Project.toml"
 ]
 
 const FILE_EXTENSIONS = [
@@ -27,7 +29,7 @@ const FILE_EXTENSIONS = [
 ]
 const FILTERED_FOLDERS = ["test", "tests", "spec", "specs", "examples", "docs", "python", "benchmarks", "node_modules", 
 "conversations", "archived"]
-const IGNORED_FILE_PATTERNS = [".log", "config.ini", "secrets.yaml", "Manifest.toml"]
+const IGNORED_FILE_PATTERNS = [".log", "config.ini", "secrets.yaml", "Manifest.toml", ".gitignore", "Project.toml", "README.md"]
 
 is_project_file(lowered_file) = lowered_file in PROJECT_FILES || any(endswith(lowered_file, "." * ext) for ext in FILE_EXTENSIONS)
 ignore_file(file) = any(endswith(file, pattern) for pattern in IGNORED_FILE_PATTERNS)
@@ -50,6 +52,7 @@ end
 
 function format_file_content(file)
     content = read(file, String)
+    relative_path = relpath(file, pwd())
 
     ext = lowercase(splitext(file)[2])
     comment_map = Dict(
@@ -61,8 +64,8 @@ function format_file_content(file)
     comment_prefix, comment_suffix = get(comment_map, ext, ("#", ""))
 
     return """
-    $(comment_prefix)File Name: $file$comment_suffix
-    $(comment_prefix)Content: $comment_suffix
+    $(comment_prefix)File Name: $(relative_path)$(comment_suffix)
+    $(comment_prefix)Content: $(comment_suffix)
     $content
     ========================================
     """

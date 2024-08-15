@@ -1,4 +1,3 @@
-# src/AISH.jl
 module AISH
 
 using Dates
@@ -60,14 +59,16 @@ function start_conversation(state::AIState)
   end
 end
 
-function main()
+function start(;resume=false, streaming=true, project_path="")
   ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,))) # Nice program exit for ctrl + c.
-  args = parse_commandline()
-  ai_state = initialize_ai_state(resume=args["resume"], streaming=args["streaming"], project_path=args["project-path"])
+  ai_state = initialize_ai_state(;resume, streaming, project_path)
   start_conversation(ai_state)
   ai_state
 end
 
-export set_project_path
+function main()
+  args = parse_commandline()
+  start(resume=args["resume"], streaming=args["streaming"], project_path=args["project-path"])
+end
 
 end # module AISH

@@ -1,6 +1,6 @@
 streaming_process_query(ai_state::AIState, user_message) = begin
   add_n_save_user_message!(ai_state, user_message)
-  ai_stream_safe(ai_state, model=ai_state.model)
+  ai_stream_safe(ai_state, printout=false)
 end
 
 process_query(ai_state::AIState, user_message) = begin
@@ -13,7 +13,7 @@ function process_question(state::AIState)
 
   if state.streaming
     print("\e[32m¬ \e[0m")
-    full_response = ai_stream_safe(state) 
+    full_response = ai_stream_safe(state, printout=false) 
     msg = channel_to_string(full_response)
   else
     println("Thinking...")  
@@ -55,8 +55,5 @@ function cmd_all_info(cmd::Cmd, output=IOBuffer(), error=IOBuffer())
   end
   exitcode = isnothing(process) ? "" : "\nexit code=$(process.exitcode)"
   except   = isnothing(err)     ? "" : "\nexception=$err"
-  return """
-stdout=$(String(take!(output)))
-stderr=$(String(take!(error)))$(exitcode)$(except)
-"""
+  return """stdout=$(String(take!(output)))stderr=$(String(take!(error)))$(exitcode)$(except)"""
 end
