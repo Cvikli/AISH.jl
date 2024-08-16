@@ -55,6 +55,12 @@ using AISH
 AISH.start("../my_project")
 ```
 
+or from commandline:
+
+```sh
+julia test/main.jl -p "../myproject" --streaming
+```
+
 This will start an interactive session where you can communicate with the AI assistant.
 
 ## Configuration
@@ -125,6 +131,7 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
 - [ ] LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
 - [ ] Thinking should be an interactive line that shows basically progress... But in the end it disappear
 - [ ] model specific max token
+- [x] simpler server start from CMD and from julia code. 
 - [x] STREAMING anthropic claude
 - [x] Multi SH can be handled
 - [x] Update the SYSTEM_PROMPT AS THE FILES CHANGE
