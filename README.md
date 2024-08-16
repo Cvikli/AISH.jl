@@ -38,20 +38,12 @@ It is actually ChatSH but a little bit rethinked version!
 - Files over 250 lines are not easy for the AI to edit... But lot of case it handle it with "rest of the code" and so on.
 
 ## Installation
-We use `meld`, `zsh`
+Install `meld`, `zsh`, as we use them! 
 
 ```julia
 using Pkg
 Pkg.add("AISH")
 ```
-
-For voice 2 text... TODO
-<!-- pip install pydub deepgram-sdk
-https://github.com/jiaaro/pydub#getting-ffmpeg-set-up
-apt-get install libav-tools libavcodec-extra
-####    OR    #####
-apt-get install ffmpeg libavcodec-extra -->
-
 
 ## Usage
 
@@ -60,18 +52,14 @@ To start using AISH.jl, run the following commands in Julia:
 ```julia
 using AISH
 
-# Initialize the AI state
-state = AISH.initialize_ai_state()
-
-# Start the conversation
-AISH.start_conversation(state)
+AISH.start("../my_project")
 ```
 
 This will start an interactive session where you can communicate with the AI assistant.
 
 ## Configuration
 
-The project uses a configuration file (`src/config.jl`) to set up various parameters:
+The project uses a configuration file (`src/AI_config.jl`) to set up various parameters:
 
 - `PROJECT_PATH`: The root path of your project
 - `ChatSH`: The name of the AI assistant (default: "Koda")
@@ -83,7 +71,7 @@ You can modify these settings to customize the behavior of AISH.jl.
 
 - `src/`: Contains the main source code
   - `AISH.jl`: Main module file
-  - `AI_struct.jl`: AI state structure
+  - `AIstate.jl`: AI state structure
   - `AI_config.jl`+`AI_prompt.jl`: Configurations
   - `process_query.jl`: Handles processing of user queries
   - `includes.jl`: Manages file inclusions
@@ -133,6 +121,7 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
   - [ ] next python... 
   - [ ] next DOCS for it... so it will be up for the community!
 - [ ] If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
+- [ ] Multimodal (image + docs)
 - [ ] LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
 - [ ] Thinking should be an interactive line that shows basically progress... But in the end it disappear
 - [ ] model specific max token
