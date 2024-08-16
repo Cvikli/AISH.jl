@@ -14,7 +14,8 @@ get_system() = strip(read(`uname -a`, String))
 get_shell() = strip(read(`$(ENV["SHELL"]) --version`, String))
 
 const PROJECT_FILES = [
-    "Dockerfile", "docker-compose.yml", "Makefile", "LICENSE",  # "README.md", 
+    "Dockerfile", "docker-compose.yml", "Makefile", "LICENSE",  
+    "README.md", 
     "Gemfile", "Cargo.toml"# , "Project.toml"
 ]
 
@@ -29,7 +30,7 @@ const FILE_EXTENSIONS = [
 ]
 const FILTERED_FOLDERS = ["test", "tests", "spec", "specs", "examples", "docs", "python", "benchmarks", "node_modules", 
 "conversations", "archived"]
-const IGNORED_FILE_PATTERNS = [".log", "config.ini", "secrets.yaml", "Manifest.toml", ".gitignore", "Project.toml", "README.md"]
+const IGNORED_FILE_PATTERNS = [".log", "config.ini", "secrets.yaml", "Manifest.toml", ".gitignore", "Project.toml"] # , "README.md"
 
 is_project_file(lowered_file) = lowered_file in PROJECT_FILES || any(endswith(lowered_file, "." * ext) for ext in FILE_EXTENSIONS)
 ignore_file(file) = any(endswith(file, pattern) for pattern in IGNORED_FILE_PATTERNS)

@@ -8,7 +8,7 @@ using Anthropic: channel_to_string
 
 include("AI_config.jl")
 include("AI_prompt.jl")
-include("AI_struct.jl")
+include("AIstate.jl")
 include("arg_parser.jl")
 
 include("anthropic/extending.jl")
