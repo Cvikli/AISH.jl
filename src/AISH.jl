@@ -4,14 +4,14 @@ using Dates
 
 using PromptingTools
 using Anthropic
-using Anthropic: channel_to_string
+using Anthropic: channel_to_string, initStreamMeta, StreamMeta
 
 include("AI_config.jl")
 include("AI_prompt.jl")
 include("AIState.jl")
 include("arg_parser.jl")
 
-include("anthropic/extending.jl")
+include("anthropic_extension.jl")
 
 include("keyboard.jl")
 
@@ -53,7 +53,7 @@ function start_conversation(state::AIState)
     print("\e[0m")  # reset text style
     isempty(strip(user_message)) && continue
     add_n_save_user_message!(state, user_message)
-    limit_user_messages(state)
+    # limit_user_messages(state)
     
     process_question(state)
   end

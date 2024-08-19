@@ -1,6 +1,7 @@
 const ChatSH::String = "Orion"
 const ainame::String = lowercase(ChatSH)
 const CONVERSATION_DIR = joinpath(@__DIR__, "..", "conversation")
+mkpath(CONVERSATION_DIR)
 
 const IGNORE_FILES = [".gitignore", ".aiignore", ".aishignore"]
 const MAX_TOKEN = 4096 # note this should be model specific later on! Note for not streaming the limit can be higher!!???
