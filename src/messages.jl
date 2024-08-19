@@ -4,8 +4,8 @@ get_all_conversations_file() = readdir(CONVERSATION_DIR)
 generate_conversation_id() = string(UUIDs.uuid4())
 get_message_separator(conversation_id) = "===AISH_MSG_$(conversation_id)==="
 
-save_message(state::AIState, msg::Message) = save_message(state, msg.role, msg.content; timestamp=msg.timestamp)
-function save_message(state::AIState, role, message; timestamp=now())
+save_message(state::AIState, msg::Message) = save_message(state, msg.role, msg.content; timestamp=msg.timestamp, itok=msg.itok, otok=msg.otok, price=msg.price, elapsed=msg.elapsed)
+function save_message(state::AIState, role, message; timestamp=now(), itok=0, otok=0, price=0, elapsed=0)
     mkpath(CONVERSATION_DIR)
     conversation_id = state.selected_conv_id
     message_separator = get_message_separator(conversation_id)
@@ -28,11 +28,11 @@ function save_message(state::AIState, role, message; timestamp=now())
         open(filename, isnothing(existing_file) ? "w" : "a") do file
             if isnothing(existing_file) || length(cur_conv_msgs(state)) == 2
                 for msg in cur_conv_msgs(state)
-                    println(file, "$(msg.timestamp) [$(msg.role)]: $(msg.content)")
+                    println(file, "$(msg.timestamp) [$(msg.role), in: $(msg.itok), out: $(msg.otok), price: $(msg.price), elapsed: $(msg.elapsed)]: $(msg.content)")
                     println(file, message_separator)
                 end
             else
-                println(file, "$(timestamp) [$(role)]: $(message)")
+                println(file, "$(timestamp) [$(role), in: $(itok), out: $(otok), price: $(price), elapsed: $(elapsed)]: $(message)")
                 println(file, message_separator)
             end
         end
@@ -59,9 +59,17 @@ function get_conversation_history(conversation_id)
     messages = split(content, get_message_separator(conversation_id), keepempty=false)
     
     return filter(!isnothing, map(messages) do message
-        m = match(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?) \[(\w+)\]: (.+)"s, strip(message))
+        m = match(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?) \[(\w+), in: (\d+), out: (\d+), price: ([\d.]+), elapsed: ([\d.]+)\]: (.+)"s, strip(message))
         if m !== nothing
-            Message(DateTime(m[1]), Symbol(m[2]), m[3])
+            Message(
+                timestamp=DateTime(m[1]),
+                role=Symbol(m[2]),
+                content=m[7],
+                itok=parse(Int, m[3]),
+                otok=parse(Int, m[4]),
+                price=parse(Float32, m[5]),
+                elapsed=parse(Float32, m[6])
+            )
         else
             nothing
         end

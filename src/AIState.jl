@@ -1,9 +1,14 @@
 using Dates
 
-mutable struct Message
+@kwdef mutable struct Message
     timestamp::DateTime
     role::Symbol
     content::String
+    id::String=""
+    itok::Int=0
+    otok::Int=0
+    price::Float32=0
+    elapsed::Float32=0
 end
 
 mutable struct ConversationInfo
@@ -85,7 +90,7 @@ end
 function generate_new_conversation(state::AIState)
     new_id = generate_conversation_id()
     state.selected_conv_id = new_id
-    state.conversation[new_id] = ConversationInfo(now(), "", new_id, [Message(now(), :system, SYSTEM_PROMPT(state.project_path))])
+    state.conversation[new_id] = ConversationInfo(now(), "", new_id, [Message(timestamp=now(), role=:system, content=SYSTEM_PROMPT(state.project_path))])
 end
 
 function update_project_path!(state::AIState, new_path::String)
@@ -95,70 +100,39 @@ end
 
 function update_system_prompt!(state::AIState; new_system_prompt="")
     new_system_prompt = new_system_prompt == "" ? SYSTEM_PROMPT(state.project_path) : new_system_prompt
-    cur_conv_msgs(state)[1] = Message(now(), :system, new_system_prompt)
+    cur_conv_msgs(state)[1] = Message(timestamp=now(), role=:system, content=new_system_prompt)
     println("\e[33mSystem prompt updated due to file changes.\e[0m")
 end
 
 function add_n_save_user_message!(state::AIState, user_message)
-    msg = Message(now(), :user, strip(user_message))
+    msg = Message(timestamp=now(), role=:user, content=strip(user_message))
     push!(cur_conv_msgs(state), msg)
     save_user_message(state, msg)
 end
 
-function add_n_save_ai_message!(state::AIState, ai_message)
-    msg = Message(now(), :assistant, strip(ai_message))
-    push!(cur_conv_msgs(state), msg)
-    save_ai_message(state, msg)
+add_n_save_ai_message!(state::AIState, ai_message) = add_n_save_ai_message!(state, Message(timestamp=now(), role=:assistant, content=strip(ai_message)))
+add_n_save_ai_message!(state::AIState, ai_message, meta) = add_n_save_ai_message!(state, Message(timestamp=now(), role=:assistant, content=strip(ai_message), itok=meta.input_token, otok=meta.output_token, price=meta.price))
+function add_n_save_ai_message!(state::AIState, ai_msg::Message)
+    push!(cur_conv_msgs(state), ai_msg)
+    save_ai_message(state, ai_msg)
 end
 
 to_dict(state::AIState) = to_dict(cur_conv_msgs(state))
 to_dict(conversation::Vector{Message}) = [Dict("role" => string(msg.role), "content" => msg.content) for msg in conversation]
 
 function conversation_to_dict(state::AIState)
-    result = Dict{String,String}[]
+    result = Dict{String,Any}[]
     for message in cur_conv_msgs(state)
         push!(result, Dict(
-            "timestamp" => Dates.format(message.timestamp, "yyyy-mm-dd_HH:MM:SS"),
+            "timestamp" => datetime2unix(message.timestamp),
             "role" => string(message.role),
-            "message" => message.content
+            "content" => message.content,
+            "id" => message.id,
+            "input_tokens" => message.itok,
+            "output_tokens" => message.otok,
+            "price" => message.price,
+            "elapsed" => message.elapsed
         ))
     end
     return result
-end
-
-function print_project_tree(path::String)
-    files = get_project_files(path)
-    rel_paths = sort([relpath(f, path) for f in files])
-    
-    println("Project structure:")
-    prev_parts = String[]
-    for (i, file) in enumerate(rel_paths)
-        parts = splitpath(file)
-        
-        # Find the common prefix with the previous file
-        common_prefix_length = findfirst(j -> j > length(prev_parts) || parts[j] != prev_parts[j], 1:length(parts)) - 1
-        
-        # Print directories that are new in this path
-        for j in (common_prefix_length + 1):(length(parts) - 1)
-            print_tree_line(parts[1:j], j, i == length(rel_paths), false, rel_paths[i+1:end])
-        end
-        
-        # Print the file (or last directory)
-        print_tree_line(parts, length(parts), i == length(rel_paths), true, rel_paths[i+1:end])
-        
-        prev_parts = parts
-    end
-end
-
-function print_tree_line(parts, depth, is_last_file, is_last_part, remaining_paths)
-    prefix = ""
-    for k in 1:(depth - 1)
-        prefix *= any(p -> startswith(p, join(parts[1:k], "/")), remaining_paths) ? "│   " : "    "
-    end
-    
-    symbol = is_last_file && is_last_part ? "└── " : "├── "
-    println(prefix * symbol * parts[end] * (is_last_part ? "" : "/"))
-end
-function print_project_tree(state::AIState)
-    print_project_tree(state.project_path)
 end

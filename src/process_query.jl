@@ -1,6 +1,8 @@
 streaming_process_query(ai_state::AIState, user_message) = begin
   add_n_save_user_message!(ai_state, user_message)
-  ai_stream_safe(ai_state, printout=false)
+  full_response, user_meta, ai_meta = ai_stream_safe(ai_state, printout=false)
+  # append_token_information()
+  full_response, user_meta, ai_meta 
 end
 
 process_query(ai_state::AIState, user_message) = begin
@@ -9,21 +11,27 @@ process_query(ai_state::AIState, user_message) = begin
 end
 
 function process_question(state::AIState)
+  local ai_msg
   update_system_prompt!(state)
 
   if state.streaming
     print("\e[32m¬ \e[0m")
-    full_response = ai_stream_safe(state, printout=false) 
+    full_response, user_meta, ai_meta = ai_stream_safe(state, printout=false) 
     msg = channel_to_string(full_response)
+    updated_content = update_message_with_outputs(msg)
+    # append_token_information(state, user_meta)
+    ai_msg = Message(timestamp=now(), role=:assistant, content=updated_content, id="", itok=ai_meta.input_tokens, otok=ai_meta.output_tokens, price=assistant_message.price, elapsed=0)
   else
     println("Thinking...")  
     assistant_message = anthropic_ask_safe(state)
     msg = assistant_message.content
+    updated_content = update_message_with_outputs(msg)
+    user_meta = StreamMeta()
+    ai_msg = Message(timestamp=now(), role=:assistant, content=updated_content, id="", itok=assistant_message.tokens[1], otok=assistant_message.tokens[2], price=assistant_message.cost, elapsed=assistant_message.elapsed)
   end
-  updated_content = update_message_with_outputs(msg)
   println("\n\e[32m¬ \e[0m$(updated_content)")
 
-  add_n_save_ai_message!(state, updated_content)
+  add_n_save_ai_message!(state, ai_msg)
 
   return cur_conv_msgs(state)[end]
 end

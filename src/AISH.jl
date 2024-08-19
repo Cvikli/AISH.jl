@@ -9,6 +9,7 @@ using Anthropic: channel_to_string, initStreamMeta, StreamMeta
 include("AI_config.jl")
 include("AI_prompt.jl")
 include("AIState.jl")
+include("project_tree.jl")
 include("arg_parser.jl")
 
 include("anthropic_extension.jl")
@@ -52,10 +53,8 @@ function start_conversation(state::AIState)
     user_message = readline_improved()
     print("\e[0m")  # reset text style
     isempty(strip(user_message)) && continue
-    add_n_save_user_message!(state, user_message)
-    # limit_user_messages(state)
     
-    process_question(state)
+    process_query(state, user_message)
   end
 end
 
