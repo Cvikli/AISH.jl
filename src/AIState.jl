@@ -65,7 +65,7 @@ cur_conv_msgs(state::AIState) = state.conversation[state.selected_conv_id].messa
 
 limit_user_messages(state::AIState) = (c = cur_conv_msgs(state); length(c) > 12 && (state.conversation[state.selected_conv_id].messages = [c[1], c[4:end]...]))
 
-system_prompt(state::AIState) = state.conversation[state.selected_conv_id].messages[1]
+system_prompt(state::AIState) = length(state.conversation[state.selected_conv_id].messages)>0 ? state.conversation[state.selected_conv_id].messages[1] : "" 
 
 function set_streaming!(state::AIState, value::Bool)
     state.streaming = value
