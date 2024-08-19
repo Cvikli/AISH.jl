@@ -17,7 +17,7 @@ EOF
 
 To modify or update an existing file use meld merge tool like this:
 ```sh
-meld file_path <(cat <<-"EOF"
+meld ./file_path <(cat <<-"EOF"
 new_file_content
 EOF
 )
@@ -25,7 +25,7 @@ EOF
 
 So to update and modify existing files use meld merge tool with cat to virtually create a filecontent and send to the meld:
 ```sh
-meld file_path <(cat <<EOF
+meld ./file_path <(cat <<EOF
 your_new_file_content
 EOF
 )
@@ -78,7 +78,7 @@ In spite of the programming language you should always try to use the sh blocks 
 
 meld filepath <(cat <<-"EOF"  is required to modify the codebase like this below:
 ```sh
-meld file_path <(cat <<-"EOF"
+meld ./file_path <(cat <<-"EOF"
 new_file_content
 EOF
 )
