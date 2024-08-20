@@ -1,8 +1,8 @@
 streaming_process_query(ai_state::AIState, user_message) = begin
   add_n_save_user_message!(ai_state, user_message)
-  full_response, user_meta, ai_meta = ai_stream_safe(ai_state, printout=false)
+  full_response, user_meta, ai_meta, start_time = ai_stream_safe(ai_state, printout=false)
   # append_token_information()
-  full_response, user_meta, ai_meta 
+  full_response, user_meta, ai_meta, start_time
 end
 
 process_query(ai_state::AIState, user_message) = begin
@@ -16,11 +16,12 @@ function process_question(state::AIState)
 
   if state.streaming
     print("\e[32m¬ \e[0m")
-    full_response, user_meta, ai_meta = ai_stream_safe(state, printout=false) 
+    full_response, user_meta, ai_meta, start_time = ai_stream_safe(state, printout=false) 
     msg = channel_to_string(full_response)
-    updated_content = update_message_with_outputs(msg)
+    calc_elapsed_times(user_meta, ai_meta, start_time)
     # append_token_information(state, user_meta)
-    ai_msg = Message(timestamp=now(), role=:assistant, content=updated_content, id="", itok=ai_meta.input_tokens, otok=ai_meta.output_tokens, price=assistant_message.price, elapsed=0)
+    updated_content = update_message_with_outputs(msg)
+    ai_msg = Message(timestamp=now(), role=:assistant, content=updated_content, id="", itok=ai_meta.input_tokens, otok=ai_meta.output_tokens, price=ai_meta.price, elapsed=ai_meta.elapsed)
   else
     println("Thinking...")  
     assistant_message = anthropic_ask_safe(state)
@@ -55,13 +56,11 @@ end
 
 
 function cmd_all_info(cmd::Cmd, output=IOBuffer(), error=IOBuffer())
-  err, process = nothing, nothing
+  err, process = "", nothing
   try
     process = run(pipeline(ignorestatus(cmd), stdout=output, stderr=error))
   catch e
-    err = e
+    err = "$e"
   end
-  exitcode = isnothing(process) ? "" : "\nexit code=$(process.exitcode)"
-  except   = isnothing(err)     ? "" : "\nexception=$err"
-  return """stdout=$(String(take!(output)))stderr=$(String(take!(error)))$(exitcode)$(except)"""
+  join(["$name=$str" for (name, str) in [("stdout", String(take!(output))), ("stderr", String(take!(error))), ("exception", err), ("exit_code", isnothing(process) ? "" : process.exitcode)] if !isempty(str)], "\n")
 end

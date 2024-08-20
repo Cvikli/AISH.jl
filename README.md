@@ -98,6 +98,16 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 - [ ] RAG (EasyRAG ongoing. Context + search tool)
 - [*] GUI (AIApp)
+- Speed
+  - [ ] type compatibility checks!
+  - [ ] memory allocation checks!
+  - [ ] speedup! measure... improve is necessary
+- [x] File tree list
+- [x] Elapsed time
+- [x] cost(maybe calculation?) 
+- [ ] cost(estimation!) 
+- [x] token  
+- [x] frontend code evaluation (execute API)
 - [ ] BENCHMARKING advanced even modular...
   - [ ] we need custom benchmark examples...
   - [ ] Code creation -> Parseable -> Executeable -> Expected test result
@@ -108,7 +118,6 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
   - [ ] test cases should be automatically generated on codebases. If it reach the appropriate state in 1 prompt or not. Also we should modify the prompt till it would be achievable by human. 
   - [ ] sh code modification and code validation... 
   - [ ] also maybe CoT... so it could solve in certain steps. We would accept longer resolution (Feature: CoT is required for this) 
-- [ ] token + cost(maybe calculation?) + elapsed time registration for messages...
 - [ ] CoT
   - [ ] problem ->
   - [ ] solve
@@ -130,7 +139,7 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
 - [ ] Multimodal (image + docs)
 - [ ] LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
 - [ ] Thinking should be an interactive line that shows basically progress... But in the end it disappear
-- [ ] model specific max token
+- [x] anthropic specific max token based on model (8192)
 - [x] simpler server start from CMD and from julia code. 
 - [x] STREAMING anthropic claude
 - [x] Multi SH can be handled

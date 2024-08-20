@@ -4,7 +4,7 @@ using Dates
 
 using PromptingTools
 using Anthropic
-using Anthropic: channel_to_string, initStreamMeta, StreamMeta
+using Anthropic: channel_to_string, initStreamMeta, StreamMeta, calc_elapsed_times
 
 include("AI_config.jl")
 include("AI_prompt.jl")

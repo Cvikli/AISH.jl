@@ -15,6 +15,7 @@ mutable struct ConversationInfo
     timestamp::DateTime
     sentence::String
     id::String
+    system_message::Message
     messages::Vector{Message}
 end
 
@@ -63,9 +64,9 @@ end
 
 cur_conv_msgs(state::AIState) = state.conversation[state.selected_conv_id].messages
 
-limit_user_messages(state::AIState) = (c = cur_conv_msgs(state); length(c) > 12 && (state.conversation[state.selected_conv_id].messages = [c[1], c[4:end]...]))
+limit_user_messages(state::AIState) = (c = cur_conv_msgs(state); length(c) > 12 && (state.conversation[state.selected_conv_id].messages = c[end-11:end]))
 
-system_prompt(state::AIState) = state.conversation[state.selected_conv_id].messages[1]
+system_message(state::AIState) = state.conversation[state.selected_conv_id].system_message
 
 function set_streaming!(state::AIState, value::Bool)
     state.streaming = value
@@ -77,12 +78,14 @@ function get_all_conversations_without_messages(state::AIState)
         id = get_id_from_file(file)
         timestamp = get_timestamp_from_file(file)
         sentence = get_conversation_from_file(file)
-        state.conversation[id] = ConversationInfo(timestamp, sentence, id, Message[])
+        state.conversation[id] = ConversationInfo(timestamp, sentence, id, Message(timestamp=now(), role=:system, content=""), Message[])
     end
 end
 
 function select_conversation(state::AIState, conversation_id)
-    state.conversation[conversation_id].messages = get_conversation_history(conversation_id)
+    conversation_history = get_conversation_history(conversation_id)
+    state.conversation[conversation_id].system_message = conversation_history[1]
+    state.conversation[conversation_id].messages = conversation_history[2:end]
     state.selected_conv_id = conversation_id
     println("Conversation id selected: $(state.selected_conv_id)")
 end
@@ -90,7 +93,13 @@ end
 function generate_new_conversation(state::AIState)
     new_id = generate_conversation_id()
     state.selected_conv_id = new_id
-    state.conversation[new_id] = ConversationInfo(now(), "", new_id, [Message(timestamp=now(), role=:system, content=SYSTEM_PROMPT(state.project_path))])
+    state.conversation[new_id] = ConversationInfo(
+        now(),
+        "",
+        new_id,
+        Message(timestamp=now(), role=:system, content=SYSTEM_PROMPT(state.project_path)),
+        Message[]
+    )
 end
 
 function update_project_path!(state::AIState, new_path::String)
@@ -100,7 +109,7 @@ end
 
 function update_system_prompt!(state::AIState; new_system_prompt="")
     new_system_prompt = new_system_prompt == "" ? SYSTEM_PROMPT(state.project_path) : new_system_prompt
-    cur_conv_msgs(state)[1] = Message(timestamp=now(), role=:system, content=new_system_prompt)
+    state.conversation[state.selected_conv_id].system_message = Message(timestamp=now(), role=:system, content=new_system_prompt)
     println("\e[33mSystem prompt updated due to file changes.\e[0m")
 end
 
@@ -111,18 +120,28 @@ function add_n_save_user_message!(state::AIState, user_message)
 end
 
 add_n_save_ai_message!(state::AIState, ai_message) = add_n_save_ai_message!(state, Message(timestamp=now(), role=:assistant, content=strip(ai_message)))
-add_n_save_ai_message!(state::AIState, ai_message, meta) = add_n_save_ai_message!(state, Message(timestamp=now(), role=:assistant, content=strip(ai_message), itok=meta.input_token, otok=meta.output_token, price=meta.price))
+add_n_save_ai_message!(state::AIState, ai_message, meta) = add_n_save_ai_message!(state, Message(timestamp=now(), role=:assistant, content=strip(ai_message), itok=meta.input_tokens, otok=meta.output_tokens, price=meta.price))
 function add_n_save_ai_message!(state::AIState, ai_msg::Message)
     push!(cur_conv_msgs(state), ai_msg)
     save_ai_message(state, ai_msg)
 end
 
-to_dict(state::AIState) = to_dict(cur_conv_msgs(state))
-to_dict(conversation::Vector{Message}) = [Dict("role" => string(msg.role), "content" => msg.content) for msg in conversation]
+to_dict(state::AIState) = [Dict("role" => "system", "content" => system_message(state).content); [Dict("role" => string(msg.role), "content" => msg.content) for msg in cur_conv_msgs(state)]]
 
 function conversation_to_dict(state::AIState)
-    result = Dict{String,Any}[]
-    for message in cur_conv_msgs(state)
+    conv = state.conversation[state.selected_conv_id]
+    result = Dict{String,Any}[Dict(
+        "timestamp" => datetime2unix(conv.system_message.timestamp),
+        "role" => "system",
+        "content" => conv.system_message.content,
+        "id" => conv.system_message.id,
+        "input_tokens" => conv.system_message.itok,
+        "output_tokens" => conv.system_message.otok,
+        "price" => conv.system_message.price,
+        "elapsed" => conv.system_message.elapsed
+    )]
+    
+    for message in conv.messages
         push!(result, Dict(
             "timestamp" => datetime2unix(message.timestamp),
             "role" => string(message.role),

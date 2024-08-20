@@ -12,30 +12,21 @@ function save_message(state::AIState, role, message; timestamp=now(), itok=0, ot
     existing_file = get_conversation_filename(conversation_id)
 
     if isnothing(existing_file)
-        first_user_message = cur_conv_msgs(state)[2]
-        sanitized_chars = strip(replace(replace(first(first_user_message.content, 32), r"[^\w\s-]" => "_"), r"\s+" => "_"), '_')
-        state.conversation[conversation_id] = ConversationInfo(
-            first_user_message.timestamp,
-            sanitized_chars,
-            conversation_id,
-            cur_conv_msgs(state)
-        )
-        filename = joinpath(CONVERSATION_DIR, "$(Dates.format(first_user_message.timestamp, "yyyy-mm-dd_HH:MM:SS"))_$(sanitized_chars)_$(conversation_id).log")
+        conv = state.conversation[conversation_id]
+        sanitized_chars = strip(replace(replace(first(conv.messages[1].content, 32), r"[^\w\s-]" => "_"), r"\s+" => "_"), '_')
+        filename = joinpath(CONVERSATION_DIR, "$(Dates.format(conv.timestamp, "yyyy-mm-dd_HH:MM:SS"))_$(sanitized_chars)_$(conversation_id).log")
     else
         filename = existing_file
     end
-    if length(cur_conv_msgs(state)) >= 2
-        open(filename, isnothing(existing_file) ? "w" : "a") do file
-            if isnothing(existing_file) || length(cur_conv_msgs(state)) == 2
-                for msg in cur_conv_msgs(state)
-                    println(file, "$(msg.timestamp) [$(msg.role), in: $(msg.itok), out: $(msg.otok), price: $(msg.price), elapsed: $(msg.elapsed)]: $(msg.content)")
-                    println(file, message_separator)
-                end
-            else
-                println(file, "$(timestamp) [$(role), in: $(itok), out: $(otok), price: $(price), elapsed: $(elapsed)]: $(message)")
-                println(file, message_separator)
-            end
+    
+    open(filename, isnothing(existing_file) ? "w" : "a") do file
+        if isnothing(existing_file)
+            system_msg = state.conversation[conversation_id].system_message
+            println(file, "$(system_msg.timestamp) [system, in: $(system_msg.itok), out: $(system_msg.otok), price: $(system_msg.price), elapsed: $(system_msg.elapsed)]: $(system_msg.content)")
+            println(file, message_separator)
         end
+        println(file, "$(timestamp) [$(role), in: $(itok), out: $(otok), price: $(price), elapsed: $(elapsed)]: $(message)")
+        println(file, message_separator)
     end
 end
 
@@ -58,12 +49,12 @@ function get_conversation_history(conversation_id)
     content = read(filename, String)
     messages = split(content, get_message_separator(conversation_id), keepempty=false)
     
-    return filter(!isnothing, map(messages) do message
+    return filter(!isnothing, map(enumerate(messages)) do (i, message)
         m = match(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?) \[(\w+), in: (\d+), out: (\d+), price: ([\d.]+), elapsed: ([\d.]+)\]: (.+)"s, strip(message))
         if m !== nothing
             Message(
                 timestamp=DateTime(m[1]),
-                role=Symbol(m[2]),
+                role=i == 1 ? :system : Symbol(m[2]),
                 content=m[7],
                 itok=parse(Int, m[3]),
                 otok=parse(Int, m[4]),
@@ -83,7 +74,9 @@ function resume_last_conversation(state::AIState)
     latest_conv_id = latest_conv[2]
     
     state.selected_conv_id = latest_conv_id
-    state.conversation[latest_conv_id].messages = get_conversation_history(latest_conv_id)
+    messages = get_conversation_history(latest_conv_id)
+    state.conversation[latest_conv_id].system_message = messages[1]
+    state.conversation[latest_conv_id].messages = messages[2:end]
     
     return latest_conv_id
 end

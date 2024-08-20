@@ -3,17 +3,10 @@ const ainame::String = lowercase(ChatSH)
 const CONVERSATION_DIR = joinpath(@__DIR__, "..", "conversation")
 mkpath(CONVERSATION_DIR)
 
+
 const IGNORE_FILES = [".gitignore", ".aiignore", ".aishignore"]
 const MAX_TOKEN = 4096 # note this should be model specific later on! Note for not streaming the limit can be higher!!???
 
-function set_project_path(path)
-    global PROJECT_PATH = path
-    PROJECT_PATH !== "" && (cd(PROJECT_PATH); PROJECT_PATH = pwd(); println("Project path initialized: $(PROJECT_PATH)"))
-    return PROJECT_PATH
-end
-
-get_system() = strip(read(`uname -a`, String))
-get_shell() = strip(read(`$(ENV["SHELL"]) --version`, String))
 
 const PROJECT_FILES = [
     "Dockerfile", "docker-compose.yml", "Makefile", "LICENSE",  
@@ -34,6 +27,15 @@ const FILTERED_FOLDERS = ["spec", "specs", "examples", "docs", "python", "benchm
 "conversations", "archived", ".git"]
 const IGNORED_FILE_PATTERNS = [".log", "config.ini", "secrets.yaml", "Manifest.toml", ".gitignore", ".aiignore", ".aishignore", "Project.toml"] # , "README.md"
 
+get_system() = strip(read(`uname -a`, String))
+get_shell() = strip(read(`$(ENV["SHELL"]) --version`, String))
+
+function set_project_path(path)
+    global PROJECT_PATH = path
+    PROJECT_PATH !== "" && (cd(PROJECT_PATH); PROJECT_PATH = pwd(); println("Project path initialized: $(PROJECT_PATH)"))
+    return PROJECT_PATH
+end
+
 is_project_file(lowered_file) = lowered_file in PROJECT_FILES || any(endswith(lowered_file, "." * ext) for ext in FILE_EXTENSIONS)
 ignore_file(file) = any(endswith(file, pattern) for pattern in IGNORED_FILE_PATTERNS)
 
@@ -53,7 +55,10 @@ end
 function parse_ignore_files(root)
     patterns = String[]
     for ignore_file in IGNORE_FILES
-        append!(patterns, parse_ignore_file(root, ignore_file))
+        ignore_path = joinpath(root, ignore_file)
+        if isfile(ignore_path)
+            append!(patterns, readlines(ignore_path))
+        end
     end
     return patterns
 end
@@ -72,6 +77,7 @@ function gitignore_to_regex(pattern)
 end
 
 function is_ignored_by_patterns(file, ignore_patterns, root)
+    root=="" && return false
     rel_path = relpath(file, root)
     for pattern in ignore_patterns
         regex = gitignore_to_regex(pattern)
