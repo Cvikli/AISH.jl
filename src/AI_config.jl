@@ -152,10 +152,10 @@ function format_file_content(file)
     ========================================
     """
 end
-
-function get_all_project_with_URIs(path)
+function get_all_project_files(path, question="")
     all_files = get_project_files(path)
     result = map(file -> format_file_content(file), all_files)
     return join(result, "\n")
 end
+project_ctx = get_all_project_files
 

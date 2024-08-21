@@ -6,7 +6,7 @@ The regex match return with SubString a strip(...) also return with SubString, s
 # Don't annotate the function arguments with types. 
 # """
 
-SYSTEM_PROMPT(path) = """You are $ChatSH, an AI language model that specializes in assisting the user with his task using SHELL commands.
+SYSTEM_PROMPT(;codebase="") = """You are $ChatSH, an AI language model that specializes in assisting the user with his task using SHELL commands.
 
 To create new file use cat like this:
 ```sh
@@ -68,12 +68,7 @@ The used SHELL is:
 $(get_shell())
 The SHELL is in this folder right now:
 $(pwd())
-""" *
-(path=="" ? "" : """The folder structure of your codebase that you are working in:
-========================================
-$(get_all_project_with_URIs(path))""") *
-"""
-
+$codebase
 In spite of the programming language you should always try to use the sh blocks that was told to you to solve the tasks! 
 
 meld filepath <(cat <<-"EOF"  is required to modify the codebase like this below:
@@ -88,6 +83,13 @@ With these informations in mind you can communicate with the user from here!
 User requests arrive these are what you have to fulfill.
 """
 
+get_codebase_ctx(question, path, ) = """
+The codebase you are working on:
+================================
+$(project_ctx(path, question))
+================================
+This is the latest version of the codebase, chats after these can only hold same or older versions only. If something is not like you proposed that is probably that change was not accepted, or there were manual edits in the code, which we should keep probably.
+"""
 # literally the only system_prompt it need was very easy. 
 
 # In spite of the programming language you should always try to use the sh blocks that was told to you to solve the tasks! 

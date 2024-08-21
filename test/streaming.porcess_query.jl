@@ -1,5 +1,5 @@
 
-function process_question(state::AIState)
+function process_message(state::AIState)
   assistant_message = safe_aigenerate(state.conversation, model=state.model)
   print("\e[32m¬ \e[0m")
   assistant_message = stream_anthropic_response(state.conversation, model=state.model)

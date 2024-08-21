@@ -45,7 +45,7 @@ function initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; resume::Bool=fa
             if !isempty(cur_conv_msgs(state))
                 if cur_conv_msgs(state)[end].role == :user
                     println("Processing last unanswered message: $(cur_conv_msgs(state)[end].content)")
-                    process_question(state)
+                    process_message(state)
                 else
                     println("The last user message was answered already: \e[36m➜ \e[0m\"$(cur_conv_msgs(state)[end-1].content)\"")
                     println("So continuing from here...")

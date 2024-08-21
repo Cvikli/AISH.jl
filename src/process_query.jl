@@ -1,16 +1,25 @@
-streaming_process_query(ai_state::AIState, user_message) = begin
+streaming_process_question(ai_state::AIState, user_message) = begin
   add_n_save_user_message!(ai_state, user_message)
   full_response, user_meta, ai_meta, start_time = ai_stream_safe(ai_state, printout=false)
   # append_token_information()
   full_response, user_meta, ai_meta, start_time
 end
+create_conversation(question) = begin
+  codebase_ctx = get_codebase_ctx(question, aistate.project_path)
+  sysprompt = SYSTEM_PROMPT(codebase=codebase_ctx)
+  msgs_history = get_history(aistate.conversation, keep=5)
+  context_msg = get_context_msg(question)
+  new_user_msg = get_new_user_msg(question)
+  [sysprompt, msgs_history..., context_msg, new_user_msg]
+end
+process_question(ai_state::AIState, question) = begin
+  conv = create_conversation(question)
 
-process_query(ai_state::AIState, user_message) = begin
   add_n_save_user_message!(ai_state, user_message)
-  process_question(ai_state)
+  process_message(ai_state)
 end
 
-function process_question(state::AIState)
+function process_message(state::AIState)
   local ai_msg
   update_system_prompt!(state)
 
