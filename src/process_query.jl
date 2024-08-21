@@ -1,8 +1,9 @@
 
-create_conversation(question) = begin
-  codebase_ctx = get_codebase_ctx(question, aistate.project_path)
-  sysprompt = SYSTEM_PROMPT(codebase=codebase_ctx)
-  msgs_history = get_history(aistate.conversation, keep=5)
+create_conversation(ai_state, question) = begin
+  conv = curr_conv(ai_state)
+  codebase_ctx = get_codebase_ctx(question, conv.rel_project_paths)
+  sysprompt = SYSTEM_PROMPT(ctx=codebase_ctx)
+  msgs_history = get_history(conv, keep=5)
   context_msg = get_context_msg(question)
   new_user_msg = get_new_user_msg(question)
   [sysprompt, msgs_history..., context_msg, new_user_msg]
@@ -16,7 +17,7 @@ streaming_process_question(ai_state::AIState, user_message) = begin
   full_response, user_meta, ai_meta, start_time
 end
 process_question(ai_state::AIState, user_question) = begin
-  # conv = create_conversation(question)
+  # conv = create_conversation(ai_state, question)
 
   add_n_save_user_message!(ai_state, user_question)
   process_message(ai_state)
