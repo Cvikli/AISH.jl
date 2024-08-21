@@ -63,8 +63,8 @@ function get_project_files(path)
     ignore_cache = Dict{String, Vector{String}}()
     ignore_stack = Pair{String, Vector{String}}[]
     
-    for (root, dirs, files_in_dir) in walkdir(path)
-        any(d -> d in FILTERED_FOLDERS, splitpath(root)) && continue
+    for (root, dirs, files_in_dir) in walkdir(path, topdown=true)
+        any(d -> d in FILTERED_FOLDERS, splitpath(root)) && (empty!(dirs); continue)
         
         # Read and cache ignore patterns for this directory
         if !haskey(ignore_cache, root)
