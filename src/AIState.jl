@@ -105,12 +105,7 @@ end
 
 function update_project_path!(state::AIState, new_path::String)
     state.project_path = set_project_path(new_path)
-    update_system_prompt!(state)
-end
-
-function update_system_prompt!(state::AIState; new_system_prompt="")
-    new_system_prompt = new_system_prompt == "" ? SYSTEM_PROMPT(state.project_path) : new_system_prompt
-    state.conversation[state.selected_conv_id].system_message = Message(timestamp=now(), role=:system, content=new_system_prompt)
+    state.conversation[state.selected_conv_id].system_message = Message(timestamp=now(), role=:system, content=SYSTEM_PROMPT(state.project_path))
     println("\e[33mSystem prompt updated due to file changes.\e[0m")
 end
 
