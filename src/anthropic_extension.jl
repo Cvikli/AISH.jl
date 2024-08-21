@@ -5,7 +5,7 @@ using HTTP
 # Anthropic.stream_response(ai_state::AIState;         model::String=ai_state.model,               max_tokens::Int=MAX_TOKEN, printout=true) = stream_response(to_dict(ai_state); model, max_tokens, printout)
 # Anthropic.stream_response(messages::Vector{Message}; model::String="claude-3-5-sonnet-20240620", max_tokens::Int=MAX_TOKEN, printout=true) = stream_response(to_dict(messages); model, max_tokens, printout)
 
-Anthropic.ai_stream_safe(ai_state::AIState; system_msg=system_message(ai_state).content, model=ai_state.model, max_tokens::Int=MAX_TOKEN, printout=true) = ai_stream_safe(to_dict(ai_state); system_msg, model, max_tokens, printout)
+Anthropic.ai_stream_safe(ai_state::AIState; system_msg=system_message(ai_state).content, model=ai_state.model, max_tokens::Int=MAX_TOKEN, printout=true) = ai_stream_safe(to_dict_nosys(ai_state); system_msg, model, max_tokens, printout)
 
 anthropic_ask_safe(ai_state::AIState; model=ai_state.model, return_all=false) = anthropic_ask_safe(ai_state.conversation[ai_state.selected_conv_id]; model, return_all)
 anthropic_ask_safe(conversation::ConversationInfo; model, return_all=false) = begin

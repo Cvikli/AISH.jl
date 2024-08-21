@@ -26,11 +26,12 @@ end
     model::String = ""
     streaming::Bool = true
     project_path::String = ""
+    skip_code_execution::Bool = false  # New flag to skip code execution
 end
 
 # Initialize AI State
-function initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; resume::Bool=false, streaming::Bool=true, project_path::String="")
-    state = AIState(model=MODEL, streaming=streaming)
+function initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; resume::Bool=false, streaming::Bool=true, project_path::String="", skip_code_execution::Bool=false)
+    state = AIState(model=MODEL, streaming=streaming, skip_code_execution=skip_code_execution)
     get_all_conversations_without_messages(state)
     println("\e[32mAI State initialized successfully.\e[0m ")  # Green text
 
@@ -127,10 +128,11 @@ function add_n_save_ai_message!(state::AIState, ai_msg::Message)
 end
 
 to_dict(state::AIState) = [Dict("role" => "system", "content" => system_message(state).content); [Dict("role" => string(msg.role), "content" => msg.content) for msg in cur_conv_msgs(state)]]
+to_dict_nosys(state::AIState) = [Dict("role" => string(msg.role), "content" => msg.content) for msg in cur_conv_msgs(state)]
 
-function conversation_to_dict(state::AIState)
+function conversation_to_dict(state::AIState; with_sysprompt=true)
     conv = state.conversation[state.selected_conv_id]
-    result = Dict{String,Any}[Dict(
+    result = with_sysprompt ?  Dict{String,Any}[Dict(
         "timestamp" => datetime2unix(conv.system_message.timestamp),
         "role" => "system",
         "content" => conv.system_message.content,
@@ -139,7 +141,7 @@ function conversation_to_dict(state::AIState)
         "output_tokens" => conv.system_message.otok,
         "price" => conv.system_message.price,
         "elapsed" => conv.system_message.elapsed
-    )]
+    )] : Dict{String,Any}[]
     
     for message in conv.messages
         push!(result, Dict(

@@ -20,13 +20,13 @@ function process_question(state::AIState)
     msg = channel_to_string(full_response)
     calc_elapsed_times(user_meta, ai_meta, start_time)
     # append_token_information(state, user_meta)
-    updated_content = update_message_with_outputs(msg)
+    updated_content = state.skip_code_execution ? msg : update_message_with_outputs(msg)
     ai_msg = Message(timestamp=now(), role=:assistant, content=updated_content, id="", itok=ai_meta.input_tokens, otok=ai_meta.output_tokens, price=ai_meta.price, elapsed=ai_meta.elapsed)
   else
     println("Thinking...")  
     assistant_message = anthropic_ask_safe(state)
     msg = assistant_message.content
-    updated_content = update_message_with_outputs(msg)
+    updated_content = state.skip_code_execution ? msg : update_message_with_outputs(msg)
     user_meta = StreamMeta()
     ai_msg = Message(timestamp=now(), role=:assistant, content=updated_content, id="", itok=assistant_message.tokens[1], otok=assistant_message.tokens[2], price=assistant_message.cost, elapsed=assistant_message.elapsed)
   end

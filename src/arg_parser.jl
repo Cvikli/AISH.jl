@@ -19,6 +19,9 @@ function parse_commandline()
         "--streaming", "-s"
             help = "Enable streaming mode for AI responses"
             action = :store_true
+        "--skip-code-execution", "-x"
+            help = "Skip execution of code blocks"
+            action = :store_true
     end
 
     return parse_args(s)
