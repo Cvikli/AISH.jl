@@ -11,6 +11,8 @@ Backend server for the GUI: [AISHServer](https://github.com/Cvikli/AISHServer)
 
 It is actually ChatSH but a little bit rethinked version!
 
+WARNING: the project in in experimental state! APIs can change if we see better pattern as we are researching for the simplest LLM SH system yet. 
+
 ## DEMO
 
 
@@ -135,8 +137,8 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
   - [ ] next python... 
   - [ ] next DOCS for it... so it will be up for the community!
 - [ ] If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
-- [ ] Multiple project path handling 
-  - [ ] Find most common path and then replace the relative path appropriately!
+- [x] Multiple project path handling 
+  - [x] Find most common path and then replace the relative path appropriately!
 - [ ] Multimodal (image + docs)
 - [ ] LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
 - [ ] Thinking should be an interactive line that shows basically progress... But in the end it disappear
