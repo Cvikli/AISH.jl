@@ -67,7 +67,6 @@ This will start an interactive session where you can communicate with the AI ass
 
 The project uses a configuration file (`src/AI_config.jl`) to set up various parameters:
 
-- `PROJECT_PATH`: The root path of your project
 - `ChatSH`: The name of the AI assistant (default: "Koda")
 - `SYSTEM_PROMPT`: The initial system prompt for the AI
 
@@ -83,7 +82,7 @@ You can modify these settings to customize the behavior of AISH.jl.
   - `includes.jl`: Manages file inclusions
   - `error_managers/`: Error handling utilities
   - `benchmarking/`: Benchmarking tools
-- `conversation/`: Stores conversation logs
+- `conversations/`: Stores conversation logs
 
 ## Contributing
 
@@ -136,6 +135,8 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
   - [ ] next python... 
   - [ ] next DOCS for it... so it will be up for the community!
 - [ ] If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
+- [ ] Multiple project path handling 
+  - [ ] Find most common path and then replace the relative path appropriately!
 - [ ] Multimodal (image + docs)
 - [ ] LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
 - [ ] Thinking should be an interactive line that shows basically progress... But in the end it disappear

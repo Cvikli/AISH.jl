@@ -11,30 +11,31 @@ using Dates
     elapsed::Float32=0
 end
 
-mutable struct ConversationInfo
-    timestamp::DateTime
-    sentence::String
+@kwdef mutable struct ConversationInfo
+    timestamp::DateTime=now()
+    sentence::String=""
     id::String
-    system_message::Message
-    messages::Vector{Message}
+    system_message::Message=Message(timestamp=now(), role=:system, content="")
+    messages::Vector{Message}=[]
+    rel_project_paths::Vector{String}=[]
+    common_path::String=""
 end
 
 # AI State struct
 @kwdef mutable struct AIState
-    conversation::Dict{String,ConversationInfo} = Dict()
-    selected_conv_id::String = ""
+    conversations::Dict{String,ConversationInfo}=Dict()
+    selected_conv_id::String=""
+    streaming::Bool=true
+    skip_code_execution::Bool=false
     model::String = ""
-    streaming::Bool = true
-    project_path::String = ""
-    skip_code_execution::Bool = false  # New flag to skip code execution
 end
 
 # Initialize AI State
-function initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; resume::Bool=false, streaming::Bool=true, project_path::String="", skip_code_execution::Bool=false)
-    state = AIState(model=MODEL, streaming=streaming, skip_code_execution=skip_code_execution)
+function initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; resume::Bool=false, streaming::Bool=true, project_paths::Vector{String}=[], skip_code_execution::Bool=false)
+    state = AIState(streaming=streaming, skip_code_execution=skip_code_execution, model=MODEL)
     get_all_conversations_without_messages(state)
-    println("\e[32mAI State initialized successfully.\e[0m ")  # Green text
-
+    println("\e[32mAI State initialized successfully.\e[0m ")
+    
     if resume
         last_conv_id = resume_last_conversation(state)
         if isempty(last_conv_id)
@@ -42,12 +43,12 @@ function initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; resume::Bool=fa
             println("No previous conversation found. Starting a new conversation. Conversion id: $(state.selected_conv_id)")
         else
             println("Resumed conversation with ID: $last_conv_id")
-            if !isempty(cur_conv_msgs(state))
-                if cur_conv_msgs(state)[end].role == :user
-                    println("Processing last unanswered message: $(cur_conv_msgs(state)[end].content)")
+            if !isempty(curr_conv_msgs(state))
+                if curr_conv_msgs(state)[end].role == :user
+                    println("Processing last unanswered message: $(curr_conv_msgs(state)[end].content)")
                     process_message(state)
                 else
-                    println("The last user message was answered already: \e[36m➜ \e[0m\"$(cur_conv_msgs(state)[end-1].content)\"")
+                    println("The last user message was answered already: \e[36m➜ \e[0m\"$(curr_conv_msgs(state)[end-1].content)\"")
                     println("So continuing from here...")
                 end
             else
@@ -58,16 +59,24 @@ function initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; resume::Bool=fa
         generate_new_conversation(state)
         println("Conversion id: $(state.selected_conv_id)")
     end
-    update_project_path!(state, project_path)
+    update_project_path_and_sysprompt!(state, project_paths)
+
     print_project_tree(state)
     return state
 end
+set_project_path(path::String) = path !== "" && (cd(path); println("Project path initialized: $(path)"))
+set_project_path(ai_state::AIState) = set_project_path(curr_conv(ai_state).common_path)
+set_project_path(ai_state::AIState, paths) = begin
+    curr_conv(ai_state).common_path, curr_conv(ai_state).rel_project_paths = find_common_path_and_relatives(paths)
+    set_project_path(ai_state)
+end
 
-cur_conv_msgs(state::AIState) = state.conversation[state.selected_conv_id].messages
+curr_conv(state::AIState) = state.conversations[state.selected_conv_id]
+curr_conv_msgs(state::AIState) = curr_conv(state).messages
 
-limit_user_messages(state::AIState) = (c = cur_conv_msgs(state); length(c) > 12 && (state.conversation[state.selected_conv_id].messages = c[end-11:end]))
+limit_user_messages(state::AIState) = (c = curr_conv_msgs(state); length(c) > 12 && (state.conversations[state.selected_conv_id].messages = c[end-11:end]))
 
-system_message(state::AIState) = state.conversation[state.selected_conv_id].system_message
+system_message(state::AIState) = state.conversations[state.selected_conv_id].system_message
 
 function set_streaming!(state::AIState, value::Bool)
     state.streaming = value
@@ -79,14 +88,14 @@ function get_all_conversations_without_messages(state::AIState)
         id = get_id_from_file(file)
         timestamp = get_timestamp_from_file(file)
         sentence = get_conversation_from_file(file)
-        state.conversation[id] = ConversationInfo(timestamp, sentence, id, Message(timestamp=now(), role=:system, content=""), Message[])
+        state.conversations[id] = ConversationInfo(;timestamp, sentence, id)
     end
 end
 
 function select_conversation(state::AIState, conversation_id)
     conversation_history = get_conversation_history(conversation_id)
-    state.conversation[conversation_id].system_message = conversation_history[1]
-    state.conversation[conversation_id].messages = conversation_history[2:end]
+    state.conversations[conversation_id].system_message = conversation_history[1]
+    state.conversations[conversation_id].messages = conversation_history[2:end]
     state.selected_conv_id = conversation_id
     println("Conversation id selected: $(state.selected_conv_id)")
 end
@@ -94,52 +103,31 @@ end
 function generate_new_conversation(state::AIState)
     new_id = generate_conversation_id()
     state.selected_conv_id = new_id
-    state.conversation[new_id] = ConversationInfo(
-        now(),
-        "",
-        new_id,
-        Message(timestamp=now(), role=:system, content=SYSTEM_PROMPT(state.project_path)),
-        Message[]
-    )
+    state.conversations[new_id] = ConversationInfo(id=new_id)
 end
 
-function update_project_path!(state::AIState, new_path::String)
-    state.project_path = set_project_path(new_path)
-    state.conversation[state.selected_conv_id].system_message = Message(timestamp=now(), role=:system, content=SYSTEM_PROMPT(state.project_path))
+function update_project_path_and_sysprompt!(state::AIState, project_paths::Vector{String}=String[])
+    !isempty(project_paths) && (set_project_path(state, project_paths))
+    state.conversations[state.selected_conv_id].system_message = Message(timestamp=now(), role=:system, content=SYSTEM_PROMPT(ctx=projects_ctx(curr_conv(state).rel_project_paths)))
     println("\e[33mSystem prompt updated due to file changes.\e[0m")
 end
 
-function add_n_save_user_message!(state::AIState, user_message)
-    msg = Message(timestamp=now(), role=:user, content=strip(user_message))
-    push!(cur_conv_msgs(state), msg)
-    save_user_message(state, msg)
+add_n_save_user_message!(state::AIState, user_question::String) = add_n_save_user_message!(state, Message(timestamp=now(), role=:user, content=strip(user_question)))
+function add_n_save_user_message!(state::AIState, user_msg::Message)
+    push!(curr_conv_msgs(state), user_msg)
+    save_user_message(state, user_msg)
 end
 
-add_n_save_ai_message!(state::AIState, ai_message) = add_n_save_ai_message!(state, Message(timestamp=now(), role=:assistant, content=strip(ai_message)))
-add_n_save_ai_message!(state::AIState, ai_message, meta) = add_n_save_ai_message!(state, Message(timestamp=now(), role=:assistant, content=strip(ai_message), itok=meta.input_tokens, otok=meta.output_tokens, price=meta.price))
+add_n_save_ai_message!(state::AIState, ai_message::String)       = add_n_save_ai_message!(state, Message(timestamp=now(), role=:assistant, content=strip(ai_message)))
+add_n_save_ai_message!(state::AIState, ai_message::String, meta) = add_n_save_ai_message!(state, Message(timestamp=now(), role=:assistant, content=strip(ai_message), itok=meta.input_tokens, otok=meta.output_tokens, price=meta.price, elapsed=meta.elapsed))
 function add_n_save_ai_message!(state::AIState, ai_msg::Message)
-    push!(cur_conv_msgs(state), ai_msg)
+    push!(curr_conv_msgs(state), ai_msg)
     save_ai_message(state, ai_msg)
 end
 
-to_dict(state::AIState) = [Dict("role" => "system", "content" => system_message(state).content); [Dict("role" => string(msg.role), "content" => msg.content) for msg in cur_conv_msgs(state)]]
-to_dict_nosys(state::AIState) = [Dict("role" => string(msg.role), "content" => msg.content) for msg in cur_conv_msgs(state)]
-
-function conversation_to_dict(state::AIState; with_sysprompt=true)
-    conv = state.conversation[state.selected_conv_id]
-    result = with_sysprompt ?  Dict{String,Any}[Dict(
-        "timestamp" => datetime2unix(conv.system_message.timestamp),
-        "role" => "system",
-        "content" => conv.system_message.content,
-        "id" => conv.system_message.id,
-        "input_tokens" => conv.system_message.itok,
-        "output_tokens" => conv.system_message.otok,
-        "price" => conv.system_message.price,
-        "elapsed" => conv.system_message.elapsed
-    )] : Dict{String,Any}[]
-    
-    for message in conv.messages
-        push!(result, Dict(
+to_dict(state::AIState) = [Dict("role" => "system", "content" => system_message(state).content); to_dict_nosys(state)]
+to_dict_nosys(state::AIState) = [Dict("role" => string(msg.role), "content" => msg.content) for msg in curr_conv_msgs(state)]
+to_dict_nosys_detailed(state::AIState;)= [Dict(
             "timestamp" => datetime2unix(message.timestamp),
             "role" => string(message.role),
             "content" => message.content,
@@ -148,7 +136,4 @@ function conversation_to_dict(state::AIState; with_sysprompt=true)
             "output_tokens" => message.otok,
             "price" => message.price,
             "elapsed" => message.elapsed
-        ))
-    end
-    return result
-end
+        ) for message in curr_conv_msgs(state)]

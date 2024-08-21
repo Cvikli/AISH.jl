@@ -4,15 +4,15 @@ function parse_commandline()
     s = ArgParseSettings()
 
     @add_arg_table! s begin
-        "project-path"
-            help = "Set the project path"
+        "project-paths"
+            help = "Set one or more project paths"
             arg_type = String
-            default = ""
-            required = false
-        "--project-path", "-p"
-            help = "Set the project path (alternative way)"
+            nargs = '*'  # Allow multiple arguments
+            default = String[]  # Default to an empty array of strings
+        "--project-paths", "-p"
+            help = "Set one or more project paths (alternative way)"
             arg_type = String
-            default = ""
+            nargs = '+'  # Require at least one argument when using this option
         "--resume", "-r"
             help = "Flag to resume last conversation"
             action = :store_true

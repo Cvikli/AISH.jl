@@ -32,6 +32,5 @@ function print_tree_line(parts, depth, is_last_file, is_last_part, remaining_pat
 	symbol = is_last_file && is_last_part ? "└── " : "├── "
 	println(prefix * symbol * parts[end] * (is_last_part ? "" : "/"))
 end
-function print_project_tree(state::AIState)
-	print_project_tree(state.project_path)
-end
+print_project_tree(state::AIState) = print_project_tree.(curr_conv(state).rel_project_paths)
+print_project_tree(path) = print_project_tree(path)
