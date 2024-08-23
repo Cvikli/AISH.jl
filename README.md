@@ -86,39 +86,10 @@ You can modify these settings to customize the behavior of AISH.jl.
   - `benchmarking/`: Benchmarking tools
 - `conversations/`: Stores conversation logs
 
-## Contributing
-
-Contributions to AISH.jl are welcome! Please feel free to submit issues, fork the repository and send pull requests.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 
 ## TODO
 Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 - [ ] RAG (EasyRAG ongoing. Context + search tool)
-- [*] GUI (AIApp)
-- Speed
-  - [ ] type compatibility checks!
-  - [ ] memory allocation checks!
-  - [ ] speedup! measure... improve is necessary
-- [x] File tree list
-- [x] Elapsed time
-- [x] cost(maybe calculation?) 
-- [ ] cost(estimation!) 
-- [x] token  
-- [x] frontend code evaluation (execute API)
-- [ ] BENCHMARKING advanced even modular...
-  - [ ] we need custom benchmark examples...
-  - [ ] Code creation -> Parseable -> Executeable -> Expected test result
-  - [ ] Also whole benchmark cases should be automatically generated
-  - [ ] Should handle different mode like: Code generation or even file generation (like we do with the AISH)
-  - [ ] We could use python benchmark test cases to see how far do we rate with those problem in julia! ;)
-  - [ ] like modifying the code to achieve a state...
-  - [ ] test cases should be automatically generated on codebases. If it reach the appropriate state in 1 prompt or not. Also we should modify the prompt till it would be achievable by human. 
-  - [ ] sh code modification and code validation... 
-  - [ ] also maybe CoT... so it could solve in certain steps. We would accept longer resolution (Feature: CoT is required for this) 
 - [ ] CoT
   - [ ] problem ->
   - [ ] solve
@@ -126,22 +97,30 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
   - [ ] how to test
   - [ ] did it succeed?
   - [ ] jump to "solve".
+- [ ] If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
+- [ ] Multimodal (image + docs)
+- [x] GUI (AIApp)
 - [ ] FINE TUNEING
-  - [x] improve benchmark score
   - [ ] simplify the answer... shorter... filter sentences should be minimized!
   - [ ] forbid the system to generate this many extra token in the end! 
+  - [x] improve benchmark score
   - [x] forbid the AI to create ```sh_run_results blocks...
 - [ ] multilanguage support. 
-  - [x] So for now Julia... 
-  - [ ] next Javascript.. 
   - [ ] next python... 
   - [ ] next DOCS for it... so it will be up for the community!
-- [ ] If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
+  - [x] So for now Julia... 
+  - [x] next Javascript.. 
 - [x] Multiple project path handling 
   - [x] Find most common path and then replace the relative path appropriately!
-- [ ] Multimodal (image + docs)
-- [ ] LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
-- [ ] Thinking should be an interactive line that shows basically progress... But in the end it disappear
+- [x] Speed
+  - [x] type compatibility checks!
+  - [x] memory allocation checks!
+  - [x] speedup! measure... improve is necessary
+- [x] File tree list
+- [x] Elapsed time
+- [x] cost(maybe calculation?) 
+- [x] token  
+- [x] frontend code evaluation (execute API)
 - [x] anthropic specific max token based on model (8192)
 - [x] simpler server start from CMD and from julia code. 
 - [x] STREAMING anthropic claude
@@ -163,6 +142,7 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
 - [x] multilanguage support at context creation (the comment)
 - [x] resume conversation
 
+
 -[ ] Default talks like:
   - [ ] What should I know about this solution...
   - [ ] format the code... improve spacing
@@ -183,6 +163,10 @@ Finding what "stable state can we manually automatically validate" and traveling
   - [ ] messenger communication automation
   - [ ] website/internet search and surfing
 
+TODOs lost interest...
+- [ ] cost(estimation!) 
+- [ ] LIVE modification... So it could even eval the running function.... THIS IS ONLY GOOD IF WE WANT TO DEVELOP ITSELF... BUT nice feature... :D
+- [ ] Thinking should be an interactive line that shows basically progress... But in the end it disappear
 
 # Why Julia?
 
@@ -213,3 +197,17 @@ EOL
 
 
 could you repair the previous conversation resume to search for the last conversation by date which is read out from the file name and then continue it. If the last conversation is a UserMessage then continue it from then.
+
+## Contributing
+
+Contributions to AISH.jl are welcome! Please feel free to submit issues, fork the repository and send pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+### Sponsors                                                                                          
+
+If you feel the results and also believe opensource is key for healthy and fair world then don't forget to support our work!                                                                                                                                   
+- [Github sponsor](https://github.com/sponsors/Cvikli)                                                       
+
