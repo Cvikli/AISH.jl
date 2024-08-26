@@ -90,7 +90,7 @@ You can modify these settings to customize the behavior of AISH.jl.
 ## TODO
 Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 - [ ] RAG (EasyRAG ongoing. Context + search tool)
-- [ ] CoT
+- [ ] CoT (TEST generates the problem. Instead of us. This is the key to create CoT!)
   - [ ] Define Goal -> PROBLEM & TEST
   - [ ] SOLVE(PROBLEM)
   - [ ] how to TEST (CUSTOM) defined in the Goal! 
