@@ -13,7 +13,7 @@ mkpath(CONVERSATION_DIR)
 
 
 const IGNORE_FILES = [".gitignore", ".aishignore"]
-const MAX_TOKEN = 4096 # note this should be model specific later on! Note for not streaming the limit can be higher!!???
+const MAX_TOKEN = 8192 
 
 const PROJECT_FILES = [
     "Dockerfile", "docker-compose.yml", "Makefile", "LICENSE",  

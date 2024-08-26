@@ -13,7 +13,7 @@ function save_message(state::AIState, role, message; timestamp=now(UTC), itok=0,
     
     open(filename, isnothing(existing_file) ? "w" : "a") do file
         if isnothing(existing_file)
-            system_msg = curr_conv(state).system_message
+            system_msg = system_message(state)
             println(file, "$(date_format(system_msg.timestamp)) [system, in: $(system_msg.itok), out: $(system_msg.otok), price: $(system_msg.price), elapsed: $(system_msg.elapsed)]: $(system_msg.content)")
             println(file, message_separator)
         end

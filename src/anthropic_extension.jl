@@ -15,5 +15,5 @@ anthropic_ask_safe(conversation::ConversationInfo; model, return_all=false) = be
          msg.role == :assistant ? AIMessage(msg.content) : UserMessage(msg.content)
          for msg in conversation.messages]...
     ]
-    return ai_ask_safe(conv, model=model, return_all=return_all, max_token=MAX_TOKEN)
+    return ai_ask_safe(conv, model=model, return_all=return_all, max_token=min(MAX_TOKEN,4096))
 end

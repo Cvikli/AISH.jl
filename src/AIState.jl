@@ -4,7 +4,6 @@ using Dates
     timestamp::DateTime
     role::Symbol
     content::String
-    id::String=""
     itok::Int=0
     otok::Int=0
     price::Float32=0
@@ -134,7 +133,6 @@ to_dict_nosys_detailed(state::AIState;)= [Dict(
             "timestamp" => date_format(message.timestamp),
             "role" => string(message.role),
             "content" => message.content,
-            "id" => message.id,
             "input_tokens" => message.itok,
             "output_tokens" => message.otok,
             "price" => message.price,
