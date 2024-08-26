@@ -11,7 +11,7 @@ Backend server for the GUI: [AISHServer](https://github.com/Cvikli/AISHServer)
 
 It is actually ChatSH but a little bit rethinked version!
 
-WARNING: the project in in experimental state! APIs can change if we see better pattern as we are researching for the simplest LLM SH system yet. 
+WARNING: the project in in experimental state! APIs can change if we see better patterns as we are researching for the simplest LLM SH system yet. 
 
 ## DEMO
 
@@ -29,8 +29,8 @@ WARNING: the project in in experimental state! APIs can change if we see better 
 
 ## Limitation estimation (Sonnet 3.5)
 - On very basic cases it works around like 90-99% of the times. 
-- Sometimes it forces like 3-4 different solution and somehow feels like it stuck with old API document and that is the cause of the issue. 
-- Sometimes it is too hard to explain a very complex data management behind when it  just cannot create the best solution for you.
+- Sometimes it forces like 3-4 different solutions and somehow feels like it stuck with old API document and that is the cause of the issue. 
+- Sometimes it is too hard to explain a very complex data management behind when it just cannot create the best solution for you.
 - Also lot of time it writes stuff that does somehow similar functionality than some part of a code or it forget to use a state of a variable which is not really related but actually will hold useful information in that stage of the code which could reduce some calculation, in these cases we have to point out to use the values in those storages.
 - It sometimes too precise and even put the type annotation in the functions args which isn't always a good pattern, so that should be somehow ordered to be more lazy. 
 - Also it writes a little lengthy code and then we have to order it to simplify it. It simplify codes EXTREMLY well but make sure it doesn't change the functionality when it simplifies it (also you can order it to keep the same functionality when simplifing).
@@ -106,7 +106,7 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
 - [ ] If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
 - [ ] Multimodal (image + docs)
 - [x] GUI (AIApp)
-- [ ] FINE TUNEING
+- [ ] FINE TUNING
   - [ ] simplify the answer... shorter... filter sentences should be minimized!
   - [ ] forbid the system to generate this many extra token in the end! 
   - [x] improve benchmark score
@@ -162,7 +162,7 @@ Finding what "stable state can we manually automatically validate" and traveling
 
 
 
-- [ ] AI assistent functionalities
+- [ ] AI assistant functionalities
   - [ ] mail read
   - [ ] organizing calendar
   - [ ] organizing TODO list
@@ -176,7 +176,7 @@ TODOs lost interest...
 
 # Why Julia?
 
-Because julia is the most descriptive, simple language while keeping literally C/C++ speed. This means drastically faster development and understandable code. Also it has crazy stuffs starting with Revise and many more, (julia-awesome overview will be linked for extrem productivity)
+Because julia is the most descriptive, simple language while keeping literally C/C++ speed. This means drastically faster development and understandable code. Also it has crazy stuff starting with Revise and many more, (julia-awesome overview will be linked for extreme productivity)
 
 Also for humans and for AI the context length is limited, this way we can get always on the top for both "user". :D
 
