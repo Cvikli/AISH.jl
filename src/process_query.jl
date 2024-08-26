@@ -11,10 +11,10 @@ end
 
 
 streaming_process_question(ai_state::AIState, user_message) = begin
-  add_n_save_user_message!(ai_state, user_message)
+  user_msg = add_n_save_user_message!(ai_state, user_message)
   full_response, user_meta, ai_meta, start_time = ai_stream_safe(ai_state, printout=false)
   # append_token_information()
-  full_response, user_meta, ai_meta, start_time
+  full_response, user_meta, ai_meta, start_time, user_msg
 end
 process_question(ai_state::AIState, user_question) = begin
   # conv = create_conversation(ai_state, question)

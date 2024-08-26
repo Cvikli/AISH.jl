@@ -1,3 +1,31 @@
+
+DATE_FORMAT_REGEX = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(z|Z)?"
+DATE_FORMAT_REGEX = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:z|Z)?"
+CONVERSATION_FILE_REGEX = Regex("$(DATE_FORMAT_REGEX)\$")
+
+file = "2024-08-25T22:31:40.230z"
+
+
+m = match(CONVERSATION_FILE_REGEX, file)
+if !isnothing(m)
+    println("Timestamp: $(m[1])")
+    # println("Sentence: $(m[2])")
+    # println("ID: $(m[:id])")
+else
+    println("No match found")
+end
+
+
+#%%
+file = "2024-08-25T22:31:40.230z"
+
+TIME_FORMAT_REGEX = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:z|Z)?"
+
+m = match(TIME_FORMAT_REGEX, file)
+
+#%%
+
+
 using Statistics
 
 function weather_data_analyzer(temps::Vector{<:Real})

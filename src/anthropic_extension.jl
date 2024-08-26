@@ -7,7 +7,7 @@ using HTTP
 
 Anthropic.ai_stream_safe(ai_state::AIState; system_msg=system_message(ai_state).content, model=ai_state.model, max_tokens::Int=MAX_TOKEN, printout=true) = ai_stream_safe(to_dict_nosys(ai_state); system_msg, model, max_tokens, printout)
 
-anthropic_ask_safe(ai_state::AIState; model=ai_state.model, return_all=false) = anthropic_ask_safe(ai_state.conversation[ai_state.selected_conv_id]; model, return_all)
+anthropic_ask_safe(ai_state::AIState; model=ai_state.model, return_all=false) = anthropic_ask_safe(curr_conv(ai_state); model, return_all)
 anthropic_ask_safe(conversation::ConversationInfo; model, return_all=false) = begin
     conv = [
         SystemMessage(conversation.system_message.content),
