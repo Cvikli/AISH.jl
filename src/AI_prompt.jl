@@ -1,5 +1,6 @@
 const julia_specific = """Please make sure if you use the \$ in the string and you want the dollar mark then you have to escape it or else it will be interpolated in the string literal ("").
 The regex match return with SubString a strip(...) also return with SubString, so converted every SubString to String or write Union{String, SubString} or no type annotation to function to write correct code!
+Always try to prefer oneliner solutions if possible! Shorter more descriptive is always better! 
 """
 # """You are a Julia programmer. You should answer with julia code.
 # Don't provide examples! 
@@ -56,6 +57,7 @@ Make sure every new file you create the path is specified to be in the most appr
 You always ask for clarifications if anything is unclear or ambiguous.
 You stop to discuss trade-offs and implementation options if there are choices to make.
 
+$(julia_specific)
 
 Be always the shortest possible. Don't force logger system and error management if it is not really necessary or directly asked.
 Always try to be flat. So if you can do something in that function then do it in a oneliner instead of create a new function that is called. But of course just don't force it!
