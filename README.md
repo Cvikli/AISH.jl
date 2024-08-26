@@ -91,6 +91,12 @@ You can modify these settings to customize the behavior of AISH.jl.
 Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 - [ ] RAG (EasyRAG ongoing. Context + search tool)
 - [ ] CoT
+  - [ ] Define Goal -> PROBLEM & TEST
+  - [ ] SOLVE(PROBLEM)
+  - [ ] how to TEST (CUSTOM) defined in the Goal! 
+    - [ ] did it succeed?  (get errors + results = PROBLEM) from the running version of the code. which can be immediately feed back .
+    - [ ] no?  jump to SOLVE(PROBLEM)
+    - [ ] yes? READY
   - [ ] problem ->
   - [ ] solve
   - [ ] how to run
