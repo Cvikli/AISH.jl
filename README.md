@@ -38,6 +38,9 @@ WARNING: the project in in experimental state! APIs can change if we see better 
 - It forces pattern that are actually very good but it can overmodularize your project. It will even know it is overmodularized if you ask it and it can make it more flat if you ask. :D   
 - If there are duplicated files and codes that cause the AI to lose the reight structure and the right place to modify the codebase. (So like test files... or archived folders can be dangerous)
 - Files over 250 lines are not easy for the AI to edit... But lot of case it handle it with "rest of the code" and so on.
+- Javascript (react) specific: if the first solution doesn't work then it starts to complicate the solution more and more which is very likely doesn't really improve the code. In the end it can go to debug the code which most of the time help him to reach a good solution.
+- Javascript (react) specific: if it goes to wrong direction, often it starts to create error handlings and more advanced version of the specified function.
+- Streaming has "draft" data and "final" data and it manages it very poorly. Most of the time I had to finish these kind of work manually. Maybe someone has to prompt these more accurately to make sure to don't append draft values to the string endlessly. 
 
 ## Installation
 Install `meld`, `zsh`, as we use them! 
