@@ -13,7 +13,7 @@ function parse_conversation_filename(filename)
     m = match(CONVERSATION_FILE_REGEX, filename)
     return isnothing(m) ? (timestamp=nothing, sentence="", id="") : (
         timestamp=date_parse(m[1]),
-        sentence=m[2],
+        sentence=m[:sent],
         id=m[:id]
     )
 end

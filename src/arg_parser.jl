@@ -4,15 +4,15 @@ function parse_commandline()
     s = ArgParseSettings()
 
     @add_arg_table! s begin
-        "project-paths"
+        "message"
+            help = "Initial message to start the conversation"
+            arg_type = String
+            default = ""
+        "--project-paths", "-p"
             help = "Set one or more project paths"
             arg_type = String
             nargs = '*'  # Allow multiple arguments
             default = String[]  # Default to an empty array of strings
-        "--project-paths", "-p"
-            help = "Set one or more project paths (alternative way)"
-            arg_type = String
-            nargs = '+'  # Require at least one argument when using this option
         "--resume", "-r"
             help = "Flag to resume last conversation"
             action = :store_true
@@ -21,6 +21,9 @@ function parse_commandline()
             action = :store_true
         "--skip-code-execution", "-x"
             help = "Skip execution of code blocks"
+            action = :store_true
+        "--tokens", "-t"
+            help = "Show token count for each file"
             action = :store_true
     end
 

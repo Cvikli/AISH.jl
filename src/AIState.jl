@@ -35,8 +35,8 @@ end
 end
 
 # Initialize AI State
-initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; contexter, resume::Bool=false, streaming::Bool=true, project_paths::Vector{String}=String[], skip_code_execution::Bool=false) = initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, contexter)
-function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, contexter)
+initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; contexter, resume::Bool=false, streaming::Bool=true, project_paths::Vector{String}=String[], skip_code_execution::Bool=false, show_tokens::Bool=false) = initialize_ai_state(MODEL, resume, streaming, project_paths, skip_code_execution, show_tokens, contexter)
+function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, show_tokens, contexter)
     state = AIState(streaming=streaming, skip_code_execution=skip_code_execution, model=MODEL, contexter=contexter)
     get_all_conversations_without_messages(state)
     println("\e[32mAI State initialized successfully.\e[0m ")
@@ -66,10 +66,11 @@ function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{Str
     end
     update_project_path_and_sysprompt!(state, project_paths)
 
-    print_project_tree(state)
+    print_project_tree(state, show_tokens=show_tokens)
     println("All things setup!")
     return state
 end
+
 set_project_path(path::String) = path !== "" && (cd(path); println("Project path initialized: $(path)"))
 set_project_path(ai_state::AIState) = set_project_path(curr_conv(ai_state).common_path)
 set_project_path(ai_state::AIState, paths) = begin
