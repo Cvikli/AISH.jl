@@ -20,6 +20,10 @@ end
     common_path::String=""
 end
 
+abstract type AbstractContextCreator end
+@kwdef struct SimpleContexter <: AbstractContextCreator
+    keep::Int=7
+end
 # AI State struct
 @kwdef mutable struct AIState
     conversations::Dict{String,ConversationInfo}=Dict()
@@ -27,12 +31,13 @@ end
     streaming::Bool=true
     skip_code_execution::Bool=false
     model::String = ""
+    contexter::AbstractContextCreator=SimpleContexter()
 end
 
 # Initialize AI State
-initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; resume::Bool=false, streaming::Bool=true, project_paths::Vector{String}=String[], skip_code_execution::Bool=false) = initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution)
-function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution)
-    state = AIState(streaming=streaming, skip_code_execution=skip_code_execution, model=MODEL)
+initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; contexter, resume::Bool=false, streaming::Bool=true, project_paths::Vector{String}=String[], skip_code_execution::Bool=false) = initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, contexter)
+function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, contexter)
+    state = AIState(streaming=streaming, skip_code_execution=skip_code_execution, model=MODEL, contexter=contexter)
     get_all_conversations_without_messages(state)
     println("\e[32mAI State initialized successfully.\e[0m ")
     
@@ -62,6 +67,7 @@ function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{Str
     update_project_path_and_sysprompt!(state, project_paths)
 
     print_project_tree(state)
+    println("All things setup!")
     return state
 end
 set_project_path(path::String) = path !== "" && (cd(path); println("Project path initialized: $(path)"))
@@ -71,7 +77,9 @@ set_project_path(ai_state::AIState, paths) = begin
     set_project_path(ai_state)
 end
 
-curr_conv(state::AIState) = state.conversations[state.selected_conv_id]
+function curr_conv(state::AIState)
+    state.conversations[state.selected_conv_id]
+end
 curr_conv_msgs(state::AIState) = curr_conv(state).messages
 
 limit_user_messages(state::AIState) = (c = curr_conv_msgs(state); length(c) > 12 && (state.conversations[state.selected_conv_id].messages = c[end-11:end]))

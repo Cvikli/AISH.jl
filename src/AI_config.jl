@@ -16,7 +16,7 @@ const IGNORE_FILES = [".gitignore", ".aishignore"]
 const MAX_TOKEN = 8192 
 
 const PROJECT_FILES = [
-    "Dockerfile", "docker-compose.yml", "Makefile", "LICENSE",  
+    "Dockerfile", "docker-compose.yml", "Makefile", "LICENSE", "package.json", 
     "README.md", 
     "Gemfile", "Cargo.toml"# , "Project.toml"
 ]
@@ -57,10 +57,4 @@ function format_file_content(file)
     ========================================
     """
 end
-
-# function get_all_project_files(path, question="")
-#     all_files = get_project_files(path)
-#     result = map(file -> format_file_content(file), all_files)
-#     return join(result, "\n")
-# end
 

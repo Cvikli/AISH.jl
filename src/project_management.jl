@@ -58,7 +58,14 @@ function is_ignored_by_patterns(file, ignore_patterns, root)
     return false
 end
 
-function get_project_files(path)
+function get_project_files(paths::Vector{String})
+    all_files = String[]
+    for path in paths
+        append!(all_files, get_project_files(path))
+    end
+    return all_files
+end
+function get_project_files(path::String)
     files = String[]
     ignore_cache = Dict{String, Vector{String}}()
     ignore_stack = Pair{String, Vector{String}}[]
