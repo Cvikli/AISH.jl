@@ -20,10 +20,6 @@ end
     common_path::String=""
 end
 
-abstract type AbstractContextCreator end
-@kwdef struct SimpleContexter <: AbstractContextCreator
-    keep::Int=7
-end
 # AI State struct
 @kwdef mutable struct AIState
     conversations::Dict{String,ConversationInfo}=Dict()
@@ -35,7 +31,7 @@ end
 end
 
 # Initialize AI State
-initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; contexter, resume::Bool=false, streaming::Bool=true, project_paths::Vector{String}=String[], skip_code_execution::Bool=false, show_tokens::Bool=false) = initialize_ai_state(MODEL, resume, streaming, project_paths, skip_code_execution, show_tokens, contexter)
+initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; contexter=SimpleContexter(), resume::Bool=false, streaming::Bool=true, project_paths::Vector{String}=String[], skip_code_execution::Bool=false, show_tokens::Bool=false) = initialize_ai_state(MODEL, resume, streaming, project_paths, skip_code_execution, show_tokens, contexter)
 function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, show_tokens, contexter)
     state = AIState(streaming=streaming, skip_code_execution=skip_code_execution, model=MODEL, contexter=contexter)
     get_all_conversations_without_messages(state)

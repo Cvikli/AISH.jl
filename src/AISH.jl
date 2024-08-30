@@ -8,6 +8,7 @@ using Anthropic: channel_to_string, initStreamMeta, StreamMeta, calc_elapsed_tim
 
 include("AI_config.jl")
 include("AI_prompt.jl")
+include("AI_contexter.jl")
 include("AIState.jl")
 include("project_management.jl")
 include("project_tree.jl")
