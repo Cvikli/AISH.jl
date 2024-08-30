@@ -27,7 +27,7 @@ include("process_query.jl")
 handle_interrupt(sig::Int32) = (println("\nExiting gracefully. Good bye! :)"); exit(0))
 
 
-function start_conversation(state::AIState)
+function start_conversation(state::AIState, message)
   println("Welcome to $ChatSH AI. (using $(state.model))")
 
   while !isempty(curr_conv_msgs(state)) && curr_conv_msgs(state)[end].role == :user; pop!(curr_conv_msgs(state)); end
@@ -37,24 +37,29 @@ function start_conversation(state::AIState)
   while true
     print("\e[36m➜ \e[0m")  # teal arrow
     print("\e[1m")  # bold text
-    user_message = readline_improved()
+    user_question = message === nothing ? readline_improved() : message
+    message = nothing
     print("\e[0m")  # reset text style
-    isempty(strip(user_message)) && continue
+    isempty(strip(user_question)) && continue
     
-    process_question(state, user_message)
+    # maybe it is simpler if process_question is split up:
+    # # create_conversation!(ai_state.contexter, ai_state, user_question)
+    # # process_message(ai_state) or streamprocessing... this can be decided somewhere.
+    process_question(state, user_question)
   end
 end
 
-function start(;resume=false, streaming=true, project_paths=String[])
+function start(;resume=false, streaming=true, project_paths=String[], contexter=SimpleContexter(), message=nothing)
   ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,))) # Nice program exit for ctrl + c.
-  ai_state = initialize_ai_state(;resume, streaming, project_paths)
-  start_conversation(ai_state)
+  ai_state = initialize_ai_state(;contexter, resume, streaming, project_paths)
+  start_conversation(ai_state, message)
   ai_state
 end
-
-function main()
+function main(;contexter=SimpleContexter(), message=nothing, project_paths=nothing)
   args = parse_commandline()
-  start(resume=args["resume"], streaming=args["streaming"], project_paths=args["project-paths"])
+  message = message === nothing && haskey(args, "message") ? args["message"] : message
+  project_paths = project_paths === nothing ? args["project-paths"] : project_paths
+  start(resume=args["resume"], streaming=args["streaming"]; project_paths, contexter, message)
 end
 
 end # module AISH
