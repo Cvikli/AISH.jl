@@ -60,9 +60,9 @@ function start(message=""; resume=false, streaming=true, project_paths=String[],
   ai_state
 end
 
-function main()
+function main(;contexter=SimpleContexter())
   args = parse_commandline()
-  start(args["message"]; resume=args["resume"], streaming=args["streaming"], project_paths=args["project-paths"], show_tokens=args["tokens"])
+  start(args["message"]; resume=args["resume"], streaming=args["streaming"], project_paths=args["project-paths"], show_tokens=args["tokens"], contexter)
 end
 
 end # module AISH
