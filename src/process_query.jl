@@ -5,16 +5,20 @@ function cut_history!(conv; keep=10)
   conv.messages = conv.messages[max(end-keep+1,1):end]
   @assert isempty(conv.messages) || conv.messages[1].role == :user "We made a cut which doesn't end with :user role message"
 end
-create_conversation!(::SimpleContexter, ai_state, question) = begin
-  add_n_save_user_message!(ai_state, question)
+
+create_conversation!(contexter::SimpleContexter, ai_state, question) = begin
+  user_msg = add_n_save_user_message!(ai_state, question)
+  cut_history!(curr_conv(ai_state); keep=contexter.keep)
+  user_msg
 end
 
 streaming_process_question(ai_state::AIState, user_question) = begin
-  create_conversation!(ai.contexter, ai_state, user_question)
-  full_response, user_meta, ai_meta, start_time = ai_stream_safe(ai_state, printout=false)
-  # append_token_information()
+  user_msg = create_conversation!(ai_state.contexter, ai_state, user_question)
+  cache = get_cache_setting(ai_state.contexter)
+  full_response, user_meta, ai_meta, start_time = ai_stream_safe(ai_state, printout=false, cache=cache)
   full_response, user_meta, ai_meta, start_time, user_msg
 end
+
 process_question(ai_state::AIState, user_question::String) = begin
   create_conversation!(ai_state.contexter, ai_state, user_question)
 
@@ -25,13 +29,15 @@ function process_message(state::AIState)
   local ai_meta, msg
 
   if state.streaming
-    full_response, user_meta, ai_meta, start_time = ai_stream_safe(state, printout=false) 
+    cache = get_cache_setting(state.contexter)
+    full_response, user_meta, ai_meta, start_time = ai_stream_safe(state, printout=false, cache=cache) 
     msg = channel_to_string(full_response, cb=() -> (user_meta.elapsed -= start_time; println("\e[34mUser message meta: \e[0m$(format_meta_info(user_meta))")))
     calc_elapsed_times(ai_meta, user_meta.elapsed, start_time)
     update_last_user_message_meta(state, user_meta)
   else
     println("Thinking...")  
-    assistant_message = anthropic_ask_safe(state)
+    cache = get_cache_setting(state.contexter)
+    assistant_message = anthropic_ask_safe(state, cache=cache)
     msg = assistant_message.content
     ai_meta = StreamMeta(input_tokens=assistant_message.tokens[1], output_tokens=assistant_message.tokens[2], price=assistant_message.cost, elapsed=assistant_message.elapsed)
   end

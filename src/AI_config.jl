@@ -51,10 +51,10 @@ function format_file_content(file)
     comment_prefix, comment_suffix = get(comment_map, ext, ("#", ""))
 
     return """
-    $(comment_prefix)File Name: $(relative_path)$(comment_suffix)
-    $(comment_prefix)Content: $(comment_suffix)
+    File: $(relative_path)
+    ```
     $content
-    ========================================
+    ```
     """
 end
 
