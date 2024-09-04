@@ -14,10 +14,9 @@ It is actually ChatSH but a little bit rethinked version!
 WARNING: the project in in experimental state! APIs can change if we see better patterns as we are researching for the simplest LLM SH system yet. 
 
 ## DEMO
-
 https://github.com/user-attachments/assets/21b7504a-b06a-4579-ae27-6343079c7081
 
-
+Of course it can do a lot more then this! Basically it wrote most of his own codebase
 
 ## Features
 
