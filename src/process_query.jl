@@ -1,4 +1,4 @@
-function cut_history!(conv; keep=10)
+function cut_history!(conv; keep=9)
   if keep < 0
     return conv.messages
   end
@@ -6,22 +6,22 @@ function cut_history!(conv; keep=10)
   @assert isempty(conv.messages) || conv.messages[1].role == :user "We made a cut which doesn't end with :user role message"
 end
 
-create_conversation!(contexter::SimpleContexter, ai_state, question) = begin
-  user_msg = add_n_save_user_message!(ai_state, question)
+adjust_conversation!(contexter::SimpleContexter, ai_state, question) = begin
   cut_history!(curr_conv(ai_state); keep=contexter.keep)
-  user_msg
+  question
 end
 
 streaming_process_question(ai_state::AIState, user_question) = begin
-  user_msg = create_conversation!(ai_state.contexter, ai_state, user_question)
+  question = adjust_conversation!(ai_state.contexter, ai_state, user_question)
+  user_msg = add_n_save_user_message!(ai_state, question)
   cache = get_cache_setting(ai_state.contexter)
   full_response, user_meta, ai_meta, start_time = ai_stream_safe(ai_state, printout=false, cache=cache)
   full_response, user_meta, ai_meta, start_time, user_msg
 end
 
 process_question(ai_state::AIState, user_question::String) = begin
-  create_conversation!(ai_state.contexter, ai_state, user_question)
-
+  question = adjust_conversation!(ai_state.contexter, ai_state, user_question)
+  add_n_save_user_message!(ai_state, question)
   process_message(ai_state)
 end
 

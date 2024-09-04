@@ -46,9 +46,6 @@ function start_conversation(state::AIState, user_question="")
     print("\e[0m")  # reset text style
     isempty(strip(user_question)) && continue
     
-    # maybe it is simpler if process_question is split up:
-    # # create_conversation!(ai_state.contexter, ai_state, user_question)
-    # # process_message(ai_state) or streamprocessing... this can be decided somewhere.
     process_question(state, user_question)
   end
 end
