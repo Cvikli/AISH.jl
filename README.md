@@ -16,7 +16,7 @@ WARNING: the project in in experimental state! APIs can change if we see better 
 ## DEMO
 https://github.com/user-attachments/assets/21b7504a-b06a-4579-ae27-6343079c7081
 
-<p style="text-align: center;">TOf course it can do a lot more then this! Basically it wrote most of his own codebase</p>
+<center>Of course it can do a lot more then this! Basically it wrote most of his own codebase</center>
 
 ## Features
 
