@@ -23,6 +23,7 @@ include("keyboard.jl")
 
 include("file_operations.jl")
 
+include("shell_processing.jl")
 include("messages.jl")
 
 include("execute.jl")
@@ -39,7 +40,11 @@ function start_conversation(state::AIState, user_question="")
   isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
   println("Your multiline input (empty line to finish):")
 
-  !isempty(strip(user_question)) && (println("\e[36m➜ \e[1m$(user_question)\e[0m"); process_question(state, user_question))
+  shell_results = Dict{String, String}()
+  if !isempty(strip(user_question)) 
+    println("\e[36m➜ \e[1m$(user_question)\e[0m")
+    _, shell_results = process_question(state, user_question, shell_results)
+  end
 
   while true
     print("\e[36m➜ \e[0m")  # teal arrow
@@ -48,7 +53,7 @@ function start_conversation(state::AIState, user_question="")
     print("\e[0m")  # reset text style
     isempty(strip(user_question)) && continue
     
-    process_question(state, user_question)
+    _, shell_results = process_question(state, user_question, shell_results)
   end
 end
 
