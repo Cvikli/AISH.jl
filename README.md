@@ -109,6 +109,10 @@ Lot of them is already ready... Most of them was written by the AISH itself! (Re
   - [ ] did it succeed?
   - [ ] jump to "solve".
 - [ ] If you don't want to WRITE out the entire file THEN find a new way of diff patch model! So we should create a sort of patch... or another diff view which would be possible to be used with meld!
+- [ ] We should refactor the shell script run to be in the UserMessages
+- [ ] Put the SHELL command run result into the next User Message
+- [ ] The result should be abbreviated if it is more then 24 lines. Also the sh script should be abbreviated if it is more then 10 lines
+- [ ] Also when we insert the shell script into the user message then we should abbreviate too long shell scripts and also abbreviate the output... so we mustn't allow more then 24 lines output... We need the first 12 and end 12 lines of the output in these case. 
 - [ ] Multimodal (image + docs)
 - [x] GUI (AIApp)
 - [ ] FINE TUNING
