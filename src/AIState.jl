@@ -1,4 +1,4 @@
-using Dates
+generate_conversation_id() = string(UUIDs.uuid4()) 
 
 @kwdef mutable struct Message
     timestamp::DateTime
@@ -11,9 +11,9 @@ using Dates
 end
 
 @kwdef mutable struct ConversationInfo
+    id::String
     timestamp::DateTime=now(UTC)
     sentence::String=""
-    id::String
     system_message::Message=Message(timestamp=now(UTC), role=:system, content="")
     messages::Vector{Message}=[]
     rel_project_paths::Vector{String}=[]
@@ -67,6 +67,8 @@ function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{Str
     return state
 end
 
+curr_proj_path(ai_state) = isempty(curr_conv(ai_state).rel_project_paths) ? "" : curr_conv(ai_state).common_path * (!isempty(curr_conv(ai_state).rel_project_paths) && curr_conv(ai_state).rel_project_paths[1] in ["", "."] ? "" : "/" * curr_conv(ai_state).rel_project_paths[1])
+
 set_project_path(path::String) = path !== "" && (cd(path); println("Project path initialized: $(path)"))
 set_project_path(ai_state::AIState) = set_project_path(curr_conv(ai_state).common_path)
 set_project_path(ai_state::AIState, paths) = begin
@@ -74,9 +76,7 @@ set_project_path(ai_state::AIState, paths) = begin
     set_project_path(ai_state)
 end
 
-function curr_conv(state::AIState)
-    state.conversations[state.selected_conv_id]
-end
+curr_conv(state::AIState)      = state.conversations[state.selected_conv_id]
 curr_conv_msgs(state::AIState) = curr_conv(state).messages
 
 limit_user_messages(state::AIState) = (c = curr_conv_msgs(state); length(c) > 12 && (state.conversations[state.selected_conv_id].messages = c[end-11:end]))
@@ -100,15 +100,24 @@ function get_all_conversations_without_messages(state::AIState)
 end
 
 function select_conversation(state::AIState, conversation_id)
+    prev_id = state.selected_conv_id
     state.selected_conv_id = conversation_id
-    state.conversations[conversation_id].system_message, state.conversations[conversation_id].messages = load_conversation(conversation_id)
+    curr_conv(state).system_message, curr_conv(state).messages = load_conversation(conversation_id)
+    curr_conv(state).common_path, curr_conv(state).rel_project_paths = state.conversations[prev_id].common_path, state.conversations[prev_id].rel_project_paths
     println("Conversation id selected: $(state.selected_conv_id)")
 end
 
 function generate_new_conversation(state::AIState)
+    prev_id = state.selected_conv_id
     new_id = generate_conversation_id()
-    state.selected_conv_id = new_id
     state.conversations[new_id] = ConversationInfo(id=new_id)
+    if !isempty(prev_id)
+        state.conversations[new_id].common_path      =state.conversations[prev_id].common_path
+        state.conversations[new_id].rel_project_paths=state.conversations[prev_id].rel_project_paths
+    end
+    state.conversations[new_id].system_message = Message(timestamp=now(UTC), role=:system, content=SYSTEM_PROMPT(ctx=projects_ctx(state.conversations[new_id].rel_project_paths)))
+    state.selected_conv_id = new_id
+    curr_conv(state)
 end
 
 function update_project_path_and_sysprompt!(state::AIState, project_paths::Vector{String}=String[])

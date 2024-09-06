@@ -1,6 +1,3 @@
-using Dates, UUIDs
-
-generate_conversation_id() = string(UUIDs.uuid4())
 
 
 save_message(state::AIState, msg::Message) = save_message(state, msg.role, msg.content; timestamp=msg.timestamp, itok=msg.itok, otok=msg.otok, price=msg.price, elapsed=msg.elapsed)

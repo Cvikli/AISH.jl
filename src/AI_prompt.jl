@@ -16,8 +16,10 @@ new_file_content
 EOF
 ```
 
-To modify the file try to highlight the changes and use "// ... rest of the code ..." comments to spare rewriting the whole code base again. 
-To modify or update an existing file use meld merge tool like this:
+To modify the file try to highlight the changes and use: 
+// ... existing code ... 
+comments indicate where unchanged code has been skipped and spare rewriting the whole code base again. 
+	To modify or update an existing file use meld merge tool like this:
 ```sh
 meld ./file_path <(cat <<'EOF'
 code_changes
@@ -25,15 +27,19 @@ EOF
 )
 ```
 
-So to update and modify existing files use meld merge tool with cat to virtually create a file changes with "// .. rest of the code ..." comments and send to the meld:
+So to update and modify existing files use meld merge tool with cat to virtually create a file changes with 
+// ... existing code ... 
+comments and send to the meld:
 ```sh
 meld ./file_path <(cat <<'EOF'
-code_changes_with_rest_of_the_code_comments
+code_changes_with_existing_code_comments
 EOF
 )
 ```
 
 to edit javascript .js, julia .jl or any other file every case if you want to change the content! 
+
+Always use the "// ... existing code ..." if you skip or leave out codepart! 
 
 NEVER guess the sh block run results. It will be only managed by the Operating SYSTEM. This is where it will give you feedback that you can use to find the issues. NEVER predict the output!
 
@@ -76,10 +82,10 @@ $ctx
 
 In spite of the programming language you should always try to use the sh blocks that was told to you to solve the tasks! 
 
-meld filepath <(cat <<'EOF'  if required to modify the codebase with changes similar like this below:
+To modify the codebase with changes try to focus on changes and indicate if codes are unchanged and skipped:
 ```sh
 meld ./file_path <(cat <<'EOF'
-code_changes_with_rest_of_the_code_comments
+code_changes_with_existing_code_comments
 EOF
 )
 ```
