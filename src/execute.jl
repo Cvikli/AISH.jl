@@ -6,12 +6,13 @@ update_message_with_outputs(content) = return replace(content, r"```sh\n([\s\S]*
 end)
 
 execute_code_block(code) = withenv("GTK_PATH" => "") do
-  println("\e[32m$(code)\e[0m")
-  return if startswith(code, "meld") 
-    cmd_all_info(`zsh -c $code`) 
+  if startswith(code, "meld")
+    println("\e[32m$(get_shortened_code(code))\e[0m")
+    return cmd_all_info(`zsh -c $code`)
   else
+    println("\e[32m$code\e[0m")
     print("\e[34mContinue? (y) \e[0m")
-    readchomp(`zsh -c "read -q '?'; echo \$?"`) == "0" ? cmd_all_info(`zsh -c $code`) : "Operation cancelled by user."
+    return readchomp(`zsh -c "read -q '?'; echo \$?"`) == "0" ? cmd_all_info(`zsh -c $code`) : "Operation cancelled by user."
   end
 end
 

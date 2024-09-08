@@ -37,11 +37,12 @@ function process_message(state::AIState)
     if state.streaming
         cache = get_cache_setting(state.contexter, curr_conv(state))
         full_response, user_meta, ai_meta, start_time = ai_stream_safe(state, printout=false, cache=cache) 
-        msg = channel_to_string(full_response, cb=() -> (user_meta.elapsed -= start_time; println("\e[34mUser message meta: \e[0m$(format_meta_info(user_meta))")))
+        msg = channel_to_string(full_response, cb=on_start_callback(user_meta, start_time))
         calc_elapsed_times(ai_meta, user_meta.elapsed, start_time)
         update_last_user_message_meta(state, user_meta)
+        println("")
     else
-        println("Thinking...")  
+        println("Thinking...")
         cache = get_cache_setting(state.contexter, curr_conv(state))
         assistant_message = anthropic_ask_safe(state, cache=cache)
         msg = assistant_message.content
@@ -62,25 +63,37 @@ function process_message(state::AIState)
     return curr_conv_msgs(state)[end], shell_scripts
 end
 
+function on_start_callback(user_meta, start_time)
+    on_start = () -> begin
+        user_meta.elapsed -= start_time
+        println("\e[34mUser message meta: \e[0m$(format_meta_info(user_meta))")
+    end
+    return on_start
+end
+
+function get_shortened_code(code::String, max_lines::Int=3)
+    lines = split(code, '\n')
+    if length(lines) > max_lines
+        return join(lines[1:2], '\n') * "\n...\n" * lines[end]
+    else
+        return code
+    end
+end
+
 function format_shell_results(shell_commands::Dict{String, String})
     result = ""
     for (code, output) in shell_commands
-        lines = split(code, '\n')
-        shortened_code = if length(lines) > 3
-            join(lines[1:2], '\n') * "\n...\n" * lines[end]
-        else
-            code
-        end
+        shortened_code = get_shortened_code(code)
   
         result *= """## Previous shell results:
-```sh
-$shortened_code
-```
-## Output:
-```
-$output
-```
-"""
+        ```sh
+        $shortened_code
+        ```
+        ## Output:
+        ```
+        $output
+        ```
+        """
     end
     return result
 end
