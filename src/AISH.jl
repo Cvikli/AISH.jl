@@ -23,6 +23,7 @@ include("arg_parser.jl")
 
 include("anthropic_extension.jl")
 
+include("shell_processing_ai.jl")
 include("shell_processing.jl")
 include("messages.jl")
 

@@ -54,7 +54,7 @@ function on_start_callback(user_meta, start_time)
     return on_start
 end
 
-function get_shortened_code(code::String, max_lines::Int=3)
+function get_shortened_code(code::String, max_lines::Int=4)
     lines = split(code, '\n')
     if length(lines) > max_lines
         return join(lines[1:2], '\n') * "\n...\n" * lines[end]

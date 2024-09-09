@@ -40,11 +40,8 @@ end
 
 function execute_shell_commands(shell_commands::Dict{String, String})
     for (code, _) in shell_commands
-        if startswith(code, "meld")
-            output = process_meld_command(code)
-        else
-            output = execute_code_block(code)
-        end
+        startswith(code, "meld") && (code = process_meld_command(code))
+        output = execute_code_block(code)
         shell_commands[code] = output
     end
     return shell_commands

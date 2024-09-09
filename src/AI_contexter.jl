@@ -2,14 +2,14 @@
 abstract type AbstractContextCreator end
 
 @kwdef struct SimpleContexter <: AbstractContextCreator
-    keep::Int = 7
+    keep::Int = 11
 end
 
-function cut_history!(conv; keep=9)
+function cut_history!(conv; keep=13)
     if keep < 0
         return conv.messages
     end
-    conv.messages = conv.messages[max(end-keep+1,1):end]
+    conv.messages = conv.messages[max(end-keep,1):end]
     @assert isempty(conv.messages) || conv.messages[1].role == :user "We made a cut which doesn't end with :user role message"
 end
 
