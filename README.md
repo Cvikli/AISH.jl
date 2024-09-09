@@ -11,7 +11,7 @@ Backend server for the GUI: [AISHServer](https://github.com/Cvikli/AISHServer)
 
 It is actually ChatSH but a little bit rethinked version!
 
-WARNING: the project in in experimental state! APIs can change if we see better patterns as we are researching for the simplest LLM SH system yet. 
+WARNING: the project in experimental state! APIs can change if we see better patterns as we are researching for the simplest LLM SH system yet. 
 
 ## DEMO
 https://github.com/user-attachments/assets/21b7504a-b06a-4579-ae27-6343079c7081
