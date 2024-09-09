@@ -8,20 +8,20 @@ using PromptingTools
 using Anthropic
 using Anthropic: channel_to_string, initStreamMeta, StreamMeta, calc_elapsed_times, format_meta_info
 
+include("keyboard.jl")
+
 include("AI_config.jl")
 include("AI_prompt.jl")
 include("AI_contexter.jl")
 include("AIState.jl")
-include("project_management.jl")
-include("project_tree.jl")
-include("arg_parser.jl")
+
 include("token_counter.jl")
+include("file_management.jl")
+include("file_tree.jl")
+include("file_operations.jl")
+include("arg_parser.jl")
 
 include("anthropic_extension.jl")
-
-include("keyboard.jl")
-
-include("file_operations.jl")
 
 include("shell_processing.jl")
 include("messages.jl")

@@ -30,8 +30,8 @@ const FILE_EXTENSIONS = [
     "fasl", "jl", "r", "R", "Rmd", "mat", "asm", "s", "dart", "sql", "md", "markdown",
     "rst", "adoc", "tex", "sty", "gradle", "sbt", "xml"
 ]
-const FILTERED_FOLDERS = ["spec", "specs", "examples", "docs", "python", "benchmarks", "node_modules", 
-"conversations", "archived", "archive", ".git"]
+const FILTERED_FOLDERS = ["spec", "specs", "examples", "docs", "dist", "python", "benchmarks", "node_modules", 
+"conversations", "archived", "archive", "test_cases", ".git"]
 const IGNORED_FILE_PATTERNS = [".log", "config.ini", "secrets.yaml", "Manifest.toml", ".gitignore", ".aiignore", ".aishignore", "Project.toml"] # , "README.md"
 
 get_system() = strip(read(`uname -a`, String))
