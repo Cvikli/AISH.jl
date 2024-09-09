@@ -1,3 +1,4 @@
+
 function extract_shell_commands(content::String)
     shell_commands = Dict{String, String}()
     lines = split(content, '\n')
@@ -39,7 +40,11 @@ end
 
 function execute_shell_commands(shell_commands::Dict{String, String})
     for (code, _) in shell_commands
-        output = execute_code_block(code)
+        if startswith(code, "meld")
+            output = process_meld_command(code)
+        else
+            output = execute_code_block(code)
+        end
         shell_commands[code] = output
     end
     return shell_commands
