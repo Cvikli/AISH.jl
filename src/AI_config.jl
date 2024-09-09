@@ -37,24 +37,3 @@ const IGNORED_FILE_PATTERNS = [".log", "config.ini", "secrets.yaml", "Manifest.t
 get_system() = strip(read(`uname -a`, String))
 get_shell() = strip(read(`$(ENV["SHELL"]) --version`, String))
 
-function format_file_content(file)
-    content = read(file, String)
-    relative_path = relpath(file, pwd())
-
-    ext = lowercase(splitext(file)[2])
-    comment_map = Dict(
-        ".jl" => ("#", ""), ".py" => ("#", ""), ".sh" => ("#", ""), ".bash" => ("#", ""), ".zsh" => ("#", ""), ".r" => ("#", ""), ".rb" => ("#", ""),
-        ".js" => ("//", ""), ".ts" => ("//", ""), ".cpp" => ("//", ""), ".c" => ("//", ""), ".java" => ("//", ""), ".cs" => ("//", ""), ".php" => ("//", ""), ".go" => ("//", ""), ".rust" => ("//", ""), ".swift" => ("//", ""),
-        ".html" => ("<!--", "-->"), ".xml" => ("<!--", "-->")
-    )
-
-    comment_prefix, comment_suffix = get(comment_map, ext, ("#", ""))
-
-    return """
-    File: $(relative_path)
-    ```
-    $content
-    ```
-    """
-end
-

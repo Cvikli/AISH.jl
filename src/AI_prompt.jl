@@ -94,26 +94,3 @@ With these informations in mind you can communicate with the user from here!
 User requests arrive these are what you have to fulfill.
 """
 
-project_ctx(path) = """
-The codebase you are working on:
-================================
-$(get_all_project_files(path))
-================================
-This is the latest version of the codebase, chats after these can only hold same or older versions only. If something is not like you proposed that is probably that change was not accepted, or there were manual edits in the code, which we should keep probably.
-"""
-projects_ctx(paths::Vector{String}) = """
-The codebase you are working on:
-================================
-$(join(get_all_project_files.(paths),"\n================================\n"))
-================================
-This is the latest version of the codebase, chats after these can only hold same or older versions only. If something is not like you proposed that is probably that change was not accepted, or there were manual edits in the code, which we should keep probably.
-"""
-
-get_codebase_ctx(question, path, ) = """
-The codebase you are working on:
-================================
-$(project_ctx(path, question))
-================================
-This is the latest version of the codebase, chats after these can only hold same or older versions only. If something is not like you proposed that is probably that change was not accepted, or there were manual edits in the code, which we should keep probably.
-"""
-
