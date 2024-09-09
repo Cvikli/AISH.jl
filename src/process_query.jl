@@ -1,21 +1,3 @@
-function cut_history!(conv; keep=9)
-    if keep < 0
-        return conv.messages
-    end
-    conv.messages = conv.messages[max(end-keep+1,1):end]
-    @assert isempty(conv.messages) || conv.messages[1].role == :user "We made a cut which doesn't end with :user role message"
-end
-
-function prepare_user_message!(contexter::SimpleContexter, ai_state, question, shell_results::Dict{String, String})
-    cut_history!(curr_conv(ai_state); keep=contexter.keep)
-    formatted_results = format_shell_results(shell_results)
-    formatted_results * question
-end
-
-function adjust_assistant_message(message::String, shell_results::Dict{String, String})
-    formatted_results = format_shell_results(shell_results)
-    formatted_results * message
-end
 
 streaming_process_question(ai_state::AIState, user_question, shell_results=Dict{String, String}()) = begin
     question = prepare_user_message!(ai_state.contexter, ai_state, user_question, shell_results)
@@ -35,6 +17,7 @@ function process_message(state::AIState)
     local ai_meta, msg
 
     if state.streaming
+        print("\n\e[32m¬ \e[0m")
         cache = get_cache_setting(state.contexter, curr_conv(state))
         full_response, user_meta, ai_meta, start_time = ai_stream_safe(state, printout=false, cache=cache) 
         msg = channel_to_string(full_response, cb=on_start_callback(user_meta, start_time))
@@ -78,22 +61,4 @@ function get_shortened_code(code::String, max_lines::Int=3)
     else
         return code
     end
-end
-
-function format_shell_results(shell_commands::Dict{String, String})
-    result = ""
-    for (code, output) in shell_commands
-        shortened_code = get_shortened_code(code)
-  
-        result *= """## Previous shell results:
-        ```sh
-        $shortened_code
-        ```
-        ## Output:
-        ```
-        $output
-        ```
-        """
-    end
-    return result
 end
