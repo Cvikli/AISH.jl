@@ -20,20 +20,19 @@ function prepare_user_message!(contexter::SimpleContexter, ai_state, question, s
 end
 
 function format_shell_results(shell_commands::Dict{String, String})
-    result = ""
+    result = "<ShellRunResults>"
     for (code, output) in shell_commands
         shortened_code = get_shortened_code(code)
   
-        result *= """## Previous shell results:
-        ```sh
+        result *= """```sh
         $shortened_code
         ```
-        ## Output:
-        ```
+        ```sh_output
         $output
         ```
         """
     end
+    result *= "</ShellRunResults>"
     return result
 end
 

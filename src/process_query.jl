@@ -54,11 +54,15 @@ function on_start_callback(user_meta, start_time)
     return on_start
 end
 
-function get_shortened_code(code::String, max_lines::Int=4)
+function get_shortened_code(code::String, head_lines::Int=4, tail_lines::Int=3)
     lines = split(code, '\n')
-    if length(lines) > max_lines
-        return join(lines[1:2], '\n') * "\n...\n" * lines[end]
-    else
+    total_lines = length(lines)
+    
+    if total_lines <= head_lines + tail_lines
         return code
+    else
+        head = join(lines[1:head_lines], '\n')
+        tail = join(lines[end-tail_lines+1:end], '\n')
+        return "$head\n...\n$tail"
     end
 end

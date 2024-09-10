@@ -11,6 +11,12 @@ function process_meld_command(command::String)
     end
     
     file_path = file_path_match.captures[1]
+    
+    # Check if the file exists
+    if !isfile(file_path)
+        return command  # Return the original command without transformation
+    end
+    
     patch_content = content_match.captures[1]
     
     # Read original content
@@ -28,12 +34,12 @@ function process_meld_command(command::String)
     
     # Construct new meld command with AI-generated content
     new_command = """meld $file_path <(cat <<'$delimiter'
-  $ai_generated_content
-  $delimiter
-  )"""
+    $ai_generated_content
+    $delimiter
+    )"""
     
     # Execute the new meld command
-    return execute_code_block(new_command)
+    return new_command
 end
 
 function generate_better_file(original_content::String, changes_content::AbstractString)
