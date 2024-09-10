@@ -38,11 +38,14 @@ function extract_shell_commands(content::String)
     return shell_commands
 end
 
+function execute_single_shell_command(code::String)
+    code = startswith(code, "meld") ? process_meld_command(code) : code
+    return execute_code_block(code)
+end
+
 function execute_shell_commands(shell_commands::Dict{String, String})
     for (code, _) in shell_commands
-        startswith(code, "meld") && (code = process_meld_command(code))
-        output = execute_code_block(code)
-        shell_commands[code] = output
+        shell_commands[code] = execute_single_shell_command(code)
     end
     return shell_commands
 end
