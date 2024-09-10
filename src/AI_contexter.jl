@@ -1,9 +1,34 @@
 
 abstract type AbstractContextCreator end
 
+
 @kwdef struct SimpleContexter <: AbstractContextCreator
     keep::Int = 11
 end
+
+const IGNORE_FILES = [".gitignore", ".aishignore"]
+const MAX_TOKEN = 8192 
+
+const PROJECT_FILES = [
+    "Dockerfile", "docker-compose.yml", "Makefile", "LICENSE", "package.json", 
+    "README.md", 
+    "Gemfile", "Cargo.toml"# , "Project.toml"
+]
+
+const FILE_EXTENSIONS = [
+    "toml", "ini", "cfg", "conf", "sh", "bash", "zsh", "fish",
+    "html", "css", "scss", "sass", "less", "js", "jsx", "ts", "tsx", "php", "vue", "svelte",
+    "py", "pyw", "ipynb", "rb", "rake", "gemspec", "java", "kt", "kts", "groovy", "scala",
+    "clj", "c", "h", "cpp", "hpp", "cc", "cxx", "cs", "csx", "go", "rs", "swift", "m", "mm",
+    "pl", "pm", "lua", "hs", "lhs", "erl", "hrl", "ex", "exs", "lisp", "lsp", "l", "cl",
+    "fasl", "jl", "r", "R", "Rmd", "mat", "asm", "s", "dart", "sql", "md", "markdown",
+    "rst", "adoc", "tex", "sty", "gradle", "sbt", "xml"
+]
+const FILTERED_FOLDERS = ["spec", "specs", "examples", "docs", "dist", "python", "benchmarks", "node_modules", 
+"conversations", "archived", "archive", "test_cases", ".git"]
+const IGNORED_FILE_PATTERNS = [".log", "config.ini", "secrets.yaml", "Manifest.toml", ".gitignore", ".aiignore", ".aishignore", "Project.toml"] # , "README.md"
+
+
 
 function cut_history!(conv; keep=13)
     if keep < 0
