@@ -76,6 +76,7 @@ set_project_path(ai_state::AIState, paths) = begin
     set_project_path(ai_state)
 end
 
+curr_conv(state::NamedTuple)      = (@info("Missing AIState."); state.conversations[state.selected_conv_id])
 curr_conv(state::AIState)      = state.conversations[state.selected_conv_id]
 curr_conv_msgs(state::AIState) = curr_conv(state).messages
 

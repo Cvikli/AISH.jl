@@ -1,27 +1,42 @@
 using PromptingTools
+using Random
 
 function process_meld_command(command::String)
-  parts = split(command, " ")
-  file_path = parts[2]
-  content_start = findfirst(x -> startswith(x, "<<'EOF'"), parts)
-  isnothing(content_start) &&  return "Error: Invalid meld command format"
-  
-  original_content = read(file_path, String)
-  patch_content = join(parts[content_start+1:end-1], " ")
-  
-  ai_generated_content = aigenerate(original_content, patch_content)
-  
-  new_command = """meld $file_path <(cat <<'EOF'
+    # Extract file path and content using regex
+    file_path_match = match(r"meld\s+(\S+)", command)
+    content_match = match(r"<<'EOF'\n([\s\S]*?)\nEOF\n\s*\)", command)
+    
+    if isnothing(file_path_match) || isnothing(content_match)
+        return "Error: Invalid meld command format"
+    end
+    
+    file_path = file_path_match.captures[1]
+    patch_content = content_match.captures[1]
+    
+    # Read original content
+    original_content = read(file_path, String)
+    
+    # Generate new content using AI
+    ai_generated_content = generate_better_file(original_content, patch_content)
+    
+    # Choose delimiter based on content
+    delimiter = if occursin("EOF", ai_generated_content)
+        "EOF_" * randstring(3)
+    else
+        "EOF"
+    end
+    
+    # Construct new meld command with AI-generated content
+    new_command = """meld $file_path <(cat <<'$delimiter'
   $ai_generated_content
-  EOF
-  )
-  """
-  println(new_command)
-  
-  return new_command
+  $delimiter
+  )"""
+    
+    # Execute the new meld command
+    return execute_code_block(new_command)
 end
 
-function aigenerate(original_content::String, changes_content::String)
+function generate_better_file(original_content::String, changes_content::AbstractString)
   prompt = """
   You are an AI assistant specialized in merging code changes. You will be provided with the <original content> and a <changes content> to be applied. Your task is to generate the final content after applying the <changes content>. 
   Here's what you need to do:
@@ -43,12 +58,24 @@ function aigenerate(original_content::String, changes_content::String)
   Please provide the final merged content between <final content> and </final content>.
   """
 
-  @time aigenerated = PromptingTools.aigenerate(prompt, model="gpt4om")
+  println("\e[38;5;240mWe AI process the diff, for higher quality diff...\e[0m")
+  @time aigenerated = PromptingTools.aigenerate(prompt, model="ggemma9") # gpt4om, claudeh
   return extract_final_content(aigenerated.content)
 end
 
 function extract_final_content(content::AbstractString)
-  m = match(r"<final content>(.*?)</final content>"s, content)
-  return isnothing(m) ? content : strip(m.captures[1])
+  # Find the last occurrence of <final content> and </final content>
+  start_index = findfirst("<final content>", content)
+  end_index = findlast("</final content>", content)
+  
+  if !isnothing(start_index) && !isnothing(end_index)
+      # Extract the content between the last pair of tags
+      start_pos = start_index.stop + 1
+      end_pos = end_index.start - 1
+      return strip(content[start_pos:end_pos])
+  else
+      # If tags are not found, return the original content
+      @warn "Tags are not found."
+      return content
+  end
 end
-
