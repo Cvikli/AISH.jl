@@ -16,8 +16,8 @@ function parse_commandline()
         "--resume", "-r"
             help = "Flag to resume last conversation"
             action = :store_true
-        "--streaming", "-s"
-            help = "Enable streaming mode for AI responses"
+        "--no-streaming"
+            help = "Disable streaming mode"
             action = :store_true
         "--skip-code-execution", "-x"
             help = "Skip execution of code blocks"

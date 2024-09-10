@@ -30,11 +30,11 @@ function process_message(state::AIState)
     if state.streaming
         cache = get_cache_setting(state.contexter, curr_conv(state))
         channel = ai_stream_safe(state, printout=false, cache=cache) 
-        print("\e[36m¬ \e[0m")
         msg, user_meta, ai_meta = process_stream(channel, state.model, 
+            on_meta_usr=meta->(println("\e[32mUser message: \e[0m$(format_meta_info(meta))"); update_last_user_message_meta(state, meta); print("\e[36m¬ \e[0m")), 
             on_text=print, 
-            on_meta_usr=meta->(println("\e[32mUser message: \e[0m$(format_meta_info(meta))"); update_last_user_message_meta(state, meta)), 
             on_meta_ai=meta->println("\e[32mAI message: \e[0m$(format_meta_info(meta))"))
+        
         
         println("")
     else

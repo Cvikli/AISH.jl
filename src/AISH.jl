@@ -67,7 +67,7 @@ end
 
 function main(;contexter=SimpleContexter())
   args = parse_commandline()
-  start(args["message"]; resume=args["resume"], streaming=args["streaming"], project_paths=args["project-paths"], show_tokens=args["tokens"], contexter)
+  start(args["message"]; resume=args["resume"], streaming=!args["no-streaming"], project_paths=args["project-paths"], show_tokens=args["tokens"], contexter)
 end
 
 export main

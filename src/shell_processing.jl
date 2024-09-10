@@ -40,4 +40,4 @@ end
 
 execute_single_shell_command(code::String) = execute_code_block(startswith(code, "meld") ? process_meld_command(code) : code)
 
-execute_shell_commands(shell_commands::Dict{String, String}) = [execute_single_shell_command(code) for (code, _) in shell_commands]
+execute_shell_commands(shell_commands::Dict{String, String}) = Dict(code => execute_single_shell_command(code) for (code, _) in shell_commands)
