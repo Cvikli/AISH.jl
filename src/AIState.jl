@@ -6,6 +6,8 @@ generate_conversation_id() = string(UUIDs.uuid4())
     content::String
     itok::Int=0
     otok::Int=0
+    cached::Int=0
+    cache_read::Int=0
     price::Float32=0
     elapsed::Float32=0
 end
@@ -20,7 +22,6 @@ end
     common_path::String=""
 end
 
-# AI State struct
 @kwdef mutable struct AIState
     conversations::Dict{String,ConversationInfo}=Dict()
     selected_conv_id::String=""
@@ -30,7 +31,6 @@ end
     contexter::AbstractContextCreator=SimpleContexter()
 end
 
-# Initialize AI State
 initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; contexter=SimpleContexter(), resume::Bool=false, streaming::Bool=true, project_paths::Vector{String}=String[], skip_code_execution::Bool=false, show_tokens::Bool=false) = initialize_ai_state(MODEL, resume, streaming, project_paths, skip_code_execution, show_tokens, contexter)
 function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, show_tokens, contexter)
     state = AIState(streaming=streaming, skip_code_execution=skip_code_execution, model=MODEL, contexter=contexter)
@@ -67,8 +67,6 @@ function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{Str
     return state
 end
 
-curr_proj_path(ai_state) = isempty(curr_conv(ai_state).rel_project_paths) ? "" : curr_conv(ai_state).common_path * (!isempty(curr_conv(ai_state).rel_project_paths) && curr_conv(ai_state).rel_project_paths[1] in ["", "."] ? "" : "/" * curr_conv(ai_state).rel_project_paths[1])
-
 set_project_path(path::String) = path !== "" && (cd(path); println("Project path initialized: $(path)"))
 set_project_path(ai_state::AIState) = set_project_path(curr_conv(ai_state).common_path)
 set_project_path(ai_state::AIState, paths) = begin
@@ -76,7 +74,9 @@ set_project_path(ai_state::AIState, paths) = begin
     set_project_path(ai_state)
 end
 
-curr_conv(state::NamedTuple)      = (@info("Missing AIState."); state.conversations[state.selected_conv_id])
+curr_proj_path(ai_state) = isempty(curr_conv(ai_state).rel_project_paths) ? "" : curr_conv(ai_state).common_path * (!isempty(curr_conv(ai_state).rel_project_paths) && curr_conv(ai_state).rel_project_paths[1] in ["", "."] ? "" : "/" * curr_conv(ai_state).rel_project_paths[1])
+
+curr_conv(state::NamedTuple)   = (@info("Missing AIState."); state.conversations[state.selected_conv_id])
 curr_conv(state::AIState)      = state.conversations[state.selected_conv_id]
 curr_conv_msgs(state::AIState) = curr_conv(state).messages
 
@@ -135,7 +135,7 @@ function add_n_save_user_message!(state::AIState, user_msg::Message)
 end
 
 add_n_save_ai_message!(state::AIState, ai_message::String)       = add_n_save_ai_message!(state, Message(timestamp=now(UTC), role=:assistant, content=strip(ai_message)))
-add_n_save_ai_message!(state::AIState, ai_message::String, meta) = add_n_save_ai_message!(state, Message(timestamp=now(UTC), role=:assistant, content=strip(ai_message), itok=meta.input_tokens, otok=meta.output_tokens, price=meta.price, elapsed=meta.elapsed))
+add_n_save_ai_message!(state::AIState, ai_message::String, meta::Dict) = add_n_save_ai_message!(state, Message(timestamp=now(UTC), role=:assistant, content=strip(ai_message), itok=meta["input_tokens"], otok=meta["output_tokens"], cached=meta["cache_creation_input_tokens"], cache_read=meta["cache_read_input_tokens"], price=meta["price"], elapsed=meta["elapsed"]))
 function add_n_save_ai_message!(state::AIState, ai_msg::Message)
     push!(curr_conv_msgs(state), ai_msg)
     save_ai_message(state, ai_msg)
@@ -150,6 +150,8 @@ to_dict_nosys_detailed(state::AIState;)= [Dict(
             "content" => message.content,
             "input_tokens" => message.itok,
             "output_tokens" => message.otok,
+            "cached" => message.cached,
+            "cache_read" => message.cache_read,
             "price" => message.price,
             "elapsed" => message.elapsed
         ) for message in curr_conv_msgs(state)]

@@ -1,7 +1,7 @@
 
 
-save_message(state::AIState, msg::Message) = save_message(state, msg.role, msg.content; timestamp=msg.timestamp, itok=msg.itok, otok=msg.otok, price=msg.price, elapsed=msg.elapsed)
-function save_message(state::AIState, role, message; timestamp=now(UTC), itok=0, otok=0, price=0, elapsed=0)
+save_message(state::AIState, msg::Message) = save_message(state, msg.role, msg.content; timestamp=msg.timestamp, itok=msg.itok, otok=msg.otok, cached=msg.cached, cache_read=msg.cache_read, price=msg.price, elapsed=msg.elapsed)
+function save_message(state::AIState, role, message; timestamp=now(UTC), itok=0, otok=0, cached=0, cache_read=0, price=0, elapsed=0)
     mkpath(CONVERSATION_DIR)
     conversation_id = state.selected_conv_id
     message_separator = get_message_separator(conversation_id)
@@ -11,11 +11,25 @@ function save_message(state::AIState, role, message; timestamp=now(UTC), itok=0,
     open(filename, isnothing(existing_file) ? "w" : "a") do file
         if isnothing(existing_file)
             system_msg = system_message(state)
-            println(file, "$(date_format(system_msg.timestamp)) [system, in: $(system_msg.itok), out: $(system_msg.otok), price: $(system_msg.price), elapsed: $(system_msg.elapsed)]: $(system_msg.content)")
+            println(file, "$(date_format(system_msg.timestamp)) [system, in: $(system_msg.itok), out: $(system_msg.otok), cached: $(cached), cache_read: $(cache_read), price: $(system_msg.price), elapsed: $(system_msg.elapsed)]: $(system_msg.content)")
             println(file, message_separator)
         end
-        println(file, "$(date_format(timestamp)) [$(role), in: $(itok), out: $(otok), price: $(price), elapsed: $(elapsed)]: $(message)")
+        println(file, "$(date_format(timestamp)) [$(role), in: $(itok), out: $(otok), cached: $(cached), cache_read: $(cache_read), price: $(price), elapsed: $(elapsed)]: $(message)")
         println(file, message_separator)
+    end
+end
+function save_conversation_to_file(conv::ConversationInfo)  # TODO this seems to be a redundance of file print...
+    filename = get_conversation_filename(conv.id)
+    isnothing(filename) && (println("Error: Conversation file not found"); return)
+
+    open(filename, "w") do file
+        sys_msg = conv.system_message
+        println(file, "$(date_format(sys_msg.timestamp)) [system, in: $(sys_msg.itok), out: $(sys_msg.otok), cached: $(sys_msg.cached), cache_read: $(sys_msg.cache_read), price: $(sys_msg.price), elapsed: $(sys_msg.elapsed)]: $(sys_msg.content)")
+        println(file, get_message_separator(conv.id))
+        for msg in conv.messages
+            println(file, "$(date_format(msg.timestamp)) [$(msg.role), in: $(msg.itok), out: $(msg.otok), cached: $(sys_msg.cached), cache_read: $(sys_msg.cache_read), price: $(msg.price), elapsed: $(msg.elapsed)]: $(msg.content)")
+            println(file, get_message_separator(conv.id))
+        end
     end
 end
 
@@ -37,43 +51,33 @@ function get_message_by_timestamp(state::AIState, timestamp::String)
     return idx !== nothing ? (idx, curr_conv_msgs(state)[idx]) : (0, nothing)
 end
 
-update_last_user_message_meta(state::AIState, meta) = update_last_user_message_meta(state, meta.input_tokens, meta.output_tokens, meta.price, meta.elapsed) 
-function update_last_user_message_meta(state::AIState, itok::Int, otok::Int, price::Float32, elapsed::Float64)
-    curr_conv_msgs(state)[end].itok    = itok
-    curr_conv_msgs(state)[end].otok    = otok
-    curr_conv_msgs(state)[end].price   = price
-    curr_conv_msgs(state)[end].elapsed = elapsed
+update_last_user_message_meta(state::AIState, meta) = update_last_user_message_meta(state, meta["input_tokens"], meta["output_tokens"], meta["cache_creation_input_tokens"], meta["cache_read_input_tokens"], meta["price"], meta["elapsed"]) 
+function update_last_user_message_meta(state::AIState, itok::Int, otok::Int, cached::Int, cache_read::Int, price, elapsed::Float64)
+    curr_conv_msgs(state)[end].itok       = itok
+    curr_conv_msgs(state)[end].otok       = otok
+    curr_conv_msgs(state)[end].cached     = cached
+    curr_conv_msgs(state)[end].cache_read = cache_read
+    curr_conv_msgs(state)[end].price      = price
+    curr_conv_msgs(state)[end].elapsed    = elapsed
     save_conversation_to_file(curr_conv(state))
 end
 
 update_message_by_timestamp(state::AIState, timestamp::DateTime, new_content::String) = update_message_by_idx(state, get_msg_idx_by_timestamp(state, date_format(timestamp)), new_content)
 update_message_by_idx(state::AIState, idx::Int, new_content::String) = ((curr_conv_msgs(state)[idx].content = new_content); save_conversation_to_file(curr_conv(state)))
 
-function save_conversation_to_file(conv::ConversationInfo)
-    filename = get_conversation_filename(conv.id)
-    isnothing(filename) && (println("Error: Conversation file not found"); return)
-
-    open(filename, "w") do file
-        sys_msg = conv.system_message
-        println(file, "$(date_format(sys_msg.timestamp)) [system, in: $(sys_msg.itok), out: $(sys_msg.otok), price: $(sys_msg.price), elapsed: $(sys_msg.elapsed)]: $(sys_msg.content)")
-        println(file, get_message_separator(conv.id))
-        for msg in conv.messages
-            println(file, "$(date_format(msg.timestamp)) [$(msg.role), in: $(msg.itok), out: $(msg.otok), price: $(msg.price), elapsed: $(msg.elapsed)]: $(msg.content)")
-            println(file, get_message_separator(conv.id))
-        end
-    end
-end
 
 function mess(message_str)
     m = match(MSG_FORMAT, strip(message_str))
     Message(
         timestamp=date_parse(m[1]),
         role=Symbol(m[2]),
-        content=m[7],
+        content=m[9],
         itok=parse(Int, m[3]),
         otok=parse(Int, m[4]),
-        price=parse(Float32, m[5]),
-        elapsed=parse(Float32, m[6])
+        cached=parse(Int, m[5]),
+        cache_read=parse(Int, m[6]),
+        price=parse(Float32, m[7]),
+        elapsed=parse(Float32, m[8])
     )
 end
         
