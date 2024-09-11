@@ -48,12 +48,10 @@ function process_message(state::AIState)
 
     add_n_save_ai_message!(state, msg, ai_meta)
 
-    
-
-# TODO move this to somewhere else... this doesn't have to be in this function!
+    # TODO move this to somewhere else... this doesn't have to be in this function!
     shell_scripts = extract_shell_commands(msg)
     if !state.skip_code_execution
-        shell_scripts = execute_shell_commands(shell_scripts)
+        shell_scripts = execute_shell_commands(state, shell_scripts)
     end
 
 

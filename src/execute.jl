@@ -1,18 +1,21 @@
-
-update_message_with_outputs(content) = return replace(content, r"```sh\n([\s\S]*?)\n```" => matchedtxt -> begin
+update_message_with_outputs(state::AIState, content) = return replace(content, r"```sh\n([\s\S]*?)\n```" => matchedtxt -> begin
   code = matchedtxt[7:end-3]
-  output = execute_code_block(code)
+  output = execute_code_block(state, code)
   "$matchedtxt\n```sh_run_results\n$output\n```\n"
 end)
 
-execute_code_block(code) = withenv("GTK_PATH" => "") do
+execute_code_block(state::AIState, code) = withenv("GTK_PATH" => "") do
   if startswith(code, "meld")
     println("\e[32m$(get_shortened_code(code))\e[0m")
     return cmd_all_info(`zsh -c $code`)
   else
     println("\e[32m$code\e[0m")
-    print("\e[34mContinue? (y) \e[0m")
-    return readchomp(`zsh -c "read -q '?'; echo \$?"`) == "0" ? cmd_all_info(`zsh -c $code`) : "Operation cancelled by user."
+    if state.no_confirm
+      return cmd_all_info(`zsh -c $code`)
+    else
+      print("\e[34mContinue? (y) \e[0m")
+      return readchomp(`zsh -c "read -q '?'; echo \$?"`) == "0" ? cmd_all_info(`zsh -c $code`) : "Operation cancelled by user."
+    end
   end
 end
 

@@ -65,7 +65,7 @@ function generate_better_file(original_content::String, changes_content::Abstrac
   """
 
   println("\e[38;5;240mWe AI process the diff, for higher quality diff...\e[0m")
-  @time aigenerated = PromptingTools.aigenerate(prompt, model="ggemma9") # gpt4om, claudeh
+  @time aigenerated = PromptingTools.aigenerate(prompt, model="gpt4om") # gpt4om, claudeh
   return extract_final_content(aigenerated.content)
 end
 
