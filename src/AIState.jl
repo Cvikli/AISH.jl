@@ -1,6 +1,7 @@
-generate_conversation_id() = string(UUIDs.uuid4()) 
+genid() = string(UUIDs.uuid4()) 
 
 @kwdef mutable struct Message
+    id::String
     timestamp::DateTime
     role::Symbol
     content::String
@@ -11,12 +12,13 @@ generate_conversation_id() = string(UUIDs.uuid4())
     price::Float32=0
     elapsed::Float32=0
 end
+UndefMessage() = Message(id="",timestamp=now(UTC), role=:UNKNOWN, content="")
 
 @kwdef mutable struct ConversationInfo
     id::String
     timestamp::DateTime=now(UTC)
     sentence::String=""
-    system_message::Message=Message(timestamp=now(UTC), role=:system, content="")
+    system_message::Union{Message,Nothing}=nothing# =Message(id=genid(), timestamp=now(UTC), role=:system, content="")
     messages::Vector{Message}=[]
     rel_project_paths::Vector{String}=[]
     common_path::String=""
@@ -29,11 +31,12 @@ end
     skip_code_execution::Bool=false
     model::String = ""
     contexter::AbstractContextCreator=SimpleContexter()
+    no_confirm::Bool=false  
 end
 
-initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; contexter=SimpleContexter(), resume::Bool=false, streaming::Bool=true, project_paths::Vector{String}=String[], skip_code_execution::Bool=false, show_tokens::Bool=false) = initialize_ai_state(MODEL, resume, streaming, project_paths, skip_code_execution, show_tokens, contexter)
-function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, show_tokens, contexter)
-    state = AIState(streaming=streaming, skip_code_execution=skip_code_execution, model=MODEL, contexter=contexter)
+initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; contexter=SimpleContexter(), resume::Bool=false, streaming::Bool=true, project_paths::Vector{String}=String[], skip_code_execution::Bool=false, show_tokens::Bool=false, no_confirm=false) = initialize_ai_state(MODEL, resume, streaming, project_paths, skip_code_execution, show_tokens, contexter, no_confirm)
+function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, show_tokens, contexter, no_confirm)
+    state = AIState(streaming=streaming, skip_code_execution=skip_code_execution, model=MODEL, contexter=contexter, no_confirm=no_confirm)
     get_all_conversations_without_messages(state)
     println("\e[32mAI State initialized successfully.\e[0m ")
     
@@ -103,43 +106,64 @@ end
 function select_conversation(state::AIState, conversation_id)
     prev_id = state.selected_conv_id
     state.selected_conv_id = conversation_id
-    curr_conv(state).system_message, curr_conv(state).messages = load_conversation(conversation_id)
-    curr_conv(state).common_path, curr_conv(state).rel_project_paths = state.conversations[prev_id].common_path, state.conversations[prev_id].rel_project_paths
-    println("Conversation id selected: $(state.selected_conv_id)")
+    file_exists, system_message, messages = load_conversation(conversation_id)
+    if file_exists
+        curr_conv(state).system_message = system_message
+        curr_conv(state).messages = messages
+        curr_conv(state).common_path      =state.conversations[prev_id].common_path
+        curr_conv(state).rel_project_paths=state.conversations[prev_id].rel_project_paths
+        println("Conversation id selected: $(state.selected_conv_id)")
+    else
+        println("Conversation file not found for id: $(state.selected_conv_id)")
+    end
+    return file_exists
 end
 
 function generate_new_conversation(state::AIState)
     prev_id = state.selected_conv_id
-    new_id = generate_conversation_id()
+    new_id = genid()
     state.conversations[new_id] = ConversationInfo(id=new_id)
     if !isempty(prev_id)
         state.conversations[new_id].common_path      =state.conversations[prev_id].common_path
         state.conversations[new_id].rel_project_paths=state.conversations[prev_id].rel_project_paths
     end
-    state.conversations[new_id].system_message = Message(timestamp=now(UTC), role=:system, content=SYSTEM_PROMPT(ctx=projects_ctx(state.conversations[new_id].rel_project_paths)))
+    state.conversations[new_id].system_message = Message(id=genid(), timestamp=now(UTC), role=:system, content=SYSTEM_PROMPT(ctx=projects_ctx(state.conversations[new_id].rel_project_paths)))
     state.selected_conv_id = new_id
     curr_conv(state)
 end
 
 function update_project_path_and_sysprompt!(state::AIState, project_paths::Vector{String}=String[])
     !isempty(project_paths) && (set_project_path(state, project_paths))
-    state.conversations[state.selected_conv_id].system_message = Message(timestamp=now(UTC), role=:system, content=SYSTEM_PROMPT(ctx=projects_ctx(curr_conv(state).rel_project_paths)))
+    state.conversations[state.selected_conv_id].system_message = Message(id=id=genid(), timestamp=now(UTC), role=:system, content=SYSTEM_PROMPT(ctx=projects_ctx(curr_conv(state).rel_project_paths)))
     println("\e[33mSystem prompt updated due to file changes.\e[0m")
 end
 
-add_n_save_user_message!(state::AIState, user_question::String) = add_n_save_user_message!(state, Message(timestamp=now(UTC), role=:user, content=strip(user_question)))
+add_n_save_user_message!(state::AIState, user_question::String) = add_n_save_user_message!(state, Message(id=genid(), timestamp=now(UTC), role=:user, content=strip(user_question)))
 function add_n_save_user_message!(state::AIState, user_msg::Message)
     push!(curr_conv_msgs(state), user_msg)
     save_user_message(state, user_msg)
     user_msg
 end
 
-add_n_save_ai_message!(state::AIState, ai_message::String)       = add_n_save_ai_message!(state, Message(timestamp=now(UTC), role=:assistant, content=strip(ai_message)))
-add_n_save_ai_message!(state::AIState, ai_message::String, meta::Dict) = add_n_save_ai_message!(state, Message(timestamp=now(UTC), role=:assistant, content=strip(ai_message), itok=meta["input_tokens"], otok=meta["output_tokens"], cached=meta["cache_creation_input_tokens"], cache_read=meta["cache_read_input_tokens"], price=meta["price"], elapsed=meta["elapsed"]))
+add_n_save_ai_message!(state::AIState, ai_message::String)       = add_n_save_ai_message!(state, Message(id=genid(), timestamp=now(UTC), role=:assistant, content=strip(ai_message)))
+add_n_save_ai_message!(state::AIState, ai_message::String, meta::Dict) = add_n_save_ai_message!(state, Message(id=genid(), timestamp=now(UTC), role=:assistant, content=strip(ai_message), itok=meta["input_tokens"], otok=meta["output_tokens"], cached=meta["cache_creation_input_tokens"], cache_read=meta["cache_read_input_tokens"], price=meta["price"], elapsed=meta["elapsed"]))
 function add_n_save_ai_message!(state::AIState, ai_msg::Message)
     push!(curr_conv_msgs(state), ai_msg)
     save_ai_message(state, ai_msg)
     ai_msg
+end
+
+function get_message_by_id(state::AIState, message_id::String)
+    idx = findfirst(msg -> msg.id == message_id, curr_conv_msgs(state))
+    return idx !== nothing ? (idx, curr_conv_msgs(state)[idx]) : (0, nothing)
+end
+
+function update_message_by_id(state::AIState, message_id::String, new_content::String)
+    idx, msg = get_message_by_id(state, message_id)
+    if msg !== nothing
+        msg.content = new_content
+        save_conversation_to_file(curr_conv(state))
+    end
 end
 
 to_dict(state::AIState) = [Dict("role" => "system", "content" => system_message(state).content); to_dict_nosys(state)]
