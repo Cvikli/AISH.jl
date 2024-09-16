@@ -3,6 +3,10 @@
 
 AI SH to do EVERYTHING on PC
 
+AISH provide a new way of coding. Basically we switch from 100% code file editing to 10% codefile editing and 90% codeblock editing from the AISH. 
+
+Vscode extension will come. 
+
 
 AISH.jl (AI Shell) is a Julia package that provides an interactive AI-powered command-line interface for assisting users with system tasks using shell commands.
 
@@ -95,6 +99,7 @@ You can modify these settings to customize the behavior of AISH.jl.
 ## TODO
 Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
 - [ ] SHELL GPT version... it solve everything in the shell...
+- [ ] message ID to be used instead of timestamp idenfitification + add conversation_id to it...
 - [ ] SimpleContext refactor to match tha pattern of the EasyContext
   - [ ] SimpleContextNoCache create
 - [ ] RAG (EasyRAG ongoing. Context + search tool)

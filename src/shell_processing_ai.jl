@@ -1,29 +1,30 @@
 using PromptingTools
 using Random
 
-function process_meld_command(command::String)
+function generate_ai_command_from_meld_code(command::String)
+    @show command
     # Extract file path and content using regex
     file_path_match = match(r"meld\s+(\S+)", command)
     content_match = match(r"<<'EOF'\n([\s\S]*?)\nEOF\n\s*\)", command)
     
-    if isnothing(file_path_match) || isnothing(content_match)
-        return "Error: Invalid meld command format"
-    end
-    
+    (isnothing(file_path_match) || isnothing(content_match)) && return "","Error: Invalid meld command format", ""
     file_path = file_path_match.captures[1]
     
-    # Check if the file exists
-    if !isfile(file_path)
-        return command  # Return the original command without transformation
-    end
-    
+    !isfile(file_path) && return "",command,""  # Return the original command without transformation
     patch_content = content_match.captures[1]
-    
-    # Read original content
+
+    original_content, ai_generated_content = generate_ai_command(file_path, patch_content)
+
+    file_path, original_content, ai_generated_content
+end
+function generate_ai_command(file_path, patch_content)
     original_content = read(file_path, String)
-    
-    # Generate new content using AI
     ai_generated_content = generate_better_file(original_content, patch_content)
+    
+    original_content, ai_generated_content
+end
+function process_meld_command(command::String)
+    file_path, original_content, ai_generated_content = generate_ai_command_from_meld_code(command)
     
     # Choose delimiter based on content
     delimiter = if occursin("EOF", ai_generated_content)

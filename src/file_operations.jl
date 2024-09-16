@@ -3,7 +3,7 @@
 
 
 date_format(date) = Dates.format(date, DATE_FORMAT)
-date_parse(date)  = DateTime(date, DATE_FORMAT)
+date_parse(date)  = try DateTime(date, DATE_FORMAT) catch e; (println(date); println(e); rethrow(e);) end
 
 get_all_conversations_file() = readdir(CONVERSATION_DIR)
 get_message_separator(conversation_id) = "===AISH_MSG_$(conversation_id)==="

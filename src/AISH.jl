@@ -19,13 +19,13 @@ include("token_counter.jl")
 include("file_management.jl")
 include("file_tree.jl")
 include("file_operations.jl")
+include("file_messages.jl")
 include("arg_parser.jl")
 
 include("anthropic_extension.jl")
 
 include("shell_processing_ai.jl")
 include("shell_processing.jl")
-include("messages.jl")
 
 include("execute.jl")
 include("process_query.jl")

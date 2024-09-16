@@ -67,9 +67,9 @@ update_message_by_idx(state::AIState, idx::Int, new_content::String) = ((curr_co
 function mess(message_str)
     m = match(MSG_FORMAT, strip(message_str))
     Message(
-        id=string(m[1]),  
-        timestamp=date_parse(m[2]),
-        role=Symbol(m[3]),
+        id=string(m[3]),  
+        timestamp=date_parse(m[1]),
+        role=Symbol(m[2]),
         content=m[10],
         itok=parse(Int, m[4]),
         otok=parse(Int, m[5]),
@@ -98,4 +98,17 @@ function resume_last_conversation(state::AIState)
     state.conversations[latest_conv_id].system_message, state.conversations[latest_conv_id].messages = load_conversation(latest_conv_id)
     
     return latest_conv_id
+end
+
+function update_message_meta(state::AIState, message_id::String, meta::Dict)
+    idx, msg = get_message_by_id(state, message_id)
+    if msg !== nothing
+        msg.itok = meta["input_tokens"]
+        msg.otok = meta["output_tokens"]
+        msg.cached = meta["cache_creation_input_tokens"]
+        msg.cache_read = meta["cache_read_input_tokens"]
+        msg.price = meta["price"]
+        msg.elapsed = meta["elapsed"]
+        save_conversation_to_file(curr_conv(state))
+    end
 end

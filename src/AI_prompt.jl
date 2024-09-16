@@ -1,6 +1,9 @@
 const julia_specific = """Please make sure if you use the \$ in the string and you want the dollar mark then you have to escape it or else it will be interpolated in the string literal ("").
 The regex match return with SubString a strip(...) also return with SubString, so converted every SubString to String or write Union{String, SubString} or no type annotation to function to write correct code!
 Always try to prefer oneliner solutions if possible! Shorter more descriptive is always better! 
+Also when writing julia functions, try to use the oneliner format too like:
+`foo() = "oneliner"`
+
 """
 # """You are a Julia programmer. You should answer with julia code.
 # Don't provide examples! 
@@ -40,6 +43,9 @@ EOF
 to edit javascript .js, julia .jl or any other file every case if you want to change the content! 
 
 Always use the "// ... existing code ..." if you skip or leave out codepart! 
+
+	
+Try to use oneliner whenever it is possible!
 
 NEVER guess the sh block run results. It will be only managed by the Operating SYSTEM. This is where it will give you feedback that you can use to find the issues. NEVER predict the output!
 
