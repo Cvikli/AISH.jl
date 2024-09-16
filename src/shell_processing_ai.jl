@@ -2,7 +2,6 @@ using PromptingTools
 using Random
 
 function generate_ai_command_from_meld_code(command::String)
-    @show command
     # Extract file path and content using regex
     file_path_match = match(r"meld\s+(\S+)", command)
     content_match = match(r"<<'EOF'\n([\s\S]*?)\nEOF\n\s*\)", command)

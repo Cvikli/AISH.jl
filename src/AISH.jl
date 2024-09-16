@@ -6,7 +6,7 @@ using UUIDs
 
 using PromptingTools
 using Anthropic
-using Anthropic: channel_to_string, initStreamMeta, StreamMeta, calc_elapsed_times, format_meta_info
+using Anthropic: initStreamMeta, StreamMeta, calc_elapsed_times, format_meta_info
 
 include("keyboard.jl")
 
