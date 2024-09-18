@@ -1,7 +1,7 @@
 genid() = string(UUIDs.uuid4()) 
 
 @kwdef mutable struct Message
-    id::String
+    id::String=genid()
     timestamp::DateTime
     role::Symbol
     content::String

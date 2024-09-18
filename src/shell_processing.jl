@@ -76,6 +76,10 @@ function extract_and_preprocess_shell_scripts(new_content::String, extractor::Sh
     return extractor.shell_scripts
 end
 
+execute_single_shell_command(state, code::String) = execute_code_block(state, startswith(code, "meld") ? process_meld_command(code) : code)
+
+execute_shell_commands(state, shell_commands::Dict{String, String}) = Dict(code => execute_single_shell_command(state, code) for (code, _) in shell_commands)
+
 function execute_shell_commands(extractor::ShellScriptExtractor; no_confirm=false)
     shell_scripts = OrderedDict{String, String}()
     

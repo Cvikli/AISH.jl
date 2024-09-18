@@ -19,6 +19,20 @@ execute_code_block(code; original_code=nothing, no_confirm=false) = withenv("GTK
     end
   end
 end
+execute_code_block(state::AIState, code) = withenv("GTK_PATH" => "") do
+  if startswith(code, "meld")
+    println("\e[32m$(get_shortened_code(code))\e[0m")
+    return cmd_all_info(`zsh -c $code`)
+  else
+    println("\e[32m$code\e[0m")
+    if state.no_confirm
+      return cmd_all_info(`zsh -c $code`)
+    else
+      print("\e[34mContinue? (y) \e[0m")
+      return readchomp(`zsh -c "read -q '?'; echo \$?"`) == "0" ? cmd_all_info(`zsh -c $code`) : "Operation cancelled by user."
+    end
+  end
+end
 
 function cmd_all_info(cmd::Cmd, output=IOBuffer(), error=IOBuffer())
   err, process = "", nothing
