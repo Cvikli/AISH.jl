@@ -78,7 +78,7 @@ function extract_final_content(content::AbstractString)
       # Extract the content between the last pair of tags
       start_pos = start_index.stop + 1
       end_pos = end_index.start - 1
-      return strip(content[start_pos:end_pos])
+      return content[start_pos:end_pos]
   else
       # If tags are not found, return the original content
       @warn "Tags are not found."

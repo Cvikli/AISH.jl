@@ -24,17 +24,23 @@ process_question(ai_state::AIState, user_question::String, shell_results=Dict{St
     end
 end
 
+function on_text(chunk::String, extractor::ShellScriptExtractor)
+    print(chunk)
+    extract_and_preprocess_shell_scripts(chunk, extractor)
+end
+
 function process_message(state::AIState)
     local ai_meta, msg
+    extractor = ShellScriptExtractor()
 
     if state.streaming
+        print("\n\e[32m¬ \e[0m")
         cache = get_cache_setting(state.contexter, curr_conv(state))
         channel = ai_stream_safe(state, printout=false, cache=cache) 
-        msg, user_meta, ai_meta = process_stream(channel, state.model, 
+        msg, user_meta, ai_meta = process_stream(question, state.model, 
             on_meta_usr=meta->(println("\e[32mUser message: \e[0m$(format_meta_info(meta))"); update_last_user_message_meta(state, meta); print("\e[36m¬ \e[0m")), 
-            on_text=print, 
-            on_meta_ai=meta->println("\e[32mAI message: \e[0m$(format_meta_info(meta))"))
-        
+            on_text=chunk->on_text(chunk, extractor), 
+            on_meta_ai=meta->println("\n\e[32mAI message: \e[0m$(format_meta_info(meta))"))
         
         println("")
     else
@@ -44,16 +50,17 @@ function process_message(state::AIState)
         msg = assistant_message.content
         ai_meta = StreamMeta(input_tokens=assistant_message.tokens[1], output_tokens=assistant_message.tokens[2], price=assistant_message.cost, elapsed=assistant_message.elapsed)
         println("\e[36m¬ \e[0m$(msg)")
+        
+        # Extract shell commands for non-streaming case
+        extract_and_preprocess_shell_scripts(msg, extractor)
     end
 
     add_n_save_ai_message!(state, msg, ai_meta)
 
-    # TODO move this to somewhere else... this doesn't have to be in this function!
-    shell_scripts = extract_shell_commands(msg)
+    shell_scripts = OrderedDict{String, String}()
     if !state.skip_code_execution
-        shell_scripts = execute_shell_commands(state, shell_scripts)
+        shell_scripts = execute_shell_commands(extractor; no_confirm=state.no_confirm)
     end
-
 
 
     return curr_conv_msgs(state)[end], shell_scripts

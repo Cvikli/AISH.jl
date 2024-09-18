@@ -1,16 +1,17 @@
-update_message_with_outputs(state::AIState, content) = return replace(content, r"```sh\n([\s\S]*?)\n```" => matchedtxt -> begin
+update_message_with_outputs(content; no_confirm=false) = return replace(content, r"```sh\n([\s\S]*?)\n```" => matchedtxt -> begin
   code = matchedtxt[7:end-3]
-  output = execute_code_block(state, code)
+  output = execute_code_block(code; no_confirm)
   "$matchedtxt\n```sh_run_results\n$output\n```\n"
 end)
 
-execute_code_block(state::AIState, code) = withenv("GTK_PATH" => "") do
+execute_code_block(code; original_code=nothing, no_confirm=false) = withenv("GTK_PATH" => "") do
   if startswith(code, "meld")
-    println("\e[32m$(get_shortened_code(code))\e[0m")
+    println("\e[32m$(get_shortened_code(original_code !== nothing ? original_code : code))\e[0m")
+    # println("\e[32m$(code)\e[0m")
     return cmd_all_info(`zsh -c $code`)
   else
     println("\e[32m$code\e[0m")
-    if state.no_confirm
+    if no_confirm
       return cmd_all_info(`zsh -c $code`)
     else
       print("\e[34mContinue? (y) \e[0m")
@@ -18,7 +19,6 @@ execute_code_block(state::AIState, code) = withenv("GTK_PATH" => "") do
     end
   end
 end
-
 
 function cmd_all_info(cmd::Cmd, output=IOBuffer(), error=IOBuffer())
   err, process = "", nothing

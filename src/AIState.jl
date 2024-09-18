@@ -12,6 +12,7 @@ genid() = string(UUIDs.uuid4())
     price::Float32=0
     elapsed::Float32=0
 end
+
 UndefMessage() = Message(id="",timestamp=now(UTC), role=:UNKNOWN, content="")
 
 @kwdef mutable struct ConversationInfo

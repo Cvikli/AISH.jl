@@ -3,6 +3,7 @@ module AISH
 using Dates
 using UUIDs
 
+using DataStructures
 
 using PromptingTools
 using Anthropic

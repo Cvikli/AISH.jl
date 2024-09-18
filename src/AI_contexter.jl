@@ -38,23 +38,24 @@ function cut_history!(conv; keep=13)
     conv.messages = conv.messages[start_index:end]
 end
 
-function prepare_user_message!(contexter::SimpleContexter, ai_state, question, shell_results::Dict{String, String})
+function prepare_user_message!(contexter::SimpleContexter, ai_state, question, shell_results::AbstractDict{String, String})
     cut_history!(curr_conv(ai_state); keep=contexter.keep)
     formatted_results = format_shell_results(shell_results)
     formatted_results * question
 end
 
-function format_shell_results(shell_commands::Dict{String, String})
+function format_shell_results(shell_commands::AbstractDict{String, String})
     result = "<ShellRunResults>"
     for (code, output) in shell_commands
         shortened_code = get_shortened_code(code)
   
-        result *= """```sh
+        result *= """
+        <sh_script shortened>
         $shortened_code
-        ```
-        ```sh_output
+        <!sh_script>
+        <sh_output>
         $output
-        ```
+        </sh_output>
         """
     end
     result *= "</ShellRunResults>"
