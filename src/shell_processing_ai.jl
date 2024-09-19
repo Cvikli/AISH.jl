@@ -74,9 +74,8 @@ function generate_better_file(original_content::String, changes_content::Abstrac
 end
 
 function extract_final_content(content::AbstractString)
-    # Find the last occurrence of <final content> and </final content>
-    start_index = findfirst("<final content>", content)
-    end_index = findlast("</final content>", content)
+    start_index = findfirst("<final_content>", content)
+    end_index = findlast("</final_content>", content)
     
     if !isnothing(start_index) && !isnothing(end_index)
         # Extract the content between the last pair of tags
