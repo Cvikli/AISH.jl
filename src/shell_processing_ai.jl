@@ -2,7 +2,7 @@
 using PromptingTools
 using Random
 
-function generate_ai_command_from_meld_code(command::String)
+function generate_ai_command_from_meld_code(command::AbstractString)
     # Extract file path and content using regex
     file_path_match = match(r"meld\s+(\S+)", command)
     content_match = match(r"<<'EOF'\n([\s\S]*?)\nEOF\n\s*\)", command)
@@ -25,7 +25,7 @@ function generate_ai_command(file_path, patch_content)
     original_content, ai_generated_content
 end
 
-function improve_command_LLM(command::String)
+function improve_command_LLM(command::AbstractString)
     file_path, original_content, ai_generated_content = generate_ai_command_from_meld_code(command)
     # Choose delimiter based on content
     delimiter = if occursin("EOF", ai_generated_content)
@@ -44,7 +44,7 @@ function improve_command_LLM(command::String)
     return new_command
 end
 
-function generate_better_file(original_content::String, changes_content::AbstractString)
+function generate_better_file(original_content::AbstractString, changes_content::AbstractString)
     prompt = """
     You are an AI assistant specialized in merging code changes. You will be provided with the <original content> and a <changes content> to be applied. Your task is to generate the final content after applying the <changes content>. 
     Here's what you need to do:

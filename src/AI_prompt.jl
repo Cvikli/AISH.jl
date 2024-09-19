@@ -2,6 +2,7 @@ const julia_specific = """Please make sure if you use the \$ in the string and y
 The regex match return with SubString a strip(...) also return with SubString, so converted every SubString to String or write <:AbstractString or no type annotation to function to write correct code!
 Always try to prefer oneliner solutions if possible! Shorter more descriptive is always better! 
 We prefer @kwdef julia structs over constructors.
+If we wrote tests or tried to fix test cases then in the end also try to run the tests.
 Also when writing julia functions, try to use the oneliner format too like:
 `foo() = "oneliner"`
 

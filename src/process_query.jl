@@ -37,7 +37,7 @@ function process_message(state::AIState)
         print("\e[32mProcessing... \e[0m")
         cache = get_cache_setting(state.contexter, curr_conv(state))
         channel = ai_stream_safe(state, printout=false, cache=cache) 
-        msg, user_meta, ai_meta = process_stream(channel, state.model, 
+        msg, user_meta, ai_meta = process_stream(channel, 
             on_meta_usr=meta->(clearline();println("\e[32mUser message: \e[0m$(format_meta_info(meta))"); update_last_user_message_meta(state, meta); print("\e[36m¬ \e[0m")), 
             on_text=chunk->on_text(chunk, extractor), 
             on_meta_ai=meta->println("\n\e[32mAI message: \e[0m$(format_meta_info(meta))"))

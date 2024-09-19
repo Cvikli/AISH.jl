@@ -25,6 +25,9 @@ function parse_commandline()
         "--tokens", "-t"
             help = "Show token count for each file"
             action = :store_true
+        "--no-loop"
+            help = "Disable loop mode"
+            action = :store_true
     end
 
     return parse_args(s)
