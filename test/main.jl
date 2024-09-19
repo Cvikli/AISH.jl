@@ -1,4 +1,5 @@
 using AISH	
 
-ai_state = AISH.main()
+ai_state = main()
+
 

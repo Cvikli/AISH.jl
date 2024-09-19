@@ -1,7 +1,7 @@
 name = "AISH"
 uuid = "775c4406-b4e1-480c-b58a-81e3997edc43"
 authors = ["Cvikli <havlikmarcell@gmail.com>"]
-version = "0.1.0"
+version = "1.0.0"
 
 [deps]
 Anthropic = "a00d14cb-3434-48ec-9b49-cfc2b9ce2a8f"

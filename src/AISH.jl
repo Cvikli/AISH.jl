@@ -3,14 +3,18 @@ module AISH
 using Dates
 using UUIDs
 
+# Lazy load heavy dependencies
+# const DataStructures = Base.require(Base.PkgId(Base.UUID("864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"), "DataStructures"))
+# const PromptingTools = Base.require(Base.PkgId(Base.UUID("670122d1-24a8-4d70-bfce-740807c42192"), "PromptingTools"))
 using DataStructures
-
 using PromptingTools
+
+# Only import what's necessary from BoilerplateCvikli
+using BoilerplateCvikli: @async_showerr
+
 using Anthropic
 using Anthropic: initStreamMeta, StreamMeta, calc_elapsed_times, format_meta_info
 
-
-using BoilerplateCvikli: @async_showerr
 
 include("utils.jl")
 include("keyboard.jl")
@@ -67,7 +71,7 @@ end
 function start(message=""; resume=false, streaming=true, project_paths=String[], contexter=SimpleContexter(), show_tokens=false, loop=true)
   ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,))) # Nice program exit for ctrl + c.
   ai_state = initialize_ai_state(;contexter, resume, streaming, project_paths, show_tokens)
-  
+  return ai_state
   set_terminal_title("AISH $(curr_conv(ai_state).common_path)")
   
   start_conversation(ai_state, message; loop)

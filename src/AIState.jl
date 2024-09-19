@@ -35,13 +35,25 @@ end
     no_confirm::Bool=false  
 end
 
-initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; contexter=SimpleContexter(), resume::Bool=false, streaming::Bool=true, project_paths::Vector{String}=String[], skip_code_execution::Bool=false, show_tokens::Bool=false, no_confirm=false) = initialize_ai_state(MODEL, resume, streaming, project_paths, skip_code_execution, show_tokens, contexter, no_confirm)
-function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, show_tokens, contexter, no_confirm)
+initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; 
+                    contexter=SimpleContexter(), 
+                    resume::Bool=false, 
+                    streaming::Bool=true, 
+                    project_paths::Vector{String}=String[], 
+                    skip_code_execution::Bool=false, 
+                    show_tokens::Bool=false, 
+                    no_confirm=false, 
+                    full_history::Bool=false,) = initialize_ai_state(MODEL, resume, streaming, project_paths, skip_code_execution, show_tokens, contexter, no_confirm, full_history)
+function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, show_tokens, contexter, no_confirm, full_history)
     state = AIState(streaming=streaming, skip_code_execution=skip_code_execution, model=MODEL, contexter=contexter, no_confirm=no_confirm)
-    get_all_conversations_without_messages(state)
+    (full_history || resume) && get_all_conversations_without_messages(state)
     println("\e[32mAI State initialized successfully.\e[0m ")
     
-    if resume
+    if !resume
+        generate_new_conversation(state)
+        
+        println("Conversion id: $(state.selected_conv_id)")
+    else
         last_conv_id = resume_last_conversation(state)
         if isempty(last_conv_id)
             generate_new_conversation(state)
@@ -60,9 +72,6 @@ function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{Str
                 println("No previous messages in this conversation.")
             end
         end
-    else
-        generate_new_conversation(state)
-        println("Conversion id: $(state.selected_conv_id)")
     end
     update_project_path_and_sysprompt!(state, project_paths)
 

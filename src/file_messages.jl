@@ -90,7 +90,7 @@ function resume_last_conversation(state::AIState)
     latest_conv_id = latest_conv[2]
     
     state.selected_conv_id = latest_conv_id
-    state.conversations[latest_conv_id].system_message, state.conversations[latest_conv_id].messages = load_conversation(latest_conv_id)
+    succes, state.conversations[latest_conv_id].system_message, state.conversations[latest_conv_id].messages = load_conversation(latest_conv_id)
     
     return latest_conv_id
 end
