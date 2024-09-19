@@ -46,26 +46,24 @@ end
 
 function generate_better_file(original_content::String, changes_content::AbstractString)
     prompt = """
-    You are an AI code merger. Combine the original content with the specified changes:
+    You are an AI assistant specialized in merging code changes. You will be provided with the <original content> and a <changes content> to be applied. Your task is to generate the final content after applying the <changes content>. 
+    Here's what you need to do:
 
-    - Analyze the <original_content> and the <changes_content>.
-    - Apply the changes specified in the <changes_content> to the <original_content>.
-    - The <changes_content> may include comments like "// ... existing code ..." to indicate original existing code should be inserted there. Preserve these unchanged parts from the original content.
-    - Do not remove or change any code that isn't necessary to modify to apply the <changes_content>. So if that code has relevance for the structure in the final content then keep it! 
-    - Preserve all comments, formatting, and whitespace from the original content unless explicitly changed.
-    - Ensure that the resulting code is syntactically correct and maintains the original structure where possible.
-    - If there are any conflicts or ambiguities, resolve them in the logical way that maintains the intended functionality.
-    - Return the complete final content, that is reconstructed from the original file and the changes, between <final_content> and </final_content> tags.
+    1. Analyze the <original content> and the <changes content>.
+    2. Apply the changes specified in the <changes content> to the <original content>.
+    3. Ensure that the resulting code is syntactically correct and maintains the original structure where possible.
+    4. If there are any conflicts or ambiguities, resolve them in the most logical way.
+    5. Return only the final merged content, between <final content> and </final content> tags.
 
-    <original_content>
+    <original content>
     $original_content
-    </original_content>
+    </original content>
 
-    <changes_content>
+    <changes content>
     $changes_content
-    </changes_content>
+    </changes content>
 
-    Provide the complete final merged content between <final_content> and </final_content> tags.
+    Please provide the final merged content between <final content> and </final content>.
     """
 
     println("\e[38;5;240mProcessing diff with AI for higher quality...\e[0m")
@@ -74,8 +72,8 @@ function generate_better_file(original_content::String, changes_content::Abstrac
 end
 
 function extract_final_content(content::AbstractString)
-    start_index = findfirst("<final_content>", content)
-    end_index = findlast("</final_content>", content)
+    start_index = findfirst("<final content>", content)
+    end_index = findlast("</final content>", content)
     
     if !isnothing(start_index) && !isnothing(end_index)
         # Extract the content between the last pair of tags
