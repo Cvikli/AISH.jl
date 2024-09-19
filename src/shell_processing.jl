@@ -73,7 +73,8 @@ function extract_and_preprocess_shell_scripts(new_content::String, extractor::Sh
                 tmp = process_modify_command(String(file_path), command)
                 extractor.shell_scripts[command] = @async_showerr improve_command_LLM(tmp)
             elseif cmd_type == :CREATE
-                extractor.shell_scripts[command] = @async_showerr process_create_command(file_path, command)
+                tmp = process_create_command(String(file_path), command)
+                extractor.shell_scripts[command] = @async_showerr tmp
             else
                 extractor.shell_scripts[command] = @async_showerr command
                 # if block_type == "sh"

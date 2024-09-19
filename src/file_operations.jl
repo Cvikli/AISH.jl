@@ -32,3 +32,12 @@ function read_conversation_file(conversation_id)
 
     return filename, messages
 end
+
+function save_file(filepath::String, content::String)
+    open(filepath, "w") do file
+        write(file, content)
+    end
+    return true
+end
+
+
