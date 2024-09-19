@@ -1,3 +1,4 @@
+
 using PromptingTools
 using Random
 
@@ -16,15 +17,16 @@ function generate_ai_command_from_meld_code(command::String)
 
     file_path, original_content, ai_generated_content
 end
+
 function generate_ai_command(file_path, patch_content)
     original_content = read(file_path, String)
     ai_generated_content = generate_better_file(original_content, patch_content)
     
     original_content, ai_generated_content
 end
-function process_meld_command(command::String)
+
+function improve_command_LLM(command::String)
     file_path, original_content, ai_generated_content = generate_ai_command_from_meld_code(command)
-    
     # Choose delimiter based on content
     delimiter = if occursin("EOF", ai_generated_content)
         "EOF_" * randstring(3)

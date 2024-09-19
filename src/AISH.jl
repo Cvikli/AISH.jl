@@ -9,6 +9,9 @@ using PromptingTools
 using Anthropic
 using Anthropic: initStreamMeta, StreamMeta, calc_elapsed_times, format_meta_info
 
+using BoilerplateCvikli: @async_showerr
+
+include("utils.jl")
 include("keyboard.jl")
 
 include("AI_config.jl")

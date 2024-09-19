@@ -28,17 +28,17 @@ function on_text(chunk::String, extractor::ShellScriptExtractor)
     print(chunk)
     extract_and_preprocess_shell_scripts(chunk, extractor)
 end
-
 function process_message(state::AIState)
     local ai_meta, msg
     extractor = ShellScriptExtractor()
 
     if state.streaming
-        print("\n\e[32m¬ \e[0m")
+        clearline()
+        print("\e[32mProcessing... \e[0m")
         cache = get_cache_setting(state.contexter, curr_conv(state))
         channel = ai_stream_safe(state, printout=false, cache=cache) 
         msg, user_meta, ai_meta = process_stream(channel, state.model, 
-            on_meta_usr=meta->(println("\e[32mUser message: \e[0m$(format_meta_info(meta))"); update_last_user_message_meta(state, meta); print("\e[36m¬ \e[0m")), 
+            on_meta_usr=meta->(clearline();println("\e[32mUser message: \e[0m$(format_meta_info(meta))"); update_last_user_message_meta(state, meta); print("\e[36m¬ \e[0m")), 
             on_text=chunk->on_text(chunk, extractor), 
             on_meta_ai=meta->println("\n\e[32mAI message: \e[0m$(format_meta_info(meta))"))
         

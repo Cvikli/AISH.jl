@@ -44,42 +44,68 @@ end
     full_content::String = ""
 end
 
+
 function extract_and_preprocess_shell_scripts(new_content::String, extractor::ShellScriptExtractor)
     extractor.full_content *= new_content
     lines = split(extractor.full_content[extractor.last_processed_index[]+1:end], '\n')
     current_command = String[]
-    in_sh_block = false
+    in_block = false
+    cmd_type = :NOTHING
+    block_type = ""
+    file_path = ""
     last_processed_char = extractor.last_processed_index[]
 
     for (i, line) in enumerate(lines)
-        if startswith(line, "```sh") && !in_sh_block
-            in_sh_block = true
-        elseif in_sh_block && startswith(line, "```")
+        if startswith(line, "MODIFY ")        
+            file_path = String(strip(line[8:end]))
+            cmd_type = :MODIFY
+        elseif startswith(line, "CREATE ")
+            file_path = String(strip(line[8:end]))
+            cmd_type = :CREATE
+        elseif startswith(line, "```") && !in_block
+            in_block = true
+            block_type = String(strip(line[4:end]))
+        elseif in_block && length(line)>=3 && line[1:3] == "```" && (length(line)==3 || all(isspace, line[4:end]))
             command = join(current_command, '\n')
-            extractor.shell_scripts[command] = @async process_command(command)
+            # @show cmd_type
+            # @show command
+            if cmd_type == :MODIFY
+                tmp = process_modify_command(String(file_path), command)
+                extractor.shell_scripts[command] = @async_showerr improve_command_LLM(tmp)
+            elseif cmd_type == :CREATE
+                extractor.shell_scripts[command] = @async_showerr process_create_command(file_path, command)
+            else
+                extractor.shell_scripts[command] = @async_showerr command
+                # if block_type == "sh"
+                #     extractor.shell_scripts[command] = @async command
+                # else
+                #     extractor.shell_scripts[command] = @async command
+                #     @warn "is this unhandled script parsing? $(block_type)"
+                # end
+            end
             current_command = String[]
-            in_sh_block = false
-            last_processed_char += length(line) + 1  # +1 for the newline
-        elseif in_sh_block
+            in_block = false
+            block_type = ""
+            cmd_type = :NOTHING
+            file_path = ""
+            last_processed_char = length(extractor.full_content)
+        elseif in_block
             push!(current_command, line)
         end
         
-        if !in_sh_block
-            last_processed_char += length(line) + 1  # +1 for the newline
-        end
+        # if !in_block
+        #     last_processed_char += length(line) + 1  # +1 for the newline
+        # end
     end
 
     extractor.last_processed_index[] = last_processed_char
 
-    # in_sh_block && !isempty(current_command) && @warn "Last shell block wasn't closed."
-
     return extractor.shell_scripts
 end
+process_modify_command(file_path::String, content::String) = "meld $(file_path) <(cat <<'EOF'\n$(content)\nEOF\n)"
+process_create_command(file_path::String, content::String) = "cat > $(file_path) <<'EOF'\n$(content)\nEOF"
 
-
-
-
-
+execute_single_shell_command(code::String; no_confirm=false) = execute_code_block(startswith(code, "meld") ? improve_command_LLM(code) : code; no_confirm)
 
 function execute_shell_commands(extractor::ShellScriptExtractor; no_confirm=false)
     shell_scripts = OrderedDict{String, String}()
@@ -94,33 +120,3 @@ function execute_shell_commands(extractor::ShellScriptExtractor; no_confirm=fals
     
     return shell_scripts
 end
-
-function process_command(code::String)
-    if startswith(code, "meld")
-        return process_meld_command(code)
-    elseif startswith(code, "cat >")
-        return process_cat_command(code)
-    else
-        return code
-    end
-end
-
-function process_cat_command(command::String)
-    # Extract file path and content using regex
-    match_result = match(r"cat\s+>\s+(\S+)\s+<<'EOF'\n([\s\S]*?)\nEOF", command)
-    
-    if isnothing(match_result)
-        return "Error: Invalid cat command format"
-    end
-    
-    file_path, content = match_result.captures
-    
-    # Create the directory if it doesn't exist
-    mkpath(dirname(file_path))
-    
-    # Write the content to the file
-    write(file_path, content)
-    
-    return "File created: $file_path"
-end
-

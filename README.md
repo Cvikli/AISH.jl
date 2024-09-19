@@ -98,6 +98,7 @@ You can modify these settings to customize the behavior of AISH.jl.
 
 ## TODO
 Lot of them is already ready... Most of them was written by the AISH itself! (Real singularity is here yeah XD Literally I have to put the features described here to the code and merge the solution)
+- [ ] CODE merging LLM, that is EVEN taking into consideration that if a code is missing then it has to evaluate if that code was necessary to remove or not!
 - [ ] SHELL GPT version... it solve everything in the shell...
 - [ ] message ID to be used instead of timestamp idenfitification + add conversation_id to it...
 - [ ] SimpleContext refactor to match tha pattern of the EasyContext

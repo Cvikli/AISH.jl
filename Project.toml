@@ -6,6 +6,7 @@ version = "0.1.0"
 [deps]
 Anthropic = "a00d14cb-3434-48ec-9b49-cfc2b9ce2a8f"
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
+BoilerplateCvikli = "9c9f911a-9395-49bd-b3fc-139ceb24aa85"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
