@@ -48,22 +48,22 @@ function generate_better_file(original_content::String, changes_content::Abstrac
     prompt = """
     You are an AI code merger. Combine the original content with the specified changes:
 
-    - Analyze the <original_file_content> and the <specified_changes>.
-    - Apply the changes specified in the <specified_changes> to the <original_file_content>.
-    - The <specified_changes> may include comments like "// ... existing code ..." to indicate original existing code should be inserted there. Preserve these unchanged parts from the original content.
-    - Do not remove or change any code that isn't necessary to modify to apply the <specified_changes>. So if that code has relevance for the structure in the final content then keep it! 
+    - Analyze the <original_content> and the <changes_content>.
+    - Apply the changes specified in the <changes_content> to the <original_content>.
+    - The <changes_content> may include comments like "// ... existing code ..." to indicate original existing code should be inserted there. Preserve these unchanged parts from the original content.
+    - Do not remove or change any code that isn't necessary to modify to apply the <changes_content>. So if that code has relevance for the structure in the final content then keep it! 
     - Preserve all comments, formatting, and whitespace from the original content unless explicitly changed.
     - Ensure that the resulting code is syntactically correct and maintains the original structure where possible.
     - If there are any conflicts or ambiguities, resolve them in the logical way that maintains the intended functionality.
     - Return the complete final content, that is reconstructed from the original file and the changes, between <final_content> and </final_content> tags.
 
-    <original_file_content>
+    <original_content>
     $original_content
-    </original_file_content>
+    </original_content>
 
-    <specified_changes>
+    <changes_content>
     $changes_content
-    </specified_changes>
+    </changes_content>
 
     Provide the complete final merged content between <final_content> and </final_content> tags.
     """
