@@ -44,6 +44,11 @@ get_msg_idx_by_timestamp(state, timestamp) = findfirst(msg -> begin
 date_format(msg.timestamp) == timestamp
 end, curr_conv_msgs(state))
 
+function get_message_by_id(state::AIState, message_id::String)
+    idx = findfirst(msg -> msg.id == message_id, curr_conv_msgs(state))
+    return idx !== nothing ? (idx, curr_conv_msgs(state)[idx]) : (0, nothing)
+end
+
 function get_message_by_timestamp(state::AIState, timestamp::String)
     idx = get_msg_idx_by_timestamp(state, timestamp)
     return idx !== nothing ? (idx, curr_conv_msgs(state)[idx]) : (0, nothing)
