@@ -11,10 +11,10 @@ using PrecompileTools
 
 @setup_workload begin
     @compile_workload begin
-        # state = initialize_ai_state()
-        # process_question(state, "Hello, AI assistant!")
-        # process_message(state)
-        # extract_shell_commands("```sh\necho 'Hello, World!'\n```")
-        # start_conversation(state)
+        state = initialize_ai_state()
+        process_question(state, "Hello, AI assistant!")
+        process_message(state)
+        extract_shell_commands("```sh\necho 'Hello, World!'\n```")
+        start_conversation(state, loop=false)
     end
 end
