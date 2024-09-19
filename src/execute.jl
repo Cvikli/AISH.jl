@@ -1,12 +1,8 @@
-update_message_with_outputs(content; no_confirm=false) = return replace(content, r"```sh\n([\s\S]*?)\n```" => matchedtxt -> begin
-  code = matchedtxt[7:end-3]
-  output = execute_code_block(code; no_confirm)
-  "$matchedtxt\n```sh_run_results\n$output\n```\n"
-end)
 
-execute_code_block(code; original_code=nothing, no_confirm=false) = withenv("GTK_PATH" => "") do
-  if startswith(code, "meld")
-    println("\e[32m$(get_shortened_code(original_code !== nothing ? original_code : code))\e[0m")
+execute_code_block(cb::CodeBlock; no_confirm=false) = withenv("GTK_PATH" => "") do
+  code = codestr(cb)
+  if cb.type==:MODIFY
+    println("\e[32m$(get_shortened_code(code))\e[0m")
     # println("\e[32m$(code)\e[0m")
     return cmd_all_info(`zsh -c $code`)
   else

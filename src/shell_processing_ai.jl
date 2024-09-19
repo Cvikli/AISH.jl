@@ -2,46 +2,36 @@
 using PromptingTools
 using Random
 
-function generate_ai_command_from_meld_code(command::AbstractString)
-    # Extract file path and content using regex
-    file_path_match = match(r"meld\s+(\S+)", command)
-    content_match = match(r"<<'EOF'\n([\s\S]*?)\nEOF\n\s*\)", command)
-    
-    (isnothing(file_path_match) || isnothing(content_match)) && return "","Error: Invalid meld command format", ""
-    file_path = file_path_match.captures[1]
-    
-    !isfile(file_path) && return "",command,""  # Return the original command without transformation
-    patch_content = content_match.captures[1]
-
-    original_content, ai_generated_content = generate_ai_command(file_path, patch_content)
+function generate_ai_command_from_meld_code(cb::CodeBlock)
+    original_content, ai_generated_content = generate_ai_command(cb)
 
     file_path, original_content, ai_generated_content
 end
 
-function generate_ai_command(file_path, patch_content)
-    original_content = read(file_path, String)
-    ai_generated_content = generate_better_file(original_content, patch_content)
+function generate_ai_command(cb)
+    original_content = read(cb.file_path, String)
+    ai_generated_content = generate_better_file(original_content, cb.content)
     
     original_content, ai_generated_content
 end
 
-function improve_command_LLM(command::AbstractString)
-    file_path, original_content, ai_generated_content = generate_ai_command_from_meld_code(command)
+function improve_command_LLM(cb::CodeBlock)
+    original_content, ai_generated_content = generate_ai_command_from_meld_code(cb)
     # Choose delimiter based on content
-    delimiter = if occursin("EOF", ai_generated_content)
-        "EOF_" * randstring(3)
-    else
-        "EOF"
-    end
+    # delimiter = if occursin("EOF", ai_generated_content)
+    #     "EOF_" * randstring(3)
+    # else
+    #     "EOF"
+    # end
     
     # Construct new meld command with AI-generated content
-    new_command = """meld $file_path <(cat <<'$delimiter'
-    $ai_generated_content
-    $delimiter
-    )"""
+    # new_command = """meld $cb.file_path <(cat <<'$delimiter'
+    # $ai_generated_content
+    # $delimiter
+    # )"""
     
     # Execute the new meld command
-    return new_command
+    return ai_generated_content
 end
 
 function generate_better_file(original_content::AbstractString, changes_content::AbstractString)
