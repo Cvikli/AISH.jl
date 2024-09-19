@@ -44,8 +44,7 @@ end
     full_content::String = ""
 end
 
-
-function extract_and_preprocess_shell_scripts(new_content::String, extractor::ShellScriptExtractor)
+function extract_and_preprocess_shell_scripts(new_content::String, extractor::ShellScriptExtractor; mock=false)
     extractor.full_content *= new_content
     lines = split(extractor.full_content[extractor.last_processed_index[]+1:end], '\n')
     current_command = String[]

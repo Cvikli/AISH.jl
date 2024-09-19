@@ -75,8 +75,15 @@ function start(message=""; resume=false, streaming=true, project_paths=String[],
 end
 
 function main(;contexter=SimpleContexter())
-  args = parse_commandline()
-  start(args["message"]; resume=args["resume"], streaming=!args["no-streaming"], project_paths=args["project-paths"], show_tokens=args["tokens"], loop=!args["no-loop"], contexter)
+    args = parse_commandline()
+    start(args["message"]; 
+        resume=args["resume"], 
+        streaming=!args["no-streaming"], 
+        project_paths=args["project-paths"], 
+        show_tokens=args["tokens"], 
+        loop=!args["no-loop"], 
+        contexter=contexter,
+    )
 end
 
 export main
