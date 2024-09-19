@@ -66,7 +66,7 @@ function start(message=""; resume=false, streaming=true, project_paths=String[],
   ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,))) # Nice program exit for ctrl + c.
   ai_state = initialize_ai_state(;contexter, resume, streaming, project_paths, show_tokens)
   
-  set_terminal_title("AISH $(curr_conv(state::AIState).common_path)")
+  set_terminal_title("AISH $(curr_conv(ai_state).common_path)")
   
   start_conversation(ai_state, message)
   ai_state
