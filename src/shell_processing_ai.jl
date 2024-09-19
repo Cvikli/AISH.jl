@@ -46,30 +46,29 @@ end
 
 function generate_better_file(original_content::String, changes_content::AbstractString)
     prompt = """
-    You are an AI assistant specialized in merging code changes. Your task is to generate the final content after applying the specified changes to the original content. Follow these instructions carefully:
+    You are an AI code merger. Combine the original content with the specified changes:
 
-    1. Analyze the <original_file_content> and the <applicable_changes>.
-    2. Apply the changes specified in the <applicable_changes> to the <original_file_content>.
-    3. The <applicable_changes> may include comments like "// ... existing code ..." to indicate unchanged parts. Preserve these unchanged parts from the original content.
-    4. Ensure that the resulting code is syntactically correct and maintains the original structure where possible.
-    5. If there are any conflicts or ambiguities, resolve them in the most logical way that maintains the intended functionality.
-    6. Do not remove or change any code that isn't necessary to modify to apply the <applicable_changes>.
-    7. Preserve all comments, formatting, and whitespace from the original content unless explicitly changed.
-    8. If the <applicable_changes> includes new code, integrate it seamlessly with the existing code.
-    9. Return the complete final content, including both changed and unchanged parts, between <final content> and </final content> tags.
+    - Analyze the <original_file_content> and the <specified_changes>.
+    - Apply the changes specified in the <specified_changes> to the <original_file_content>.
+    - The <specified_changes> may include comments like "// ... existing code ..." to indicate original existing code should be inserted there. Preserve these unchanged parts from the original content.
+    - Do not remove or change any code that isn't necessary to modify to apply the <specified_changes>. So if that code has relevance for the structure in the final content then keep it! 
+    - Preserve all comments, formatting, and whitespace from the original content unless explicitly changed.
+    - Ensure that the resulting code is syntactically correct and maintains the original structure where possible.
+    - If there are any conflicts or ambiguities, resolve them in the logical way that maintains the intended functionality.
+    - Return the complete final content, that is reconstructed from the original file and the changes, between <final_content> and </final_content> tags.
 
     <original_file_content>
     $original_content
     </original_file_content>
 
-    <applicable_changes>
+    <specified_changes>
     $changes_content
-    </applicable_changes>
+    </specified_changes>
 
-    Provide the complete final merged content between <final content> and </final content> tags.
+    Provide the complete final merged content between <final_content> and </final_content> tags.
     """
 
-    println("\e[38;5;240mWe AI process the diff, for higher quality diff...\e[0m")
+    println("\e[38;5;240mProcessing diff with AI for higher quality...\e[0m")
     @time aigenerated = PromptingTools.aigenerate(prompt, model="gpt4om") # gpt4om, claudeh
     return extract_final_content(aigenerated.content)
 end
