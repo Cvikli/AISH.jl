@@ -33,6 +33,7 @@ end
     model::String = ""
     contexter::AbstractContextCreator=SimpleContexter()
     no_confirm::Bool=false  
+    silent::Bool=false  
 end
 
 initialize_ai_state(MODEL="claude-3-5-sonnet-20240620"; 
@@ -43,16 +44,16 @@ initialize_ai_state(MODEL="claude-3-5-sonnet-20240620";
                     skip_code_execution::Bool=false, 
                     show_tokens::Bool=false, 
                     no_confirm=false, 
-                    full_history::Bool=false,) = initialize_ai_state(MODEL, resume, streaming, project_paths, skip_code_execution, show_tokens, contexter, no_confirm, full_history)
-function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, show_tokens, contexter, no_confirm, full_history)
-    state = AIState(streaming=streaming, skip_code_execution=skip_code_execution, model=MODEL, contexter=contexter, no_confirm=no_confirm)
+                    full_history::Bool=false,
+                    silent=false) = initialize_ai_state(MODEL, resume, streaming, project_paths, skip_code_execution, show_tokens, contexter, no_confirm, full_history, silent)
+function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{String}, skip_code_execution, show_tokens, contexter, no_confirm, full_history, silent)
+    state = AIState(model=MODEL; streaming, skip_code_execution, contexter, no_confirm, silent)
     (full_history || resume) && get_all_conversations_without_messages(state)
-    println("\e[32mAI State initialized successfully.\e[0m ")
+    !state.silent && println("\e[32mAI State initialized successfully.\e[0m ")
     
     if !resume
         generate_new_conversation(state)
-        
-        println("Conversion id: $(state.selected_conv_id)")
+        !state.silent && println("Conversion id: $(state.selected_conv_id)")
     else
         last_conv_id = resume_last_conversation(state)
         if isempty(last_conv_id)
@@ -76,7 +77,7 @@ function initialize_ai_state(MODEL, resume, streaming, project_paths::Vector{Str
     update_project_path_and_sysprompt!(state, project_paths)
 
     print_project_tree(state, show_tokens=show_tokens)
-    println("All things setup!")
+    !state.silent && println("All things setup!")
     return state
 end
 
@@ -145,7 +146,7 @@ end
 function update_project_path_and_sysprompt!(state::AIState, project_paths::Vector{String}=String[])
     !isempty(project_paths) && (set_project_path(state, project_paths))
     state.conversations[state.selected_conv_id].system_message = Message(id=id=genid(), timestamp=now(UTC), role=:system, content=SYSTEM_PROMPT(ctx=projects_ctx(curr_conv(state).rel_project_paths)))
-    println("\e[33mSystem prompt updated due to file changes.\e[0m")
+    !state.silent && println("\e[33mSystem prompt updated due to file changes.\e[0m")
 end
 
 add_n_save_user_message!(state::AIState, user_question::String) = add_n_save_user_message!(state, Message(id=genid(), timestamp=now(UTC), role=:user, content=strip(user_question)))

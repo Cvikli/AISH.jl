@@ -44,16 +44,16 @@ handle_interrupt(sig::Int32) = (println("\nExiting gracefully. Good bye! :)"); e
 
 
 function start_conversation(state::AIState, user_question=""; loop=true)
-  println("Welcome to $ChatSH AI. (using $(state.model))")
+  !state.silent && println("Welcome to $ChatSH AI. (using $(state.model))")
 
   while !isempty(curr_conv_msgs(state)) && curr_conv_msgs(state)[end].role == :user; pop!(curr_conv_msgs(state)); end
 
   isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
-  println("Your multiline input (empty line to finish):")
+  !state.silent && println("Your multiline input (empty line to finish):")
 
   shell_results = Dict{String, String}()
   if !isempty(strip(user_question)) 
-    println("\e[36m➜ \e[1m$(user_question)\e[0m")
+    # println("\e[36m➜ \e[1m$(user_question)\e[0m")
     _, shell_results = process_question(state, user_question, shell_results)
   end
 
@@ -70,7 +70,7 @@ end
 
 function start(message=""; resume=false, streaming=true, project_paths=String[], contexter=SimpleContexter(), show_tokens=false, loop=true)
   ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,))) # Nice program exit for ctrl + c.
-  ai_state = initialize_ai_state(;contexter, resume, streaming, project_paths, show_tokens)
+  ai_state = initialize_ai_state(;contexter, resume, streaming, project_paths, show_tokens, silent=!isempty(message))
   
   set_terminal_title("AISH $(curr_conv(ai_state).common_path)")
   
@@ -78,16 +78,16 @@ function start(message=""; resume=false, streaming=true, project_paths=String[],
   ai_state
 end
 
-function main(;contexter=SimpleContexter())
-    args = parse_commandline()
-    start(args["message"]; 
-        resume=args["resume"], 
-        streaming=!args["no-streaming"], 
-        project_paths=args["project-paths"], 
-        show_tokens=args["tokens"], 
-        loop=!args["no-loop"], 
-        contexter=contexter,
-    )
+function main(;contexter=SimpleContexter(), loop=true)
+  args = parse_commandline()
+  start(args["message"]; 
+      resume=args["resume"], 
+      streaming=!args["no-streaming"], 
+      project_paths=args["project-paths"], 
+      show_tokens=args["tokens"], 
+      loop=!args["no-loop"] && loop, 
+      contexter=contexter,
+  )
 end
 
 export main
