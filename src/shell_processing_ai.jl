@@ -14,19 +14,6 @@ end
 
 function improve_command_LLM(cb::CodeBlock)
     original_content, ai_generated_content = generate_ai_command_from_meld_code(cb)
-    # Choose delimiter based on content
-    # delimiter = if occursin("EOF", ai_generated_content)
-    #     "EOF_" * randstring(3)
-    # else
-    #     "EOF"
-    # end
-    
-    # Construct new meld command with AI-generated content
-    # new_command = """meld $cb.file_path <(cat <<'$delimiter'
-    # $ai_generated_content
-    # $delimiter
-    # )"""
-    
     # Execute the new meld command
     return ai_generated_content
 end

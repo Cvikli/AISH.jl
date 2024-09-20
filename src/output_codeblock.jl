@@ -21,9 +21,17 @@ codestr(cb) = if cb.type==:MODIFY return process_modify_command(cb.file_path, cb
     elseif cb.type==:DEFAULT        return cb.content
     else @assert false "not known type for $cb"
 end
-
-process_modify_command(file_path::String, content::String) = "meld $(file_path) <(cat <<'EOF'\n$(content)\nEOF\n)"
-process_create_command(file_path::String, content::String) = "cat > $(file_path) <<'EOF'\n$(content)\nEOF"
+function get_unique_eof(content::String)
+    occursin("EOF", content) ? "EOF_" * randstring(3) : "EOF"
+end
+process_modify_command(file_path::String, content::String) = begin
+    delimiter = get_unique_eof(content)
+    "meld $(file_path) <(cat <<'$delimiter'\n$(content)\n$delimiter\n)"
+end
+process_create_command(file_path::String, content::String) = begin
+    delimiter = get_unique_eof(content)
+    "cat > $(file_path) <<'$delimiter'\n$(content)\n$delimiter"
+end
 
 preprocess(cb::CodeBlock) = (cb.content = cb.type==:MODIFY ? improve_command_LLM(cb) : cb.pre_content; cb)
 
