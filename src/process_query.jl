@@ -1,4 +1,5 @@
-streaming_process_question(ai_state::AIState, user_question, shell_results=Dict{String, String}()) = begin
+
+streaming_process_question(ai_state::AIState, user_question, shell_results=Dict{String, CodeBlock}()) = begin
     user_msg = nothing
     try
         question = prepare_user_message!(ai_state.contexter, ai_state, user_question, shell_results)
@@ -12,7 +13,7 @@ streaming_process_question(ai_state::AIState, user_question, shell_results=Dict{
     end
 end
 
-process_question(ai_state::AIState, user_question::String, shell_results=Dict{String, String}()) = begin
+process_question(ai_state::AIState, user_question::String, shell_results=Dict{String, CodeBlock}()) = begin
     try
         question = prepare_user_message!(ai_state.contexter, ai_state, user_question, shell_results)
         add_n_save_user_message!(ai_state, question)
@@ -28,32 +29,62 @@ function on_text(chunk::String, extractor::ShellScriptExtractor)
     print(chunk)
     extract_and_preprocess_shell_scripts(chunk, extractor)
 end
+
+function run_with_spinner(f::Function, stop_condition::Ref{Bool})
+    p = ProgressUnknown("Progressing...", spinner=true)
+    spinner_task = @async begin
+        while !istaskdone(current_task()) && !stop_condition[]
+            ProgressMeter.next!(p)  # Update spinner without incrementing progress
+            sleep(0.01)
+        end
+    end
+    
+    try
+        return f(p)
+    finally
+        stop_condition[] = true
+        wait(spinner_task)
+        # ProgressMeter.finish!(p)
+    end
+end
+
 function process_message(state::AIState)
     local ai_meta, msg
     extractor = ShellScriptExtractor()
 
-    if state.streaming
-        clearline()
-        print("\e[32mProcessing... \e[0m")
-        cache = get_cache_setting(state.contexter, curr_conv(state))
-        channel = ai_stream_safe(state, printout=false, cache=cache) 
-        msg, user_meta, ai_meta = process_stream(channel, 
-            on_meta_usr=meta->(clearline();println("\e[32mUser message: \e[0m$(format_meta_info(meta))"); update_last_user_message_meta(state, meta); print("\e[36m¬ \e[0m")), 
-            on_text=chunk->on_text(chunk, extractor), 
-            on_meta_ai=meta->println("\n\e[32mAI message: \e[0m$(format_meta_info(meta))"))
-        
-        println("")
-    else
-        println("Thinking...")
-        cache = get_cache_setting(state.contexter, curr_conv(state))
-        assistant_message = anthropic_ask_safe(state, cache=cache)
-        msg = assistant_message.content
-        ai_meta = StreamMeta(input_tokens=assistant_message.tokens[1], output_tokens=assistant_message.tokens[2], price=assistant_message.cost, elapsed=assistant_message.elapsed)
-        println("\e[36m¬ \e[0m$(msg)")
-        
-        # Extract shell commands for non-streaming case
-        extract_and_preprocess_shell_scripts(msg, extractor)
-    end
+    clearline()
+    
+    stop_spinner = Ref(false)
+    
+    run_with_spinner((p) -> begin
+        if state.streaming
+            cache = get_cache_setting(state.contexter, curr_conv(state))
+            channel = ai_stream_safe(state, printout=false, cache=cache)
+            msg, user_meta, ai_meta = process_stream(channel, 
+                on_meta_usr=meta -> begin
+                    stop_spinner[] = true
+                    clearline()
+                    println("\e[32mUser message: \e[0m$(format_meta_info(meta))");
+                    update_last_user_message_meta(state, meta)
+                    print("\e[36m¬ \e[0m")
+                end, 
+                on_text=chunk->on_text(chunk, extractor), 
+                on_meta_ai=meta->println("\n\e[32mAI message: \e[0m$(format_meta_info(meta))"))
+            
+            println("")
+        else
+            cache = get_cache_setting(state.contexter, curr_conv(state))
+            assistant_message = anthropic_ask_safe(state, cache=cache)
+            stop_spinner[] = true
+            clearline()
+            msg = assistant_message.content
+            ai_meta = StreamMeta(input_tokens=assistant_message.tokens[1], output_tokens=assistant_message.tokens[2], price=assistant_message.cost, elapsed=assistant_message.elapsed)
+            println("\e[36m¬ \e[0m$(msg)")
+            
+            # Extract shell commands for non-streaming case
+            extract_and_preprocess_shell_scripts(msg, extractor)
+        end
+    end, stop_spinner)
 
     add_n_save_ai_message!(state, msg, ai_meta)
 
@@ -110,3 +141,5 @@ function modify_file_async(file_path::String, modifications::String, channel::Ch
         put!(channel, "Error: $(sprint(showerror, e))")
     end
 end
+
+

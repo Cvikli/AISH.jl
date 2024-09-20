@@ -11,6 +11,9 @@ using SHA
 using DataStructures
 using PromptingTools
 
+# Import the ProgressMeter for progress tracking
+using ProgressMeter
+
 # Only import what's necessary from BoilerplateCvikli
 using BoilerplateCvikli: @async_showerr
 
