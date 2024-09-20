@@ -1,3 +1,4 @@
+
 module AISH
 
 using Dates
@@ -51,7 +52,7 @@ function start_conversation(state::AIState, user_question=""; loop=true)
   isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
   !state.silent && println("Your multiline input (empty line to finish):")
 
-  shell_results = Dict{String, String}()
+  shell_results = Dict{String, CodeBlock}()
   if !isempty(strip(user_question)) 
     # println("\e[36m➜ \e[1m$(user_question)\e[0m")
     _, shell_results = process_question(state, user_question, shell_results)

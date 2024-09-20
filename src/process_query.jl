@@ -57,11 +57,7 @@ function process_message(state::AIState)
 
     add_n_save_ai_message!(state, msg, ai_meta)
 
-    shell_scripts = OrderedDict{String, String}()
-    if !state.skip_code_execution
-        shell_scripts = execute_shell_commands(extractor; no_confirm=state.no_confirm)
-    end
-
+    shell_scripts = !state.skip_code_execution ? execute_shell_commands(extractor; no_confirm=state.no_confirm) : OrderedDict{String, String}()
 
     return curr_conv_msgs(state)[end], shell_scripts
 end

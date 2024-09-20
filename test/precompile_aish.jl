@@ -1,4 +1,5 @@
 using AISH
+using AISH: CodeBlock
 using PromptingTools
 using DataStructures
 using BoilerplateCvikli
@@ -13,6 +14,5 @@ AISH.generate_new_conversation(state)
 AISH.update_project_path_and_sysprompt!(state)
 AISH.print_project_tree(state, show_tokens=false)
 
-shell_results = Dict{String, String}()
 # Simulate processing a simple query
-AISH.process_question(state, "say yes", shell_results)
+AISH.process_question(state, "say yes")

@@ -20,7 +20,7 @@ end
 process_modify_command(file_path::String, content::String) = "meld $(file_path) <(cat <<'EOF'\n$(content)\nEOF\n)"
 process_create_command(file_path::String, content::String) = "cat > $(file_path) <<'EOF'\n$(content)\nEOF"
 
-preprocess(cb::CodeBlock) = cb.content = cb.type==:MODIFY ? improve_command_LLM(cb.pre_content) : cb.pre_content
+preprocess(cb::CodeBlock) = (cb.content = cb.type==:MODIFY ? improve_command_LLM(cb) : cb.pre_content; cb)
 
 function get_shortened_code(code::String, head_lines::Int=4, tail_lines::Int=3)
 	lines = split(code, '\n')
