@@ -20,6 +20,7 @@ using Anthropic: initStreamMeta, StreamMeta, calc_elapsed_times, format_meta_inf
 include("utils.jl")
 include("keyboard.jl")
 
+include("output_codeblock.jl")
 include("AI_config.jl")
 include("AI_prompt.jl")
 include("AI_contexter.jl")
