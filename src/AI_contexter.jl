@@ -68,9 +68,7 @@ function get_cache_setting(::AbstractContextCreator, conv)
     return nothing
 end
 
-function get_cache_setting(::SimpleContexter, conv)
-    return nothing
-end
+get_cache_setting(::SimpleContexter, conv) = return nothing
 
 
 project_ctx(path) = """

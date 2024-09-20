@@ -60,7 +60,7 @@ function start_conversation(state::AIState, user_question=""; loop=true)
   shell_results = Dict{String, CodeBlock}()
   if !isempty(strip(user_question)) 
     # println("\e[36m➜ \e[1m$(user_question)\e[0m")
-    _, shell_results = process_question(state, user_question, shell_results)
+    _, shell_results = streaming_process_question(state, user_question, shell_results)
   end
 
   while loop
@@ -70,14 +70,14 @@ function start_conversation(state::AIState, user_question=""; loop=true)
     print("\e[0m")  # reset text style
     isempty(strip(user_question)) && continue
     
-    _, shell_results = process_question(state, user_question, shell_results)
+    _, shell_results = streaming_process_question(state, user_question, shell_results)
   end
 end
 
 function start(message=""; resume=false, streaming=true, project_paths=String[], contexter=SimpleContexter(), show_tokens=false, loop=true)
   ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,))) # Nice program exit for ctrl + c.
   ai_state = initialize_ai_state(;contexter, resume, streaming, project_paths, show_tokens, silent=!isempty(message))
-  
+
   set_terminal_title("AISH $(curr_conv(ai_state).common_path)")
   
   start_conversation(ai_state, message; loop)

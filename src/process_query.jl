@@ -1,23 +1,13 @@
 
-streaming_process_question(ai_state::AIState, user_question, shell_results=Dict{String, CodeBlock}()) = begin
-    user_msg = nothing
-    try
-        question = prepare_user_message!(ai_state.contexter, ai_state, user_question, shell_results)
-        user_msg = add_n_save_user_message!(ai_state, question)
-        cache = get_cache_setting(ai_state.contexter, curr_conv(ai_state))
-        channel = ai_stream_safe(ai_state, printout=false, cache=cache)
-        return channel, user_msg, nothing
-    catch e
-        @error "Error executing code block: $(sprint(showerror, e))" exception=(e, catch_backtrace())
-        return nothing, user_msg, e
-    end
-end
-
-process_question(ai_state::AIState, user_question::String, shell_results=Dict{String, CodeBlock}()) = begin
+streaming_process_question(ai_state::AIState, user_question, shell_results=Dict{String, CodeBlock}(), 
+    custom_on_meta_usr=noop,  
+    custom_on_text=noop,  
+    custom_on_meta_ai=noop,
+    on_error=nothing, on_done=nothing, on_start=nothing) = begin
     try
         question = prepare_user_message!(ai_state.contexter, ai_state, user_question, shell_results)
         add_n_save_user_message!(ai_state, question)
-        ai_message, shell_scripts = process_message(ai_state)
+        ai_message, shell_scripts = process_message(ai_state, custom_on_meta_usr,  custom_on_text,  custom_on_meta_ai, on_error, on_done, on_start)
         return ai_message, shell_scripts, nothing
     catch e
         @error "Error executing code block: $(sprint(showerror, e))" exception=(e, catch_backtrace())
@@ -25,101 +15,56 @@ process_question(ai_state::AIState, user_question::String, shell_results=Dict{St
     end
 end
 
-function on_text(chunk::String, extractor::ShellScriptExtractor)
-    print(chunk)
-    extract_and_preprocess_shell_scripts(chunk, extractor)
-end
 
-function process_message(state::AIState)
-    local ai_meta, msg
+function process_message(state::AIState, on_meta_usr=noop, on_text=noop, on_meta_ai=noop, on_error=nothing, on_done=nothing, on_start=nothing)
     extractor = ShellScriptExtractor()
-
     clearline()
-
     stop_spinner = progressing_spinner()
 
-    if state.streaming
-        cache = get_cache_setting(state.contexter, curr_conv(state))
-        channel = ai_stream_safe(state, printout=false, cache=cache)
-        msg, user_meta, ai_meta = process_stream(channel, 
-            on_meta_usr=meta -> begin
-                stop_spinner[] = true
-                clearline()
-                println("\e[32mUser message: \e[0m$(format_meta_info(meta))");
-                update_last_user_message_meta(state, meta)
-                print("\e[36m¬ \e[0m")
-            end, 
-            on_text=chunk->on_text(chunk, extractor), 
-            on_meta_ai=meta->println("\n\e[32mAI message: \e[0m$(format_meta_info(meta))"))
-        
-        println("")
-    else
-        cache = get_cache_setting(state.contexter, curr_conv(state))
-        assistant_message = anthropic_ask_safe(state, cache=cache)
-        stop_spinner[] = true
-        clearline()
-        msg = assistant_message.content
-        ai_meta = StreamMeta(input_tokens=assistant_message.tokens[1], output_tokens=assistant_message.tokens[2], price=assistant_message.cost, elapsed=assistant_message.elapsed)
-        println("\e[36m¬ \e[0m$(msg)")
-        
-        # Extract shell commands for non-streaming case
-        extract_and_preprocess_shell_scripts(msg, extractor)
-    end
+    cache   = get_cache_setting(state.contexter, curr_conv(state))
+    channel = ai_stream_safe(state, printout=false, cache=cache)
+    
+    stream_kwargs = Dict{Symbol, Any}()
+    stream_kwargs[:on_meta_usr] = onmetauser(meta) = begin
+            stop_spinner[] = true
+            clearline()
+            on_meta_usr(meta)
+            println("\e[32mUser message: \e[0m$(format_meta_info(meta))")
+            update_last_user_message_meta(state, meta)
+            print("\e[36m¬ \e[0m")
+        end
+    stream_kwargs[:on_text] = ontext(text) = begin
+            on_text(text)
+            print(text)
+            extract_and_preprocess_shell_scripts(text, extractor)
+        end
+    stream_kwargs[:on_meta_ai] = onmetaai(meta, full_msg) = begin
+            on_meta_ai(meta)
+            add_n_save_ai_message!(state, full_msg, meta)
+            println("\n\e[32mAI message: \e[0m$(format_meta_info(meta))")
+        end
+    on_start !== nothing && (stream_kwargs[:on_start] = on_start)
+    on_error !== nothing && (stream_kwargs[:on_error] = on_error)
+    on_done  !== nothing && (stream_kwargs[:on_done]  = on_done)
 
-    add_n_save_ai_message!(state, msg, ai_meta)
+    process_stream(channel; stream_kwargs...)
 
     shell_scripts = !state.skip_code_execution ? execute_shell_commands(extractor; no_confirm=state.no_confirm) : OrderedDict{String, String}()
 
     return curr_conv_msgs(state)[end], shell_scripts
 end
 
-function on_start_callback(user_meta, start_time)
-    on_start = () -> begin
-        user_meta.elapsed -= start_time
-        println("\e[34mUser message meta: \e[0m$(format_meta_info(user_meta))")
-    end
-    return on_start
+process_message_nostream() = begin
+    assistant_message = anthropic_ask_safe(state, cache=cache)
+    stop_spinner[] = true
+    clearline()
+    msg = assistant_message.content
+    ai_meta = StreamMeta(input_tokens=assistant_message.tokens[1], output_tokens=assistant_message.tokens[2], price=assistant_message.cost, elapsed=assistant_message.elapsed)
+    println("\e[36m¬ \e[0m$(msg)")
+    
+    # Extract shell commands for non-streaming case
+    extract_and_preprocess_shell_scripts(msg, extractor)
 end
 
-function execute_shell_command_async(command::String, channel::Channel)
-    try
-        cmd = Cmd(split(command))
-        process = open(cmd, "r")
-        for line in eachline(process)
-            put!(channel, line)
-        end
-        close(process)
-    catch e
-        put!(channel, "Error: $(sprint(showerror, e))")
-    end
-end
-
-function select_folder_async(path::String, channel::Channel)
-    try
-        for (root, dirs, files) in walkdir(path)
-            for dir in dirs
-                put!(channel, joinpath(root, dir))
-            end
-            for file in files
-                put!(channel, joinpath(root, file))
-            end
-        end
-    catch e
-        put!(channel, "Error: $(sprint(showerror, e))")
-    end
-end
-
-function modify_file_async(file_path::String, modifications::String, channel::Channel)
-    try
-        # Implement file modification logic here
-        # Use `put!(channel, update)` to send progress updates
-        # This is a placeholder implementation
-        put!(channel, "Starting file modification")
-        # ... perform actual file modifications ...
-        put!(channel, "File modification completed")
-    catch e
-        put!(channel, "Error: $(sprint(showerror, e))")
-    end
-end
 
 
