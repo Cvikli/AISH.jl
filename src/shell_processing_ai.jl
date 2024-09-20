@@ -5,6 +5,7 @@ using Random
 generate_ai_command_from_meld_code(cb::CodeBlock) = generate_ai_command(cb)
 
 function generate_ai_command(cb)
+    !isfile(cb.file_path) && @warn "UNEXISTING file $(cb.file_path) pwd: $(pwd())"
     original_content = read(cb.file_path, String)
     ai_generated_content = generate_better_file(original_content, cb.pre_content)
     
