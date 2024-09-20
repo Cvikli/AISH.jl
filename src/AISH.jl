@@ -3,6 +3,7 @@ module AISH
 
 using Dates
 using UUIDs
+using SHA
 
 # Lazy load heavy dependencies
 # const DataStructures = Base.require(Base.PkgId(Base.UUID("864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"), "DataStructures"))

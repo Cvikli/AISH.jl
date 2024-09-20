@@ -6,6 +6,7 @@ execute_code_block(cb::CodeBlock; no_confirm=false) = withenv("GTK_PATH" => "") 
     # println("\e[32m$(code)\e[0m")
     return cmd_all_info(`zsh -c $code`)
   else
+    !(lowercase(cb.language) in ["bash", "sh", "zsh"]) && return ""
     println("\e[32m$code\e[0m")
     if no_confirm
       return cmd_all_info(`zsh -c $code`)

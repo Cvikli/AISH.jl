@@ -2,15 +2,11 @@
 using PromptingTools
 using Random
 
-function generate_ai_command_from_meld_code(cb::CodeBlock)
-    original_content, ai_generated_content = generate_ai_command(cb)
-
-    file_path, original_content, ai_generated_content
-end
+generate_ai_command_from_meld_code(cb::CodeBlock) = generate_ai_command(cb)
 
 function generate_ai_command(cb)
     original_content = read(cb.file_path, String)
-    ai_generated_content = generate_better_file(original_content, cb.content)
+    ai_generated_content = generate_better_file(original_content, cb.pre_content)
     
     original_content, ai_generated_content
 end
