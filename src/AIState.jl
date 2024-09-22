@@ -179,16 +179,20 @@ function update_message_by_id(state::AIState, message_id::String, new_content::S
     end
 end
 
-to_dict(state::AIState) = [Dict("role" => "system", "content" => system_message(state).content); to_dict_nosys(state)]
-to_dict_nosys(state::AIState) = [Dict("role" => string(msg.role), "content" => msg.content) for msg in curr_conv_msgs(state)]
-to_dict_nosys_detailed(state::AIState;)= [Dict(
-            "timestamp" => date_format(message.timestamp),
-            "role" => string(message.role),
-            "content" => message.content,
-            "input_tokens" => message.itok,
-            "output_tokens" => message.otok,
-            "cached" => message.cached,
-            "cache_read" => message.cache_read,
-            "price" => message.price,
-            "elapsed" => message.elapsed
-        ) for message in curr_conv_msgs(state)]
+to_dict(message::Message) = Dict(
+    "timestamp" => date_format(message.timestamp),
+    "role" => string(message.role),
+    "content" => message.content,
+    "input_tokens" => message.itok,
+    "output_tokens" => message.otok,
+    "cached" => message.cached,
+    "cache_read" => message.cache_read,
+    "price" => message.price,
+    "elapsed" => message.elapsed
+)
+to_dict(state::AIState)         = to_dict(state.conversations[state.selected_conv_id])
+to_dict(conv::ConversationInfo) = [Dict("role" => "system", "content" => conv.system_message); to_dict_nosys(conv)]
+to_dict_nosys(state::AIState)         = to_dict_nosys(state.conversations[state.selected_conv_id])
+to_dict_nosys(conv::ConversationInfo) = [Dict("role" => string(msg.role), "content" => msg.content) for msg in conv.messages]
+to_dict_nosys_detailed(conv::AIState)          = to_dict_nosys_detailed(state.conversations[state.selected_conv_id])
+to_dict_nosys_detailed(conv::ConversationInfo) = [to_dict(message) for message in conv.messages]

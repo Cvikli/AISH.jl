@@ -53,6 +53,7 @@ function update_last_user_message_meta(state::AIState, itok::Int, otok::Int, cac
     curr_conv_msgs(state)[end].price      = price
     curr_conv_msgs(state)[end].elapsed    = elapsed
     save_conversation_to_file(curr_conv(state))
+    curr_conv_msgs(state)[end]
 end
 
 update_message_by_timestamp(state::AIState, timestamp::DateTime, new_content::String) = update_message_by_idx(state, get_msg_idx_by_timestamp(state, date_format(timestamp)), new_content)

@@ -1,13 +1,13 @@
 
-streaming_process_question(ai_state::AIState, user_question, shell_results=Dict{String, CodeBlock}(), 
-    custom_on_meta_usr=noop,  
-    custom_on_text=noop,  
-    custom_on_meta_ai=noop,
+streaming_process_question(ai_state::AIState, user_question, shell_results=OrderedDict{String, CodeBlock}(); 
+    on_meta_usr=noop,  
+    on_text=noop,  
+    on_meta_ai=noop,
     on_error=nothing, on_done=nothing, on_start=nothing) = begin
     try
         question = prepare_user_message!(ai_state.contexter, ai_state, user_question, shell_results)
         add_n_save_user_message!(ai_state, question)
-        ai_message, shell_scripts = process_message(ai_state, custom_on_meta_usr,  custom_on_text,  custom_on_meta_ai, on_error, on_done, on_start)
+        ai_message, shell_scripts = process_message(ai_state; on_meta_usr,  on_text,  on_meta_ai, on_error, on_done, on_start)
         return ai_message, shell_scripts, nothing
     catch e
         @error "Error executing code block: $(sprint(showerror, e))" exception=(e, catch_backtrace())
@@ -16,7 +16,7 @@ streaming_process_question(ai_state::AIState, user_question, shell_results=Dict{
 end
 
 
-function process_message(state::AIState, on_meta_usr=noop, on_text=noop, on_meta_ai=noop, on_error=nothing, on_done=nothing, on_start=nothing)
+function process_message(state::AIState; on_meta_usr=noop, on_text=noop, on_meta_ai=noop, on_error=nothing, on_done=nothing, on_start=nothing)
     extractor = ShellScriptExtractor()
     clearline()
     stop_spinner = progressing_spinner()
@@ -28,19 +28,16 @@ function process_message(state::AIState, on_meta_usr=noop, on_text=noop, on_meta
     stream_kwargs[:on_meta_usr] = onmetauser(meta) = begin
             stop_spinner[] = true
             clearline()
-            on_meta_usr(meta)
             println("\e[32mUser message: \e[0m$(format_meta_info(meta))")
-            update_last_user_message_meta(state, meta)
+            on_meta_usr(update_last_user_message_meta(state, meta))
             print("\e[36m¬ \e[0m")
         end
     stream_kwargs[:on_text] = ontext(text) = begin
-            on_text(text)
+            on_text(text, extract_and_preprocess_shell_scripts(text, extractor))
             print(text)
-            extract_and_preprocess_shell_scripts(text, extractor)
         end
     stream_kwargs[:on_meta_ai] = onmetaai(meta, full_msg) = begin
-            on_meta_ai(meta)
-            add_n_save_ai_message!(state, full_msg, meta)
+            on_meta_ai(add_n_save_ai_message!(state, full_msg, meta))
             println("\n\e[32mAI message: \e[0m$(format_meta_info(meta))")
         end
     on_start !== nothing && (stream_kwargs[:on_start] = on_start)
@@ -49,7 +46,7 @@ function process_message(state::AIState, on_meta_usr=noop, on_text=noop, on_meta
 
     process_stream(channel; stream_kwargs...)
 
-    shell_scripts = !state.skip_code_execution ? execute_shell_commands(extractor; no_confirm=state.no_confirm) : OrderedDict{String, String}()
+    shell_scripts = !state.skip_code_execution ? execute_shell_commands(extractor; no_confirm=state.no_confirm) : OrderedDict{String, CodeBlock}()
 
     return curr_conv_msgs(state)[end], shell_scripts
 end

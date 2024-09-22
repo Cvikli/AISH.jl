@@ -34,7 +34,9 @@ function extract_and_preprocess_shell_scripts(new_content::String, extractor::Sh
             cmd_type = :DEFAULT
             block_type = ""
             file_path = ""
-            last_processed_char = length(extractor.full_content)
+            extractor.last_processed_index[]  = length(extractor.full_content)
+            
+            return cb
         elseif in_block
             push!(current_command, line)
         end
@@ -44,9 +46,7 @@ function extract_and_preprocess_shell_scripts(new_content::String, extractor::Sh
         # end
     end
 
-    extractor.last_processed_index[] = last_processed_char
-
-    return extractor.shell_scripts
+    return nothing
 end
 
 execute_single_shell_command(code::CodeBlock; no_confirm=false) = execute_code_block(preprocess(code); no_confirm)
