@@ -84,6 +84,7 @@ function start(message=""; resume=false, streaming=true, project_paths=String[],
   ai_state
 end
 
+julia_main(;contexter=SimpleContexter(), loop=true) = main(;contexter, loop)
 function main(;contexter=SimpleContexter(), loop=true)
   args = parse_commandline()
   start(args["message"]; 
