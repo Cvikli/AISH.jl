@@ -24,7 +24,7 @@ const FILE_EXTENSIONS = [
     "rst", "adoc", "tex", "sty", "gradle", "sbt", "xml"
 ]
 const FILTERED_FOLDERS = ["spec", "specs", "examples", "docs", "dist", "python", "benchmarks", "node_modules", 
-"conversations", "archived", "archive", "test_cases", ".git"]
+"conversations", "archived", "archive", "test_cases", ".git" ,"playground"]
 const IGNORED_FILE_PATTERNS = [".log", "config.ini", "secrets.yaml", "Manifest.toml", ".gitignore", ".aiignore", ".aishignore", "Project.toml"] # , "README.md"
 
 
