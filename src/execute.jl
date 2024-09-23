@@ -3,7 +3,7 @@ execute_code_block(cb::CodeBlock; no_confirm=false) = withenv("GTK_PATH" => "") 
   code = codestr(cb)
   if cb.type==:MODIFY || cb.type==:CREATE
     println("\e[32m$(get_shortened_code(code))\e[0m")
-    # println("\e[32m$(code)\e[0m")
+    cb.type==:CREATE && (print("\e[34mContinue? (y) \e[0m"); !(readchomp(`zsh -c "read -q '?'; echo \$?"`) == "0")) && return "Operation cancelled by user."
     return cmd_all_info(`zsh -c $code`)
   else
     !(lowercase(cb.language) in ["bash", "sh", "zsh"]) && return ""
@@ -20,7 +20,7 @@ end
 function cmd_all_info(cmd::Cmd, output=IOBuffer(), error=IOBuffer())
   err, process = "", nothing
   try
-    process = run(pipeline(ignorestatus(cmd), stdout=output, stderr=error))
+    process = run(pipeline(ignorestatus(cmd), stdout=output, stderr=error), wait=false)
   catch e
     err = "$e"
   end

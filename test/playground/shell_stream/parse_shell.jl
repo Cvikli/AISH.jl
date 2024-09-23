@@ -1,4 +1,5 @@
 
+using BoilerplateCvikli: @async_showerr
 using Base.Threads
 
 function run_command_async(cmd_str)
@@ -12,10 +13,14 @@ function run_command_async(cmd_str)
     process = run(pipeline(cmd, stdout=out_pipe, stderr=err_pipe), wait=false)
     close(out_pipe.in)
     close(err_pipe.in)
-
+		
     # Stream output in real-time
     @async while !eof(out_pipe)
         line = readline(out_pipe)
+        println(line)
+    end
+    @async while !eof(err_pipe)
+        line = readline(err_pipe)
         println(line)
     end
 
@@ -26,9 +31,12 @@ function run_command_async(cmd_str)
     for line in eachline(out_pipe)
         println(line)
     end
+    for line in eachline(err_pipe)
+        println(line)
+    end
 end
 
-cmd_str = "for i in {1..7}; do echo \$i; sleep 0.5; done"
+cmd_str = "for i in {1..3}; do echo \$i; sleep 0.5; done"
 run_command_async(cmd_str)
 
 println("\nCommand execution completed.")
