@@ -156,10 +156,8 @@ function add_n_save_user_message!(state::AIState, user_msg::Message)
     user_msg
 end
 
-add_n_save_ai_message!(state::AIState, ai_message::String)       = add_n_save_ai_message!(state, Message(id=genid(), timestamp=now(UTC), role=:assistant, content=strip(ai_message)))
-add_n_save_ai_message!(state::AIState, ai_message::String, meta::Dict) = begin
-    add_n_save_ai_message!(state, Message(id=genid(), timestamp=now(UTC), role=:assistant, content=strip(ai_message), itok=meta["input_tokens"], otok=meta["output_tokens"], cached=meta["cache_creation_input_tokens"], cache_read=meta["cache_read_input_tokens"], price=meta["price"], elapsed=meta["elapsed"]))
-end
+add_n_save_ai_message!(state::AIState, ai_message::String, meta::Dict) = add_n_save_ai_message!(state, Message(id=genid(), timestamp=now(UTC), role=:assistant, content=strip(ai_message), itok=meta["input_tokens"], otok=meta["output_tokens"], cached=meta["cache_creation_input_tokens"], cache_read=meta["cache_read_input_tokens"], price=meta["price"], elapsed=meta["elapsed"]))
+add_n_save_ai_message!(state::AIState, ai_message::String)             = add_n_save_ai_message!(state, Message(id=genid(), timestamp=now(UTC), role=:assistant, content=strip(ai_message)))
 function add_n_save_ai_message!(state::AIState, ai_msg::Message)
     push!(curr_conv_msgs(state), ai_msg)
     save_ai_message(state, ai_msg)
