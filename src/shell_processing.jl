@@ -6,6 +6,7 @@
 end
 
 function extract_and_preprocess_shell_scripts(new_content::String, extractor::ShellScriptExtractor; mock=false)
+    # @show extractor
     extractor.full_content *= new_content
     lines = split(extractor.full_content[nextind(extractor.full_content, extractor.last_processed_index[]):end], '\n')
     current_command = String[]
@@ -13,7 +14,6 @@ function extract_and_preprocess_shell_scripts(new_content::String, extractor::Sh
     cmd_type = :DEFAULT
     block_type = ""
     file_path = ""
-    last_processed_char = extractor.last_processed_index[]
 
     for (i, line) in enumerate(lines)
         if startswith(line, "MODIFY ")        

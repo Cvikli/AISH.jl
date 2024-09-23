@@ -51,7 +51,6 @@ function process_message(state::AIState; on_meta_usr=noop, on_text=noop, on_meta
         on_error !== nothing && on_error(error)
     end
     stream_kwargs[:on_done]  = () -> begin
-        
         on_done !== nothing && on_done()
     end
     on_start !== nothing && (stream_kwargs[:on_start] = on_start)
@@ -74,6 +73,4 @@ process_message_nostream() = begin
     # Extract shell commands for non-streaming case
     extract_and_preprocess_shell_scripts(msg, extractor)
 end
-
-
 

@@ -5,7 +5,8 @@ using AISH: ShellScriptExtractor, extract_and_preprocess_shell_scripts
 using AISH: execute_single_shell_command
 
 @testset "LLM Parser Tests" begin
-	filepath = "test/test_examples/new_file.jl"
+	testpath="test/test_examples"
+	filepath = "$(testpath)/new_file.jl"
     @testset "File Creation" begin
         llm_output = """
         CREATE $filepath
@@ -22,55 +23,63 @@ using AISH: execute_single_shell_command
         @test !isnothing(result)
         @test result.type == :CREATE
         @test result.file_path == filepath
-        @test trim(result.pre_content) == "function hello()\n    println(\"Hello, world!\")\nend"
+        @test strip(result.pre_content) == "function hello()\n    println(\"Hello, world!\")\nend"
 
         # Execute the code block and check if the file is created
         execute_single_shell_command(result, no_confirm=true)
         @test isfile(filepath)
         @test read(filepath, String) == "function hello()\n    println(\"Hello, world!\")\nend\n"
 
-        # rm(filepath)
+        rm(filepath)
     end
 
     @testset "File Creation with Multiple Files" begin
-        llm_output = """
-        CREATE file1.jl
-        ```julia
-        println("File 1")
-        ```
+			f1 = "$(testpath)/file1.jl"
+			f2 = "$(testpath)/file2.jl"
+        llm_output1 = """
+				test
+				CREATE $f1
+				```julia
+				println("File 1")
+				```
 
-        Some random text here.
+				Some random text here.
+				"""
+				llm_output2 = """
+				OK
 
-        CREATE file2.jl
-        ```julia
-        println("File 2")
-        ```
-        """
+				CREATE $f2
+				```julia
+				println("File 2")
+				```
+				testes
+				"""
 
         extractor = ShellScriptExtractor()
-        result1 = extract_and_preprocess_shell_scripts(llm_output, extractor)
-        result2 = extract_and_preprocess_shell_scripts(llm_output, extractor)
+        result1 = extract_and_preprocess_shell_scripts(llm_output1, extractor)
 
         @test !isnothing(result1)
-        @test !isnothing(result2)
         @test result1.type == :CREATE
-        @test result1.file_path == "file1.jl"
-        @test result1.pre_content == "println(\"File 1\")\n"
-        @test result2.type == :CREATE
-        @test result2.file_path == "file2.jl"
-        @test result2.pre_content == "println(\"File 2\")\n"
+        @test result1.file_path == f1
+        @test strip(result1.pre_content) == "println(\"File 1\")"
 
-        # Execute the code blocks and check if the files are created
         execute_single_shell_command(result1, no_confirm=true)
+        @test isfile(f1)
+        @test read(f1, String) == "println(\"File 1\")\n"
+
+        result2 = extract_and_preprocess_shell_scripts(llm_output2, extractor)
+        @test !isnothing(result2)
+        @test result2.type == :CREATE
+        @test result2.file_path == f2
+        @test strip(result2.pre_content) == "println(\"File 2\")"
+
         execute_single_shell_command(result2, no_confirm=true)
-        @test isfile("file1.jl")
-        @test isfile("file2.jl")
-        @test read("file1.jl", String) == "println(\"File 1\")\n"
-        @test read("file2.jl", String) == "println(\"File 2\")\n"
+        @test isfile(f2)
+        @test read(f2, String) == "println(\"File 2\")\n"
 
         # Clean up
-        rm("file1.jl")
-        rm("file2.jl")
+        rm(f1)
+        rm(f2)
     end
 
     # @testset "File Modification" begin
