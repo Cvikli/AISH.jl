@@ -48,6 +48,10 @@ include("process_query.jl")
 
 handle_interrupt(sig::Int32) = (println("\nExiting gracefully. Good bye! :)"); exit(0))
 
+user_question = readline_improved()
+noempty(user_question) = isempty(strip(user_question))
+
+
 
 function start_conversation(state::AIState, user_question=""; loop=true)
   !state.silent && println("Welcome to $ChatSH AI. (using $(state.model))")
@@ -58,19 +62,20 @@ function start_conversation(state::AIState, user_question=""; loop=true)
   !state.silent && println("Your multiline input (empty line to finish):")
 
   shell_results = Dict{String, CodeBlock}()
-  if !isempty(strip(user_question)) 
-    # println("\e[36m➜ \e[1m$(user_question)\e[0m")
-    _, shell_results = streaming_process_question(state, user_question, shell_results)
+  if !noempty(user_question) 
+    user_msg = prepare_user_message!(ai_state.contexter, ai_state, user_question, shell_results)
+    add_n_save_user_message!(ai_state, user_msg)
+
+    _, shell_results = streaming_process_question(state)
   end
 
   while loop
-    print("\e[36m➜ \e[0m")  # teal arrow
-    print("\e[1m")  # bold text
     user_question = readline_improved()
-    print("\e[0m")  # reset text style
-    isempty(strip(user_question)) && continue
+    noempty(user_question) && continue
     
-    _, shell_results = streaming_process_question(state, user_question, shell_results)
+    user_msg = prepare_user_message!(ai_state.contexter, ai_state, user_question, shell_results)
+    add_n_save_user_message!(ai_state, user_msg)
+    _, shell_results = streaming_process_question(state, user_msg)
   end
 end
 
