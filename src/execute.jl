@@ -1,7 +1,7 @@
 
 execute_code_block(cb::CodeBlock; no_confirm=false) = withenv("GTK_PATH" => "") do
   code = codestr(cb)
-  if cb.type==:MODIFY
+  if cb.type==:MODIFY || cb.type==:CREATE
     println("\e[32m$(get_shortened_code(code))\e[0m")
     # println("\e[32m$(code)\e[0m")
     return cmd_all_info(`zsh -c $code`)
