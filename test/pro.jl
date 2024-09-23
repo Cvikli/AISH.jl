@@ -1,7 +1,7 @@
-using EasyContext: EasyContextCreatorV3
+using EasyContext: EasyContextCreatorV4
 using AISH: main
 
 # main(;contexter=EasyContextCreator())
 # main(;contexter=EasyContextCreatorV2())
-# main(;contexter=EasyContextCreatorV3())
-main(;)
+main(;contexter=EasyContextCreatorV4())
+# main(;)
