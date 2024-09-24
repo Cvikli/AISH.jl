@@ -40,7 +40,6 @@ include("processor_persistable.jl")
 include("processor_workspace.jl")
 
 include("token_counter.jl")
-include("file_management.jl")
 include("file_tree.jl")
 include("file_operations.jl")
 # include("file_messages.jl")
