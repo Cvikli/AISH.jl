@@ -20,6 +20,8 @@ using BoilerplateCvikli: @async_showerr
 using Anthropic
 using Anthropic: initStreamMeta, StreamMeta, calc_elapsed_times, format_meta_info
 
+using EasyContext: ContextNode
+using EasyContext: QuestionAccumulatorProcessor, CodebaseContextV3, ReduceRankGPTReranker
 
 include("utils.jl")
 include("keyboard.jl")
@@ -51,34 +53,43 @@ include("shell_processing.jl")
 
 include("execute.jl")
 
-
 function format_shell_results_to_context(shell_commands::AbstractDict{String, CodeBlock})
-  content = ""
-  for (code, codeblock) in shell_commands
-      shortened_code = get_shortened_code(codestr(code))
-      content *= """
-      <sh_script shortened>
-      $shortened_code
-      </sh_script>
-      <sh_output>
-      $(codeblock.results[end])
-      </sh_output>
-      """
-  end
-  content = """
-  <ShellResults>
-  $content
-  </ShellResults>
-  """
-  return content
+	content = ""
+	for (code, codeblock) in shell_commands
+			shortened_code = get_shortened_code(codestr(code))
+			content *= """
+			<sh_script shortened>
+			$shortened_code
+			</sh_script>
+			<sh_output>
+			$(codeblock.results[end])
+			</sh_output>
+			"""
+	end
+	content = """
+	<ShellResults>
+	$content
+	</ShellResults>
+	"""
+	return content
 end
 
 
 
+
+function get_processor_description(processor::Symbol, context_node::Union{ContextNode, Nothing}=nothing)
+  processor_msg = processor == :ShellResults ? "Shell command results are" :
+                  processor == :CodebaseContext ? "Codebase context is" :
+                  processor == :JuliaPackageContext ? "Julia package context functions are" :
+                  ""
+  @assert processor_msg != "" "Unknown processor"
+
+  return "$(processor_msg) wrapped in <$(context_node.tag)> and </$(context_node.tag)> tags, with individual elements wrapped in <$(context_node.element)> and </$(context_node.element)> tags."
+end
+
 function start_conversation(user_question="", workspace=CreateWorkspace(); resume, streaming, project_paths, show_tokens, silent, loop=true)
 
   # init
-  conversation = ConversationProcessorrrr(sys_msggg="You are AI SH a shell...")
   llm_solve    = StreamingLLMProcessor()
   extractor    = CodeBlockExtractor()
   persister    = Persistable("")
@@ -90,21 +101,31 @@ function start_conversation(user_question="", workspace=CreateWorkspace(); resum
   isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
   !silent && isempty(user_question) && println("Your multiline input (empty line to finish):")
 
+  shell_context    = ContextNode(tag="ShellRunResults", element="sh_script")
+  codebase_context = ContextNode(tag="Codebase", element="File")
+  package_context  = ContextNode(tag="Functions", element="Function")
+
+  sys_msg_ext = SYSTEM_PROMPT()
+  sys_msg_ext *= get_processor_description(:ShellResults,        shell_context)
+  sys_msg_ext *= get_processor_description(:CodebaseContext,     codebase_context)
+  sys_msg_ext *= get_processor_description(:JuliaPackageContext, package_context)
+  conversation = ConversationProcessorr(sys_msggg=sys_msg_ext)
+
   append_conv!(msg) = save!(conversation, msg)
   to_disk!()        = to_disk_custom!(conversation, persister)
+
 
   # forward
   while loop || !isempty(user_question)
 
     user_question = wait_user_question(user_question)
-    # stop_spinner = progressing_spinner()
-
+@show workspace.project_paths
     context_shell    = format_shell_results_to_context(extractor.shell_results)
     context_codebase = begin
         # question_acc = QuestionAccumulatorProcessor()(user_question)
-        # codebase = CodebaseContextV3(project_paths=workspace.project_paths)(question_acc)
-        # reranked = ReduceRankGPTReranker(batch_size=30, model="gpt4om")(codebase)
-        # codebase_context(reranked)
+        codebase = CodebaseContextV3(project_paths=workspace.project_paths)(user_question)
+        reranked = ReduceRankGPTReranker(batch_size=30, model="gpt4om")(codebase)
+        codebase_context(reranked)
     end
 
     

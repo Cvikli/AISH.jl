@@ -9,15 +9,15 @@
 
 using PrecompileTools
 
-@setup_workload begin
-    @compile_workload begin
-        # state = initialize_ai_state(no_confirm=false)
-        parse_commandline()
-        stop_spinner=progressing_spinner()
-        stop_spinner[]=true
-        # process_question(state, "Say yes!")
-        # process_message(state)
-        # extract_shell_commands("```sh\necho 'Hello, World!'\n```")
-        main(loop=false)
-    end
-end
+# @setup_workload begin
+#     @compile_workload begin
+#         # state = initialize_ai_state(no_confirm=false)
+#         parse_commandline()
+#         stop_spinner=progressing_spinner()
+#         stop_spinner[]=true
+#         # process_question(state, "Say yes!")
+#         # process_message(state)
+#         # extract_shell_commands("```sh\necho 'Hello, World!'\n```")
+#         main(loop=false)
+#     end
+# end

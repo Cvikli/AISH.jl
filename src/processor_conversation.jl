@@ -22,7 +22,7 @@ end
 	conv::ConversationInfo
 	max_history::Int = 10
 end
-ConversationProcessorrrr(;sys_msggg::String) = ConversationProcessor(
+ConversationProcessorr(;sys_msggg::String) = ConversationProcessor(
 	conv=ConversationInfo(system_message=Message(id=genid(), timestamp=now(UTC), role=:system, content=sys_msggg)),
 	max_history=10)
 (conv::ConversationProcessor)() = conv.conv

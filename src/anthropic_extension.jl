@@ -2,6 +2,9 @@ using Anthropic: ai_stream_safe
 using PromptingTools: SystemMessage, UserMessage, AIMessage
 using HTTP
 
+const MAX_TOKEN = 8192 
+
+
 # Anthropic.stream_response(ai_state::AIState;         model::String=ai_state.model,               max_tokens::Int=MAX_TOKEN, printout=true) = stream_response(to_dict(ai_state); model, max_tokens, printout)
 # Anthropic.stream_response(messages::Vector{Message}; model::String="claude-3-5-sonnet-20240620", max_tokens::Int=MAX_TOKEN, printout=true) = stream_response(to_dict(messages); model, max_tokens, printout)
 
