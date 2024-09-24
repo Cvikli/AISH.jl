@@ -37,7 +37,7 @@ using ReTestItems
         """
         chunks = [content[1:30], content[31:60], content[61:end]]
         
-        extractor = AISH.ShellScriptExtractor()
+        extractor = AISH.CodeBlockExtractor()
         for chunk in chunks
             AISH.extract_and_preprocess_shell_scripts(chunk, extractor; mock=true)
         end
@@ -73,7 +73,7 @@ using ReTestItems
                 # Simulate chunked streaming
                 chunks = simulate_chunked_streaming(content, 1:20)  # Increased range for more varied chunk sizes
 
-                extractor = AISH.ShellScriptExtractor()
+                extractor = AISH.CodeBlockExtractor()
                 for chunk in chunks
                     AISH.extract_and_preprocess_shell_scripts(chunk, extractor; mock=true)
                 end
@@ -129,7 +129,7 @@ using ReTestItems
             So we have this.
             """
             extracted = AISH.extract_shell_commands(content)
-            extractor = ShellScriptExtractor()
+            extractor = CodeBlockExtractor()
             res = extract_and_preprocess_shell_scripts(extractor, content)
             @show res
 
@@ -177,7 +177,7 @@ using ReTestItems
         """
         original_extracted = AISH.extract_shell_commands(content)
 
-        extractor = AISH.ShellScriptExtractor()
+        extractor = AISH.CodeBlockExtractor()
         AISH.extract_and_preprocess_shell_scripts(content, extractor; mock=true)
         chunked_extracted = Dict(cmd => fetch(task) for (cmd, task) in extractor.shell_scripts)
 

@@ -46,7 +46,7 @@ end_of_things
 ```
 So we have this.
 """
-extractor = AISH.ShellScriptExtractor()
+extractor = AISH.CodeBlockExtractor()
 res = AISH.extract_and_preprocess_shell_scripts(content, extractor)
 @show res
 clipboard(res)
