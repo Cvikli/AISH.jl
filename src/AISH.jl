@@ -73,9 +73,6 @@ function format_shell_results_to_context(shell_commands::AbstractDict{String, Co
 	return content
 end
 
-
-
-
 function get_processor_description(processor::Symbol, context_node::Union{ContextNode, Nothing}=nothing)
   processor_msg = processor == :ShellResults ? "Shell command results are" :
                   processor == :CodebaseContext ? "Codebase context is" :
@@ -118,7 +115,6 @@ function start_conversation(user_question="", workspace=CreateWorkspace(); resum
   while loop || !isempty(user_question)
 
     user_question = wait_user_question(user_question)
-@show workspace.project_paths
     context_shell    = format_shell_results_to_context(extractor.shell_results)
     context_codebase = begin
         # question_acc = QuestionAccumulatorProcessor()(user_question)
@@ -146,6 +142,7 @@ end
 function start(message=""; resume=false, streaming=true, project_paths=String[], contexter=SimpleContexter(), show_tokens=false, loop=true)
   nice_exit_handler()
   workspace    = CreateWorkspace(project_paths)
+  print_project_tree(workspace, show_tokens=show_tokens)
   set_terminal_title("AISH $(workspace.common_path)")
   
   start_conversation(message, workspace; loop, resume, streaming, project_paths, show_tokens, silent=!isempty(message))
