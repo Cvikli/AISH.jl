@@ -28,7 +28,8 @@ include("output_codeblock.jl")
 include("AI_config.jl")
 include("AI_prompt.jl")
 include("AI_contexter.jl")
-include("AIState.jl")
+include("Message.jl")
+# include("AIState.jl")
 
 include("processors.jl")
 include("processor_conversation.jl")
@@ -40,7 +41,7 @@ include("token_counter.jl")
 include("file_management.jl")
 include("file_tree.jl")
 include("file_operations.jl")
-include("file_messages.jl")
+# include("file_messages.jl")
 include("arg_parser.jl")
 
 include("anthropic_extension.jl")
@@ -77,7 +78,7 @@ end
 function start_conversation(user_question="", workspace=CreateWorkspace(); resume, streaming, project_paths, show_tokens, silent, loop=true)
 
   # init
-  conversation = ConversationProcessor(system_message=Message(id=genid(), timestamp=now(UTC), role=:system, content="You are AI SH a shell..."))
+  conversation = ConversationProcessorrrr(sys_msggg="You are AI SH a shell...")
   llm_solve    = StreamingLLMProcessor()
   extractor    = CodeBlockExtractor()
   persister    = Persistable("")

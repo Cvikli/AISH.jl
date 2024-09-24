@@ -1,6 +1,6 @@
 
-print_project_tree(paths::Vector{String}; show_tokens::Bool=false) = print_project_tree.(paths; show_tokens)
-print_project_tree(state::AIState;        show_tokens::Bool=false) = print_project_tree(curr_conv(state).rel_project_paths; show_tokens)
+print_project_tree(paths::Vector{String};  show_tokens::Bool=false) = print_project_tree.(paths; show_tokens)
+print_project_tree(conv::ConversationInfo; show_tokens::Bool=false) = print_project_tree(conv.rel_project_paths; show_tokens)
 print_project_tree(path::String; show_tokens::Bool=false) = begin
     files = get_project_files(path)
     rel_paths = sort([relpath(f, path) for f in files])

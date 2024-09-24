@@ -26,3 +26,6 @@ function progressing_spinner()
 end
 
 is_really_empty(user_question) = isempty(strip(user_question))
+
+
+genid() = string(UUIDs.uuid4()) 

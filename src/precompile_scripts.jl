@@ -11,7 +11,7 @@ using PrecompileTools
 
 @setup_workload begin
     @compile_workload begin
-        state = initialize_ai_state(no_confirm=false)
+        # state = initialize_ai_state(no_confirm=false)
         parse_commandline()
         stop_spinner=progressing_spinner()
         stop_spinner[]=true

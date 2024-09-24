@@ -29,16 +29,6 @@ const IGNORED_FILE_PATTERNS = [".log", "config.ini", "secrets.yaml", "Manifest.t
 
 
 
-function cut_history!(conv; keep=13)
-    length(conv.messages) <= keep && return conv.messages
-    
-    start_index = max(1, length(conv.messages) - keep + 1)
-    start_index += (conv.messages[start_index].role == :assistant)
-    
-    conv.messages = conv.messages[start_index:end]
-end
-
-
 function format_shell_results(shell_commands::AbstractDict{String, CodeBlock})
     result = "<ShellRunResults>"
     for (code, output) in shell_commands
