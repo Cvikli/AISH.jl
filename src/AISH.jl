@@ -20,35 +20,30 @@ using BoilerplateCvikli: @async_showerr
 using Anthropic
 using Anthropic: initStreamMeta, StreamMeta, calc_elapsed_times, format_meta_info
 
-using EasyContext: ContextNode
-using EasyContext: QuestionAccumulatorProcessor, CodebaseContextV3, ReduceRankGPTReranker
+using EasyContext: Message, ConversationInfo, ConversationProcessor
+using EasyContext: CodeBlock
+using EasyContext: greet
+using EasyContext: StreamingLLMProcessor, ConversationProcessorr
+using EasyContext: ContextNode, CodeBlockExtractor, Persistable
+using EasyContext: QuestionAccumulatorProcessor, CodebaseContextV3, ReduceRankGPTReranker, Workspace, CreateWorkspace
+using EasyContext: print_project_tree
 
 include("utils.jl")
-include("keyboard.jl")
+include("keyboard.jl")  # TODO move to EASYCONTEXT
 
-include("output_codeblock.jl")
 include("AI_config.jl")
 include("AI_prompt.jl")
-include("AI_contexter.jl")
-include("Message.jl")
+include("AI_contexter.jl") # TODO move to EASYCONTEXT
 # include("AIState.jl")
 
-include("processors.jl")
-include("processor_conversation.jl")
-include("processor_LLM.jl")
-include("processor_persistable.jl")
-include("processor_workspace.jl")
 
-include("token_counter.jl")
-include("file_tree.jl")
+include("token_counter.jl") # TODO move to EASYCONTEXT
 include("file_operations.jl")
-# include("file_messages.jl")
 include("arg_parser.jl")
 
 include("anthropic_extension.jl")
 
-include("shell_processing_ai.jl")
-include("shell_processing.jl")
+include("shell_processing_ai.jl") # TODO move to EASYCONTEXT
 
 include("execute.jl")
 
@@ -93,7 +88,7 @@ function start_conversation(user_question="", workspace=CreateWorkspace(); resum
   # codebase_context = ContextNode(tag="Codebase", element="File")
   
   # prepare
-  !silent && greet(llm_solve)
+  !silent && greet(ChatSH, llm_solve)
   isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
   !silent && isempty(user_question) && println("Your multiline input (empty line to finish):")
 
