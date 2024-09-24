@@ -44,12 +44,8 @@ include("shell_processing.jl")
 
 include("execute.jl")
 include("process_query.jl")
+include("processors.jl")
 
-
-handle_interrupt(sig::Int32) = (println("\nExiting gracefully. Good bye! :)"); exit(0))
-
-user_question = readline_improved()
-noempty(user_question) = isempty(strip(user_question))
 
 
 
@@ -60,32 +56,58 @@ function start_conversation(state::AIState, user_question=""; loop=true)
 
   isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
   !state.silent && println("Your multiline input (empty line to finish):")
+  
+  ssave!(msg) = save!(conversation, msg)
 
-  shell_results = Dict{String, CodeBlock}()
-  if !noempty(user_question) 
-    user_msg = prepare_user_message!(ai_state.contexter, ai_state, user_question, shell_results)
-    add_n_save_user_message!(ai_state, user_msg)
+  workspace    = Workspace()
+  conversation = ConversationProcessor()
+  llm_solve    = StreamingLLMProcessor("sonnet-3.5")
+  extractor    = CodeBlockExtractor()
 
-    _, shell_results = streaming_process_question(state)
-  end
+  while loop || !isempty(user_question)
 
-  while loop
-    user_question = readline_improved()
-    noempty(user_question) && continue
+    user_question = wait_user_question(user_question)
+    # stop_spinner = progressing_spinner()
+
+    context_shell = @async_showerr format_shell_results_to_context(shell_scripts)
+    context_codebase = @async_showerr begin
+        question_acc = QuestionAccumulatorProcessor()(user_question)
+        codebase = CodebaseContextV3(project_paths=workspace.project_paths)(question_acc)
+        reranked = ReduceRankGPTReranker(batch_size=30, model="gpt4om")(codebase)
+        model.codebase_context(reranked)
+    end
+
     
-    user_msg = prepare_user_message!(ai_state.contexter, ai_state, user_question, shell_results)
-    add_n_save_user_message!(ai_state, user_msg)
-    _, shell_results = streaming_process_question(state, user_msg)
+    context_combiner!(user_question, context_shell, context_codebase) |> create_user_message |> ssave!
+    @async_showerr persist!(conversation)
+
+    reset!(extractor)
+    error = llm_solve(user_msg;
+          on_text    = (text)  -> extract_and_preprocess_codeblocks(text, extractor),
+          on_meta_usr= (meta)  -> begin
+            # stop_spinner[] = true; 
+            # clearline();
+            update_last_user_message_meta(conversation, meta)
+          end,
+          on_meta_ai=  (ai_msg)-> (ai_msg |> save!; persist!(conversation)),
+          on_done   =  ()      -> codeblock_runner(extractor),
+          on_error  =  (error) -> begin
+            # stop_spinner[] = true;
+            save_error!(conversation, "\nERROR: $error")
+          end,
+    )
+    
+
+    user_question=""
   end
 end
 
 function start(message=""; resume=false, streaming=true, project_paths=String[], contexter=SimpleContexter(), show_tokens=false, loop=true)
-  ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,))) # Nice program exit for ctrl + c.
-  ai_state = initialize_ai_state(;contexter, resume, streaming, project_paths, show_tokens, silent=!isempty(message))
+  nice_exit_handler()
 
-  set_terminal_title("AISH $(curr_conv(ai_state).common_path)")
+  set_terminal_title("AISH $(project_paths[1])")
   
-  start_conversation(ai_state, message; loop)
+  start_conversation(ai_state, message; loop, contexter, resume, streaming, project_paths, show_tokens, silent=!isempty(message))
   ai_state
 end
 
