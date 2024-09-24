@@ -38,11 +38,6 @@ function cut_history!(conv; keep=13)
     conv.messages = conv.messages[start_index:end]
 end
 
-function prepare_user_message!(contexter::SimpleContexter, ai_state, question, shell_results::AbstractDict{String, CodeBlock})
-    cut_history!(curr_conv(ai_state); keep=contexter.keep)
-    formatted_results = format_shell_results(shell_results)
-    formatted_results * question
-end
 
 function format_shell_results(shell_commands::AbstractDict{String, CodeBlock})
     result = "<ShellRunResults>"

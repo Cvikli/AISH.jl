@@ -1,4 +1,6 @@
 
+execute_single_shell_command(code::CodeBlock; no_confirm=false) = execute_code_block(preprocess(code); no_confirm)
+
 execute_code_block(cb::CodeBlock; no_confirm=false) = withenv("GTK_PATH" => "") do
   code = codestr(cb)
   if cb.type==:MODIFY || cb.type==:CREATE

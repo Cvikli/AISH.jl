@@ -1,7 +1,7 @@
 
 using Test
 using AISH
-using AISH: ShellScriptExtractor, extract_and_preprocess_shell_scripts
+using AISH: CodeBlockExtractor, extract_and_preprocess_shell_scripts
 using AISH: execute_single_shell_command
 
 @testset "LLM Parser Tests" begin
@@ -17,7 +17,7 @@ using AISH: execute_single_shell_command
         ```
         """
 
-        extractor = ShellScriptExtractor()
+        extractor = CodeBlockExtractor()
         result = extract_and_preprocess_shell_scripts(llm_output, extractor)
 
         @test !isnothing(result)
@@ -55,7 +55,7 @@ using AISH: execute_single_shell_command
 				testes
 				"""
 
-        extractor = ShellScriptExtractor()
+        extractor = CodeBlockExtractor()
         result1 = extract_and_preprocess_shell_scripts(llm_output1, extractor)
 
         @test !isnothing(result1)
@@ -96,7 +96,7 @@ using AISH: execute_single_shell_command
     #     ```
     #     """
 
-    #     extractor = ShellScriptExtractor()
+    #     extractor = CodeBlockExtractor()
     #     result = extract_and_preprocess_shell_scripts(llm_output, extractor)
 
     #     @test !isnothing(result)

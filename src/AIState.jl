@@ -14,6 +14,10 @@ genid() = string(UUIDs.uuid4())
 end
 
 UndefMessage() = Message(id="",timestamp=now(UTC), role=:UNKNOWN, content="")
+create_AI_message(ai_message::String, meta::Dict) = Message(id=genid(), timestamp=now(UTC), role=:assistant, content=ai_message, itok=meta["input_tokens"], otok=meta["output_tokens"], cached=meta["cache_creation_input_tokens"], cache_read=meta["cache_read_input_tokens"], price=meta["price"], elapsed=meta["elapsed"])
+create_AI_message(ai_message::String)             = Message(id=genid(), timestamp=now(UTC), role=:assistant, content=ai_message)
+create_user_message(user_query) = Message(id=genid(), timestamp=now(UTC), role=:user, content=user_query)
+
 
 @kwdef mutable struct ConversationInfo
     id::String
@@ -149,30 +153,11 @@ function update_project_path_and_sysprompt!(state::AIState, project_paths::Vecto
     !state.silent && println("\e[33mSystem prompt updated due to file changes.\e[0m")
 end
 
-
-create_user_message(user_query) = Message(id=genid(), timestamp=now(UTC), role=:user, content=user_query)
 add_n_save_user_message!(state::AIState, user_question::String) = add_n_save_user_message!(state, create_user_message(user_question) )
 function add_n_save_user_message!(state::AIState, user_msg::Message)
     push!(curr_conv_msgs(state), user_msg)
     save_user_message(state, user_msg)
     user_msg
-end
-
-create_AI_message(ai_message::String, meta::Dict) = Message(id=genid(), timestamp=now(UTC), role=:assistant, content=ai_message, itok=meta["input_tokens"], otok=meta["output_tokens"], cached=meta["cache_creation_input_tokens"], cache_read=meta["cache_read_input_tokens"], price=meta["price"], elapsed=meta["elapsed"])
-create_AI_message(ai_message::String)             = Message(id=genid(), timestamp=now(UTC), role=:assistant, content=ai_message)
-add_n_save_ai_message!(state::AIState, ai_message::String, meta::Dict) = add_n_save_ai_message!(state, create_AI_message(ai_message, meta))
-add_n_save_ai_message!(state::AIState, ai_message::String)             = add_n_save_ai_message!(state, create_AI_message(ai_message))
-function add_n_save_ai_message!(state::AIState, ai_msg::Message)
-    push!(curr_conv_msgs(state), ai_msg)
-    save_ai_message(state, ai_msg)
-    ai_msg
-end
-add_n_save_error_message!(state::AIState, error_content::String) = begin
-    if curr_conv_msgs(state)[end].role == :user 
-        add_n_save_ai_message!(state, error_content)
-    elseif curr_conv_msgs(state)[end].role == :assistant 
-        update_message_by_id(state, curr_conv_msgs(state)[end].id, curr_conv_msgs(state)[end].content * error_content)
-    end
 end
 
 
@@ -203,8 +188,5 @@ to_dict(message::Message) = Dict(
     "elapsed" => message.elapsed
 )
 to_dict(state::AIState)         = to_dict(state.conversations[state.selected_conv_id])
-to_dict(conv::ConversationInfo) = [Dict("role" => "system", "content" => conv.system_message); to_dict_nosys(conv)]
 to_dict_nosys(state::AIState)         = to_dict_nosys(state.conversations[state.selected_conv_id])
-to_dict_nosys(conv::ConversationInfo) = [Dict("role" => string(msg.role), "content" => msg.content) for msg in conv.messages]
 to_dict_nosys_detailed(conv::AIState)          = to_dict_nosys_detailed(state.conversations[state.selected_conv_id])
-to_dict_nosys_detailed(conv::ConversationInfo) = [to_dict(message) for message in conv.messages]

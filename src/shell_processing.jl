@@ -1,11 +1,15 @@
 
-@kwdef mutable struct ShellScriptExtractor
+@kwdef mutable struct CodeBlockExtractor
     last_processed_index::Ref{Int} = Ref(0)
     shell_scripts::OrderedDict{String, Task} = OrderedDict{String, Task}()
+    shell_results::OrderedDict{String, CodeBlock} = OrderedDict{String, CodeBlock}()
     full_content::String = ""
+    skip_code_execution::Bool = false
+    no_confirm::Bool = false
 end
 
-function extract_and_preprocess_shell_scripts(new_content::String, extractor::ShellScriptExtractor; mock=false)
+
+function extract_and_preprocess_codeblocks(new_content::String, extractor::CodeBlockExtractor; mock=false)
     # @show extractor
     extractor.full_content *= new_content
     lines = split(extractor.full_content[nextind(extractor.full_content, extractor.last_processed_index[]):end], '\n')
@@ -49,20 +53,23 @@ function extract_and_preprocess_shell_scripts(new_content::String, extractor::Sh
     return nothing
 end
 
-execute_single_shell_command(code::CodeBlock; no_confirm=false) = execute_code_block(preprocess(code); no_confirm)
+codeblock_runner(extractor::CodeBlockExtractor) = !extractor.skip_code_execution ? execute_shell_commands(extractor; no_confirm=extractor.no_confirm) : OrderedDict{String, CodeBlock}()
 
-function execute_shell_commands(extractor::ShellScriptExtractor; no_confirm=false)
-    shell_scripts = OrderedDict{String, CodeBlock}()
-    
+function execute_shell_commands(extractor::CodeBlockExtractor; no_confirm=false)
     for (command, task) in extractor.shell_scripts
-        processed_command = fetch(task)
+        extractor.shell_results[command] = fetch(task)
         # @show processed_command
         output = execute_code_block(processed_command; no_confirm)
-        push!(processed_command.run_results, output)
-        shell_scripts[processed_command.pre_content] = processed_command
+        push!(extractor.shell_results[command].run_results, output)
         println("\n\e[36mCommand:\e[0m $command")
         println("\e[36mOutput:\e[0m $output")
     end
-
-    return shell_scripts
 end
+
+reset!(extractor::CodeBlockExtractor) = begin
+    extractor.last_processed_index=Ref(0) 
+    empty!(extractor.shell_scripts)
+    empty!(extractor.shell_results)
+    extractor.full_content="" 
+end
+

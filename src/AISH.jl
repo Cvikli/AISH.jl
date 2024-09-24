@@ -30,6 +30,12 @@ include("AI_prompt.jl")
 include("AI_contexter.jl")
 include("AIState.jl")
 
+include("processors.jl")
+include("processor_conversation.jl")
+include("processor_LLM.jl")
+include("processor_persistable.jl")
+include("processor_workspace.jl")
+
 include("token_counter.jl")
 include("file_management.jl")
 include("file_tree.jl")
@@ -43,60 +49,74 @@ include("shell_processing_ai.jl")
 include("shell_processing.jl")
 
 include("execute.jl")
-include("process_query.jl")
-include("processors.jl")
+
+
+function format_shell_results_to_context(shell_commands::AbstractDict{String, CodeBlock})
+  content = ""
+  for (code, codeblock) in shell_commands
+      shortened_code = get_shortened_code(codestr(code))
+      content *= """
+      <sh_script shortened>
+      $shortened_code
+      </sh_script>
+      <sh_output>
+      $(codeblock.results[end])
+      </sh_output>
+      """
+  end
+  content = """
+  <ShellResults>
+  $content
+  </ShellResults>
+  """
+  return content
+end
 
 
 
+function start_conversation(user_question="", workspace=CreateWorkspace(); resume, streaming, project_paths, show_tokens, silent, loop=true)
 
-function start_conversation(state::AIState, user_question=""; loop=true)
-  !state.silent && println("Welcome to $ChatSH AI. (using $(state.model))")
-
-  while !isempty(curr_conv_msgs(state)) && curr_conv_msgs(state)[end].role == :user; pop!(curr_conv_msgs(state)); end
-
-  isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
-  !state.silent && println("Your multiline input (empty line to finish):")
-  
-  ssave!(msg) = save!(conversation, msg)
-
-  workspace    = Workspace()
-  conversation = ConversationProcessor()
-  llm_solve    = StreamingLLMProcessor("sonnet-3.5")
+  # init
+  conversation = ConversationProcessor(system_message=Message(id=genid(), timestamp=now(UTC), role=:system, content="You are AI SH a shell..."))
+  llm_solve    = StreamingLLMProcessor()
   extractor    = CodeBlockExtractor()
+  persister    = Persistable("")
 
+  # codebase_context = ContextNode(tag="Codebase", element="File")
+  
+  # prepare
+  !silent && greet(llm_solve)
+  isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
+  !silent && isempty(user_question) && println("Your multiline input (empty line to finish):")
+
+  append_conv!(msg) = save!(conversation, msg)
+  to_disk!()        = to_disk_custom!(conversation, persister)
+
+  # forward
   while loop || !isempty(user_question)
 
     user_question = wait_user_question(user_question)
     # stop_spinner = progressing_spinner()
 
-    context_shell = @async_showerr format_shell_results_to_context(shell_scripts)
-    context_codebase = @async_showerr begin
-        question_acc = QuestionAccumulatorProcessor()(user_question)
-        codebase = CodebaseContextV3(project_paths=workspace.project_paths)(question_acc)
-        reranked = ReduceRankGPTReranker(batch_size=30, model="gpt4om")(codebase)
-        model.codebase_context(reranked)
+    context_shell    = format_shell_results_to_context(extractor.shell_results)
+    context_codebase = begin
+        # question_acc = QuestionAccumulatorProcessor()(user_question)
+        # codebase = CodebaseContextV3(project_paths=workspace.project_paths)(question_acc)
+        # reranked = ReduceRankGPTReranker(batch_size=30, model="gpt4om")(codebase)
+        # codebase_context(reranked)
     end
 
     
-    context_combiner!(user_question, context_shell, context_codebase) |> create_user_message |> ssave!
-    @async_showerr persist!(conversation)
+    context_combiner!(user_question, context_shell, context_codebase) |> create_user_message |> append_conv!
 
     reset!(extractor)
-    error = llm_solve(user_msg;
+    error = llm_solve(conversation;
           on_text    = (text)  -> extract_and_preprocess_codeblocks(text, extractor),
-          on_meta_usr= (meta)  -> begin
-            # stop_spinner[] = true; 
-            # clearline();
-            update_last_user_message_meta(conversation, meta)
-          end,
-          on_meta_ai=  (ai_msg)-> (ai_msg |> save!; persist!(conversation)),
-          on_done   =  ()      -> codeblock_runner(extractor),
-          on_error  =  (error) -> begin
-            # stop_spinner[] = true;
-            save_error!(conversation, "\nERROR: $error")
-          end,
+          on_meta_usr= (meta)  -> update_last_user_message_meta(conversation, meta),
+          on_meta_ai = (ai_msg)-> (ai_msg |> append_conv!; to_disk!()),
+          on_done    = ()      -> codeblock_runner(extractor),
+          on_error   = (error) -> (save_error!(conversation, "\nERROR: $error") |> append_conv!; to_disk!()),
     )
-    
 
     user_question=""
   end
@@ -104,14 +124,12 @@ end
 
 function start(message=""; resume=false, streaming=true, project_paths=String[], contexter=SimpleContexter(), show_tokens=false, loop=true)
   nice_exit_handler()
-
-  set_terminal_title("AISH $(project_paths[1])")
+  workspace    = CreateWorkspace(project_paths)
+  set_terminal_title("AISH $(workspace.common_path)")
   
-  start_conversation(ai_state, message; loop, contexter, resume, streaming, project_paths, show_tokens, silent=!isempty(message))
-  ai_state
+  start_conversation(message, workspace; loop, resume, streaming, project_paths, show_tokens, silent=!isempty(message))
 end
 
-julia_main(;contexter=SimpleContexter(), loop=true) = main(;contexter, loop)
 function main(;contexter=SimpleContexter(), loop=true)
   args = parse_commandline()
   start(args["message"]; 
@@ -123,8 +141,9 @@ function main(;contexter=SimpleContexter(), loop=true)
       contexter=contexter,
   )
 end
+julia_main(;contexter=SimpleContexter(), loop=true) = main(;contexter, loop)
 
-export main
+export main, julia_main
 
 include("precompile_scripts.jl")
 

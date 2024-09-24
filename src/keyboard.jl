@@ -6,6 +6,7 @@ function readline_improved()
     dialog()
     print("\e[1m")  # bold text
     res = readline_multi()
+    clearline()
     print("\e[0m")  # reset text style
     return res
 end
@@ -18,4 +19,11 @@ function readline_multi()
         write(buffer, batch)
     end
     return String(take!(buffer))
+end
+
+wait_user_question(user_question) = begin
+    while is_really_empty(user_question)
+        user_question = readline_improved()
+    end
+    user_question
 end

@@ -16,7 +16,7 @@ function save_message(state::AIState, role, message; id=string(UUIDs.uuid4()), t
         println(file, message_separator)
     end
 end
-function save_conversation_to_file(conv::ConversationInfo)  # TODO this seems to be a redundancy of file print...
+function save_conversation_to_file(conv::ConversationProcessor)  # TODO this seems to be a redundancy of file print...
     filename = get_conversation_filename(conv.id)
     isnothing(filename) && (println("Error: Conversation file not found"); return)
 
@@ -44,21 +44,12 @@ get_msg_idx_by_timestamp(state, timestamp) = findfirst(msg -> begin
 date_format(msg.timestamp) == timestamp
 end, curr_conv_msgs(state))
 
-update_last_user_message_meta(state::AIState, meta) = update_last_user_message_meta(state, meta["input_tokens"], meta["output_tokens"], meta["cache_creation_input_tokens"], meta["cache_read_input_tokens"], meta["price"], meta["elapsed"]) 
-function update_last_user_message_meta(state::AIState, itok::Int, otok::Int, cached::Int, cache_read::Int, price, elapsed::Float64)
-    curr_conv_msgs(state)[end].itok       = itok
-    curr_conv_msgs(state)[end].otok       = otok
-    curr_conv_msgs(state)[end].cached     = cached
-    curr_conv_msgs(state)[end].cache_read = cache_read
-    curr_conv_msgs(state)[end].price      = price
-    curr_conv_msgs(state)[end].elapsed    = elapsed
-    save_conversation_to_file(curr_conv(state))
-    curr_conv_msgs(state)[end]
-end
+update_last_user_message_meta(state::AIState, meta) = update_last_user_message_meta(curr_conv_msgs(state), meta["input_tokens"], meta["output_tokens"], meta["cache_creation_input_tokens"], meta["cache_read_input_tokens"], meta["price"], meta["elapsed"]) 
+update_last_user_message_meta(state::AIState, itok::Int, otok::Int, cached::Int, cache_read::Int, price, elapsed::Float64) = update_last_user_message_meta(curr_conv_msgs(state), itok, otok, cached, cache_read, price, elapsed)
+
 
 update_message_by_timestamp(state::AIState, timestamp::DateTime, new_content::String) = update_message_by_idx(state, get_msg_idx_by_timestamp(state, date_format(timestamp)), new_content)
-update_message_by_idx(state::AIState, idx::Int, new_content::String) = ((curr_conv_msgs(state)[idx].content = new_content); save_conversation_to_file(curr_conv(state)))
-
+update_message_by_idx(state::AIState, idx::Int, new_content::String) = ((curr_conv_msgs(state)[idx].content = new_content); )
 
 function mess(message_str)
     m = match(MSG_FORMAT, strip(message_str))

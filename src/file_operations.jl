@@ -5,7 +5,7 @@
 date_format(date) = Dates.format(date, DATE_FORMAT)
 date_parse(date)  = try DateTime(date, DATE_FORMAT) catch e; (println(date); println(e); rethrow(e);) end
 
-get_all_conversations_file() = readdir(CONVERSATION_DIR)
+get_all_conversations_file(p) = readdir(CONVERSATION_DIR(p))
 get_message_separator(conversation_id) = "===AISH_MSG_$(conversation_id)==="
 get_conversation_filename(conversation_id) = (files = filter(f -> endswith(f, "_$(conversation_id).log"), readdir(CONVERSATION_DIR)); isempty(files) ? nothing : joinpath(CONVERSATION_DIR, first(files)))
 
