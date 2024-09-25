@@ -28,6 +28,9 @@ function parse_commandline()
         "--no-loop"
             help = "Disable loop mode"
             action = :store_true
+        "--log-dir"
+            arg_type = String
+            default = joinpath(@__DIR__, "..", "conversations")
     end
 
     return parse_args(s)

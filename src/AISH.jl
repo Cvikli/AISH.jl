@@ -25,13 +25,13 @@ include("AI_prompt.jl")
 function start_conversation(user_question=""; resume, streaming, project_paths, show_tokens, silent, loop=true)
 
   # init
-  workspace           = CreateWorkspace(project_paths)
-  extractor           = CodeBlockExtractor()
-  package_ctx         = JuliaPackageContext()
-  llm_solve           = StreamingLLMProcessor()
-  persister           = Persistable("")
-  age_filter          = AgeTracker()
-  ctx_changes_tracker = EntrTracker()
+  workspace       = CreateWorkspace(project_paths)
+  extractor       = CodeBlockExtractor()
+  package_ctx     = JuliaPackageContext()
+  llm_solve       = StreamingLLMProcessor()
+  persister       = Persistable("")
+  age_filter      = AgeTracker()
+  changes_tracker = EntrTracker()
 
   sys_msg      = SYSTEM_PROMPT(ChatSH)
   sys_msg     *= output_format_description(workspace) # get_processor_description(:CodebaseContext,     codebase_context)
@@ -64,19 +64,19 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
     user_question   = wait_user_question(user_question)
     ctx_question    = user_question |> add_past_user_msgs() 
     ctx_shell       = extractor |> shell_results_2_string #format_shell_results_to_context(extractor.shell_results)
-    ctx_codebase    = (workspace()  # CodebaseContextV3 
-                       |> BM25IndexBuilder()(_, ctx_question)
-                       |> ReduceRankGPTReranker(batch_size=30, model="gpt4om")(_, ctx_question)
-                       |> age_filter()
-                       |> ctx_changes_tracker()
-                       |> workspace_ctx_2_string)
-    # ctx_jl_pkg      = (user_question 
-    #                    |> QuestionAccumulatorProcessor()
-    #                    JuliaPackageContext()
-    #                    |> entr_tracker()
-    #                    |> BM25IndexBuilder()(_, ctx_question)
-    #                    |> ReduceRankGPTReranker(batch_size=40)(_, ctx_question)
-    #                    pkg_ctx_2_string)
+    ctx_codebase    = @pipe (workspace()  # CodebaseContextV3 
+                             |> BM25IndexBuilder()(_, ctx_question)
+                             |> ReduceRankGPTReranker(batch_size=30, model="gpt4om")(_, ctx_question)
+                             |> age_filter()
+                             |> changes_tracker()
+                             |> workspace_ctx_2_string)
+    # ctx_jl_pkg      = @pipe (JuliaPackageContext()
+    #                       |> entr_tracker()
+    #                       |> BM25IndexBuilder()(_, ctx_question)
+    #                       |> ReduceRankGPTReranker(batch_size=40)(_, ctx_question)
+    #                       |> age_filter()
+    #                       |> changes_tracker()
+    #                       |> pkg_ctx_2_string)
     
     context_combiner!(user_question, ctx_shell, ctx_codebase) |> _add_user_message!
 
