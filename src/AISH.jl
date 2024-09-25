@@ -3,7 +3,7 @@ module AISH
 
 using EasyContext: Message, ConversationInfo, ConversationProcessor
 using EasyContext: CodeBlock, format_shell_results_to_context
-using EasyContext: greet, SYSTEM_PROMPT
+using EasyContext: greet
 using EasyContext: update_last_user_message_meta
 using EasyContext: add_user_message!, add_ai_message!, add_error_message!
 using EasyContext: wait_user_question, create_user_message, save!, reset!
@@ -20,7 +20,6 @@ using EasyContext: get_processor_description
 include("utils.jl")
 include("arg_parser.jl")
 
-include("AI_config.jl")
 include("AI_prompt.jl")
 
 function start_conversation(user_question=""; resume, streaming, project_paths, show_tokens, silent, loop=true)
