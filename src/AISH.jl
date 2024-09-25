@@ -11,72 +11,29 @@ using SHA
 using DataStructures
 using PromptingTools
 
-# Import the ProgressMeter for progress tracking
-using ProgressMeter
-
-# Only import what's necessary from BoilerplateCvikli
-using BoilerplateCvikli: @async_showerr
-
-using Anthropic
-using Anthropic: initStreamMeta, StreamMeta, calc_elapsed_times, format_meta_info
-
 using EasyContext: Message, ConversationInfo, ConversationProcessor
-using EasyContext: CodeBlock
-using EasyContext: greet
+using EasyContext: CodeBlock, format_shell_results_to_context
+using EasyContext: greet, SYSTEM_PROMPT
+using EasyContext: update_last_user_message_meta
+using EasyContext: add_error_message!
+using EasyContext: wait_user_question, create_user_message, save!, reset!
 using EasyContext: StreamingLLMProcessor, ConversationProcessorr
 using EasyContext: ContextNode, CodeBlockExtractor, Persistable
 using EasyContext: QuestionAccumulatorProcessor, CodebaseContextV3, ReduceRankGPTReranker, Workspace, CreateWorkspace
 using EasyContext: print_project_tree
+using EasyContext: context_combiner!
+using EasyContext: to_disk_custom!
+using EasyContext: extract_and_preprocess_codeblocks
+using EasyContext: get_processor_description
 
 include("utils.jl")
-include("keyboard.jl")  # TODO move to EASYCONTEXT
-
-include("AI_config.jl")
-include("AI_prompt.jl")
-include("AI_contexter.jl") # TODO move to EASYCONTEXT
-# include("AIState.jl")
-
-
-include("token_counter.jl") # TODO move to EASYCONTEXT
-include("file_operations.jl")
 include("arg_parser.jl")
 
-include("anthropic_extension.jl")
-
-include("shell_processing_ai.jl") # TODO move to EASYCONTEXT
-
+include("AI_config.jl")
 include("execute.jl")
 
-function format_shell_results_to_context(shell_commands::AbstractDict{String, CodeBlock})
-	content = ""
-	for (code, codeblock) in shell_commands
-			shortened_code = get_shortened_code(codestr(code))
-			content *= """
-			<sh_script shortened>
-			$shortened_code
-			</sh_script>
-			<sh_output>
-			$(codeblock.results[end])
-			</sh_output>
-			"""
-	end
-	content = """
-	<ShellResults>
-	$content
-	</ShellResults>
-	"""
-	return content
-end
+# include("file_operations.jl") # TODO move to EASYCONTEXT
 
-function get_processor_description(processor::Symbol, context_node::Union{ContextNode, Nothing}=nothing)
-  processor_msg = processor == :ShellResults ? "Shell command results are" :
-                  processor == :CodebaseContext ? "Codebase context is" :
-                  processor == :JuliaPackageContext ? "Julia package context functions are" :
-                  ""
-  @assert processor_msg != "" "Unknown processor"
-
-  return "$(processor_msg) wrapped in <$(context_node.tag)> and </$(context_node.tag)> tags, with individual elements wrapped in <$(context_node.element)> and </$(context_node.element)> tags."
-end
 
 function start_conversation(user_question="", workspace=CreateWorkspace(); resume, streaming, project_paths, show_tokens, silent, loop=true)
 
@@ -96,7 +53,7 @@ function start_conversation(user_question="", workspace=CreateWorkspace(); resum
   codebase_context = ContextNode(tag="Codebase", element="File")
   package_context  = ContextNode(tag="Functions", element="Function")
 
-  sys_msg_ext = SYSTEM_PROMPT()
+  sys_msg_ext = SYSTEM_PROMPT(ChatSH)
   sys_msg_ext *= get_processor_description(:ShellResults,        shell_context)
   sys_msg_ext *= get_processor_description(:CodebaseContext,     codebase_context)
   sys_msg_ext *= get_processor_description(:JuliaPackageContext, package_context)
@@ -127,14 +84,13 @@ function start_conversation(user_question="", workspace=CreateWorkspace(); resum
           on_meta_usr= (meta)  -> update_last_user_message_meta(conversation, meta),
           on_meta_ai = (ai_msg)-> (ai_msg |> append_conv!; to_disk!()),
           on_done    = ()      -> codeblock_runner(extractor),
-          on_error   = (error) -> (save_error!(conversation, "\nERROR: $error") |> append_conv!; to_disk!()),
+          on_error   = (error) -> (add_error_message!(conversation, "\nERROR: $error") |> append_conv!; to_disk!()),
     )
 
     user_question=""
   end
 end
-
-function start(message=""; resume=false, streaming=true, project_paths=String[], contexter=SimpleContexter(), show_tokens=false, loop=true)
+function start(message=""; resume=false, streaming=true, project_paths=String[], contexter=nothing, show_tokens=false, loop=true)
   nice_exit_handler()
   workspace    = CreateWorkspace(project_paths)
   print_project_tree(workspace, show_tokens=show_tokens)
@@ -143,7 +99,7 @@ function start(message=""; resume=false, streaming=true, project_paths=String[],
   start_conversation(message, workspace; loop, resume, streaming, project_paths, show_tokens, silent=!isempty(message))
 end
 
-function main(;contexter=SimpleContexter(), loop=true)
+function main(;contexter=nothing, loop=true)
   args = parse_commandline()
   start(args["message"]; 
       resume=args["resume"], 
@@ -154,7 +110,7 @@ function main(;contexter=SimpleContexter(), loop=true)
       contexter=contexter,
   )
 end
-julia_main(;contexter=SimpleContexter(), loop=true) = main(;contexter, loop)
+julia_main(;contexter=nothing, loop=true) = main(;contexter, loop)
 
 export main, julia_main
 

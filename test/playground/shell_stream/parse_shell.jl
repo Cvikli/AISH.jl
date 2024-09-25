@@ -1,5 +1,4 @@
 
-using BoilerplateCvikli: @async_showerr
 using Base.Threads
 
 function run_command_async(cmd_str)

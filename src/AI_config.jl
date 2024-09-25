@@ -12,6 +12,3 @@ const CONVERSATION_FILE_REGEX = Regex("^($(DATE_FORMAT_REGEX.pattern))_(?<sent>.
 date_format(date) = Dates.format(date, DATE_FORMAT)
 date_parse(date)  = try DateTime(date, DATE_FORMAT) catch e; (println(date); println(e); rethrow(e);) end
 
-get_system() = strip(read(`uname -a`, String))
-get_shell() = strip(read(`$(ENV["SHELL"]) --version`, String))
-

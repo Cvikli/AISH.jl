@@ -4,18 +4,11 @@ authors = ["Cvikli <havlikmarcell@gmail.com>"]
 version = "1.0.0"
 
 [deps]
-Anthropic = "a00d14cb-3434-48ec-9b49-cfc2b9ce2a8f"
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
-BoilerplateCvikli = "9c9f911a-9395-49bd-b3fc-139ceb24aa85"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 EasyContext = "5067fbba-b9ec-41e5-aa31-a8c1ac509a30"
-HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
-ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 PromptingTools = "670122d1-24a8-4d70-bfce-740807c42192"
-REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
