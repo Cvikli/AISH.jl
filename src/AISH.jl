@@ -25,12 +25,20 @@ include("AI_prompt.jl")
 function start_conversation(user_question=""; resume, streaming, project_paths, show_tokens, silent, loop=true)
 
   # init
-  workspace    = CreateWorkspace(project_paths)
-  llm_solve    = StreamingLLMProcessor()
-  extractor    = CodeBlockExtractor()
-  persister    = Persistable("")
+  workspace           = CreateWorkspace(project_paths)
+  extractor           = CodeBlockExtractor()
+  package_ctx         = JuliaPackageContext()
+  llm_solve           = StreamingLLMProcessor()
+  persister           = Persistable("")
+  age_filter          = AgeTracker()
+  ctx_changes_tracker = EntrTracker()
 
-  # codebase_context = ContextNode(tag="Codebase", element="File")
+  sys_msg      = SYSTEM_PROMPT(ChatSH)
+  sys_msg     *= output_format_description(workspace) # get_processor_description(:CodebaseContext,     codebase_context)
+  sys_msg     *= output_format_description(extractor) # get_processor_description(:ShellResults,        shell_context)
+  sys_msg     *= output_format_description(package_ctx) # get_processor_description(:JuliaPackageContext, package_context)
+  conversation = ConversationProcessorr(sys_msggg=sys_msg)
+
   
   # prepare
   print_project_tree(workspace, show_tokens=show_tokens)
@@ -40,16 +48,10 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
   !silent && isempty(user_question) && println("Your multiline input (empty line to finish):")
 
-  shell_context    = ContextNode(tag="ShellRunResults", element="sh_script")
-  codebase_context = ContextNode(tag="Codebase", element="File")
-  package_context  = ContextNode(tag="Functions", element="Function")
-
-  sys_msg_ext = SYSTEM_PROMPT(ChatSH)
-  sys_msg_ext *= get_processor_description(:ShellResults,        shell_context)
-  sys_msg_ext *= get_processor_description(:CodebaseContext,     codebase_context)
-  sys_msg_ext *= get_processor_description(:JuliaPackageContext, package_context)
-  conversation = ConversationProcessorr(sys_msggg=sys_msg_ext)
-
+  # shell_context    = ContextNode(tag="ShellRunResults", element="sh_script")
+  # codebase_context = ContextNode(tag="Codebase", element="File")
+  # package_context  = ContextNode(tag="Functions", element="Function")
+  
   _add_user_message!(msg)  = add_user_message!(conversation, msg)
   _add_ai_message!(msg)    = add_ai_message!(conversation, msg)
   _add_error_message!(msg) = add_error_message!(conversation, msg)
@@ -59,24 +61,33 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   # forward
   while loop || !isempty(user_question)
 
-    user_question = wait_user_question(user_question)
-    context_shell    = format_shell_results_to_context(extractor.shell_results)
-    context_codebase = begin
-        # question_acc = QuestionAccumulatorProcessor()(user_question)
-        codebase = CodebaseContextV3(project_paths=workspace.project_paths)(user_question)
-        reranked = ReduceRankGPTReranker(batch_size=30, model="gpt4om")(codebase)
-        codebase_context(reranked)
-    end
+    user_question   = wait_user_question(user_question)
+    ctx_question    = user_question |> add_past_user_msgs() 
+    ctx_shell       = extractor |> shell_results_2_string #format_shell_results_to_context(extractor.shell_results)
+    ctx_codebase    = (workspace()  # CodebaseContextV3 
+                       |> BM25IndexBuilder()(_, ctx_question)
+                       |> ReduceRankGPTReranker(batch_size=30, model="gpt4om")(_, ctx_question)
+                       |> age_filter()
+                       |> ctx_changes_tracker()
+                       |> workspace_ctx_2_string)
+    # ctx_jl_pkg      = (user_question 
+    #                    |> QuestionAccumulatorProcessor()
+    #                    JuliaPackageContext()
+    #                    |> entr_tracker()
+    #                    |> BM25IndexBuilder()(_, ctx_question)
+    #                    |> ReduceRankGPTReranker(batch_size=40)(_, ctx_question)
+    #                    pkg_ctx_2_string)
     
-    context_combiner!(user_question, context_shell, context_codebase) |> _add_user_message!
+    context_combiner!(user_question, ctx_shell, ctx_codebase) |> _add_user_message!
 
     reset!(extractor)
+
     error = llm_solve(conversation;
-          on_text    = (text)  -> extract_and_preprocess_codeblocks(text, extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb)),
-          on_meta_usr= (meta)  -> update_last_user_message_meta(conversation, meta),
-          on_meta_ai = (ai_msg)-> (ai_msg |> _add_ai_message!; to_disk!()),
-          on_done    = ()      -> codeblock_runner(extractor),
-          on_error   = (error) -> ("\nERROR: $error" |> add_error_message!; to_disk!()),
+                      on_text     = (text)   -> extract_and_preprocess_codeblocks(text, extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb)),
+                      on_meta_usr = (meta)   -> update_last_user_message_meta(conversation, meta),
+                      on_meta_ai  = (ai_msg) -> (ai_msg |> _add_ai_message!; to_disk!()),
+                      on_done     = ()       -> codeblock_runner(extractor),
+                      on_error    = (error)  -> ("\nERROR: $error" |> add_error_message!; to_disk!()),
     )
 
     user_question=""
@@ -91,12 +102,12 @@ end
 function main(;contexter=nothing, loop=true)
   args = parse_commandline()
   start(args["message"]; 
-      resume=args["resume"], 
-      streaming=!args["no-streaming"], 
-      project_paths=args["project-paths"], 
-      show_tokens=args["tokens"], 
-      loop=!args["no-loop"] && loop, 
-      contexter=contexter,
+        resume=args["resume"], 
+        streaming=!args["no-streaming"], 
+        project_paths=args["project-paths"], 
+        show_tokens=args["tokens"], 
+        loop=!args["no-loop"] && loop, 
+        contexter=contexter,
   )
 end
 julia_main(;contexter=nothing, loop=true) = main(;contexter, loop)
