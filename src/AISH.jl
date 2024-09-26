@@ -12,7 +12,7 @@ using EasyContext: update_last_user_message_meta, output_format_description
 using EasyContext: add_user_message!, add_ai_message!, add_error_message!
 using EasyContext: wait_user_question, reset!
 using EasyContext: workspace_ctx_2_string, pkg_ctx_2_string
-using EasyContext: EntrTracker, AgeTracker
+using EasyContext: ChangeTracker, AgeTracker
 using EasyContext: StreamingLLMProcessor
 using EasyContext: CodeBlockExtractor, Persistable
 using EasyContext: ReduceRankGPTReranker, QuestionAccumulatorProcessor
@@ -35,9 +35,9 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   package_ctx     = JuliaPackageContext()
   llm_solve       = StreamingLLMProcessor()
   persister       = Persistable(logdir)
-  workspace_age_ctx      = AgeTracker()
-  workspace_changes_ctx  = EntrTracker()
-  workspace_ctx          = CTX_merger(self_filter=d -> d |> workspace_age_ctx, new_data=d->d |> workspace_age_ctx)
+  workspace_age      = AgeTracker()
+  workspace_changes  = ChangeTracker()
+  workspace_ctx      = Context()
   question_acc    = QuestionAccumulatorProcessor()
 
   sys_msg         = SYSTEM_PROMPT(ChatSH)
@@ -75,7 +75,8 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
                              |> BM25IndexBuilder()(_, ctx_question)
                              |> ReduceRankGPTReranker(batch_size=30, model="gpt4om")(_, ctx_question)
                              |> workspace_ctx
-                             |> workspace_changes_ctx
+                             |> workspace_age(_, max_history=5)
+                             |> workspace_ctx
                              |> workspace_ctx_2_string)
     # ctx_jl_pkg      = @pipe (JuliaPackageContext()
     #                       |> entr_tracker()
