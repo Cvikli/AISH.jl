@@ -35,9 +35,9 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   package_ctx     = JuliaPackageContext()
   llm_solve       = StreamingLLMProcessor()
   persister       = Persistable(logdir)
-  workspace_age      = AgeTracker()
-  workspace_changes  = ChangeTracker()
-  workspace_ctx      = Context()
+  ws_age          = AgeTracker()
+  ws_changes      = ChangeTracker()
+  workspace_ctx   = Context()
   question_acc    = QuestionAccumulatorProcessor()
 
   sys_msg         = SYSTEM_PROMPT(ChatSH)
@@ -75,8 +75,8 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
                              |> BM25IndexBuilder()(_, ctx_question)
                              |> ReduceRankGPTReranker(batch_size=30, model="gpt4om")(_, ctx_question)
                              |> workspace_ctx
-                             |> workspace_age(_, max_history=5)
-                             |> workspace_ctx
+                             |> ws_age(_, max_history=5)
+                             |> ws_changes
                              |> workspace_ctx_2_string)
     # ctx_jl_pkg      = @pipe (JuliaPackageContext()
     #                       |> entr_tracker()
