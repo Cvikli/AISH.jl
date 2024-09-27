@@ -3,7 +3,7 @@
 
 ![matrix](https://github.com/user-attachments/assets/f90a1d9c-dfe2-4a41-a5a7-c53d8aefa4d4)
 
-What if I tell you every work is a transformation... You can describe every workflow soon...
+Everything is a transformation... You can describe every workflow soon...
 
 AI SH to do EVERYTHING on PC
 
