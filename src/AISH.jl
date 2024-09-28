@@ -21,6 +21,7 @@ using EasyContext: context_combiner!
 using EasyContext: to_disk_custom!
 using EasyContext: extract_and_preprocess_codeblocks
 using EasyContext: LLM_conditonal_apply_changes
+using EasyContext: full_file_chunker
 
 include("utils.jl")
 include("arg_parser.jl")
@@ -72,6 +73,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
     ctx_question    = user_question |> question_acc 
     ctx_shell       = extractor |> shell_results_2_string #format_shell_results_to_context(extractor.shell_results)
     ctx_codebase    = @pipe (workspace()  # CodebaseContextV3 
+                             |> full_file_chunker
                              |> BM25IndexBuilder()(_, ctx_question)
                              |> ReduceRankGPTReranker(batch_size=30, model="gpt4om")(_, ctx_question)
                              |> workspace_ctx
