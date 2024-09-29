@@ -7,14 +7,15 @@ using EasyContext: get_processor_description, ContextNode
 using EasyContext: ConversationProcessor, ConversationProcessorr
 using EasyContext: Workspace, CreateWorkspace
 using EasyContext: format_shell_results_to_context
-using EasyContext: greet
-using EasyContext: update_last_user_message_meta, output_format_description
+using EasyContext: greet, Context
+using EasyContext: update_last_user_message_meta
 using EasyContext: add_user_message!, add_ai_message!, add_error_message!
 using EasyContext: wait_user_question, reset!
-using EasyContext: workspace_ctx_2_string, pkg_ctx_2_string
+using EasyContext: workspace_ctx_2_string, julia_ctx_2_string, shell_ctx_2_string
 using EasyContext: ChangeTracker, AgeTracker
 using EasyContext: StreamingLLMProcessor
 using EasyContext: CodeBlockExtractor, Persistable
+using EasyContext: BM25IndexBuilder
 using EasyContext: ReduceRankGPTReranker, QuestionAccumulatorProcessor
 using EasyContext: print_project_tree
 using EasyContext: context_combiner!
@@ -22,6 +23,10 @@ using EasyContext: to_disk_custom!
 using EasyContext: extract_and_preprocess_codeblocks
 using EasyContext: LLM_conditonal_apply_changes
 using EasyContext: full_file_chunker
+using EasyContext: CTX_wrapper, CTX_unwrapp
+using EasyContext: workspace_format_description
+using EasyContext: shell_format_description
+using EasyContext: julia_format_description
 
 include("utils.jl")
 include("arg_parser.jl")
@@ -33,7 +38,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   # init
   workspace       = CreateWorkspace(project_paths)
   extractor       = CodeBlockExtractor()
-  package_ctx     = JuliaPackageContext()
+  # package_ctx     = JuliaPackageContext()
   llm_solve       = StreamingLLMProcessor()
   persister       = Persistable(logdir)
   ws_age          = AgeTracker()
@@ -42,9 +47,9 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   question_acc    = QuestionAccumulatorProcessor()
 
   sys_msg         = SYSTEM_PROMPT(ChatSH)
-  sys_msg        *= output_format_description(workspace) # get_processor_description(:CodebaseContext,     codebase_context)
-  sys_msg        *= output_format_description(extractor) # get_processor_description(:ShellResults,        shell_context)
-  sys_msg        *= output_format_description(package_ctx) # get_processor_description(:JuliaPackageContext, package_context)
+  sys_msg        *= workspace_format_description() # get_processor_description(:CodebaseContext,     codebase_context)
+  sys_msg        *= shell_format_description() # get_processor_description(:ShellResults,        shell_context)
+  sys_msg        *= julia_format_description() # get_processor_description(:JuliaPackageContext, package_context)
   conversation    = ConversationProcessorr(sys_msg=sys_msg)
 
   
@@ -71,22 +76,22 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
     user_question   = wait_user_question(user_question)
 
     ctx_question    = user_question |> question_acc 
-    ctx_shell       = extractor |> shell_results_2_string #format_shell_results_to_context(extractor.shell_results)
+    ctx_shell       = extractor |> shell_ctx_2_string #format_shell_results_to_context(extractor.shell_results)
     ctx_codebase    = @pipe (workspace()  # CodebaseContextV3 
                              |> full_file_chunker
-                             |> BM25IndexBuilder()(_, ctx_question)
-                             |> ReduceRankGPTReranker(batch_size=30, model="gpt4om")(_, ctx_question)
+                             |> CTX_unwrapp(BM25IndexBuilder()(CTX_wrapper(_,ctx_question)))
+                             |> CTX_unwrapp(ReduceRankGPTReranker(batch_size=30, model="gpt4om")(CTX_wrapper(_, ctx_question)))
                              |> workspace_ctx
                              |> ws_age(_, max_history=5)
                              |> ws_changes
-                             |> workspace_ctx_2_string)
+                             |> workspace_ctx_2_string(_...))
     # ctx_jl_pkg      = @pipe (JuliaPackageContext()
     #                       |> entr_tracker()
     #                       |> BM25IndexBuilder()(_, ctx_question)
     #                       |> ReduceRankGPTReranker(batch_size=40)(_, ctx_question)
     #                       |> age_filter
     #                       |> changes_tracker
-    #                       |> pkg_ctx_2_string)
+    #                       |> julia_ctx_2_string)
     
     context_combiner!(user_question, ctx_shell, ctx_codebase) |> _add_user_message!
 
