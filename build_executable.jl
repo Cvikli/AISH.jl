@@ -6,4 +6,5 @@ create_app(".", "aish_executable";
     include_transitive_dependencies=true,
     filter_stdlibs=false,
     force=true,
+    incremental=false
 )

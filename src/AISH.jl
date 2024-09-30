@@ -29,6 +29,7 @@ using EasyContext: shell_format_description
 using EasyContext: julia_format_description
 using EasyContext: get_cache_setting
 using EasyContext: FullFileChunker
+using EasyContext: codeblock_runner
 
 include("utils.jl")
 include("arg_parser.jl")
@@ -80,17 +81,17 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
     ctx_question    = user_question |> question_acc 
     ctx_shell       = extractor |> shell_ctx_2_string #format_shell_results_to_context(extractor.shell_results)
     ctx_codebase    = begin 
-                             _0 = workspace(FullFileChunker())
-                             if isempty(_0) 
-                              ""  
-                             else
-                              _1 = CTX_unwrapp(EmbeddingIndexBuilder()(CTX_wrapper(_0,ctx_question)))
-                              _2 = CTX_unwrapp(ReduceRankGPTReranker(batch_size=30, model="gpt4om")(CTX_wrapper(_1, ctx_question)))
-                              _3 = workspace_ctx(_2)
-                              _4 = ws_age(_3, max_history=5)
-                              _5 = ws_changes(_4)
-                              _6 = workspace_ctx_2_string(_5...)
-                             end
+                        _0 = workspace(FullFileChunker())
+                        if isempty(_0) 
+                          ""  
+                        else
+                          _1 = CTX_unwrapp(EmbeddingIndexBuilder()(CTX_wrapper(_0,ctx_question)))
+                          _2 = CTX_unwrapp(ReduceRankGPTReranker(batch_size=30, model="gpt4om")(CTX_wrapper(_1, ctx_question)))
+                          _3 = workspace_ctx(_2)
+                          _4 = ws_age(_3, max_history=5)
+                          _5 = ws_changes(_4)
+                          _6 = workspace_ctx_2_string(_5...)
+                        end
     end
     # ctx_jl_pkg      = @pipe (JuliaPackageContext()
     #                       |> entr_tracker()
