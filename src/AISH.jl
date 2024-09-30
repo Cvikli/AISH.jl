@@ -1,11 +1,11 @@
 
 module AISH
 
-using Pipe
+using Chain
 
 using EasyContext: get_processor_description, ContextNode
 using EasyContext: ConversationProcessor, ConversationProcessorr
-using EasyContext: Workspace, CreateWorkspace
+using EasyContext: Workspace, WorkspaceLoader
 using EasyContext: format_shell_results_to_context
 using EasyContext: greet, Context
 using EasyContext: update_last_user_message_meta
@@ -30,6 +30,7 @@ using EasyContext: julia_format_description
 using EasyContext: get_cache_setting
 using EasyContext: FullFileChunker
 using EasyContext: codeblock_runner
+using EasyContext: OpenAIBatchEmbedder
 
 include("utils.jl")
 include("arg_parser.jl")
@@ -39,24 +40,27 @@ include("AI_prompt.jl")
 function start_conversation(user_question=""; resume, streaming, project_paths, logdir, show_tokens, silent, loop=true)
 
   # init
-  workspace       = CreateWorkspace(project_paths)
+  workspace       = WorkspaceLoader(project_paths)
   extractor       = CodeBlockExtractor()
   # package_ctx     = JuliaPackageContext()
   llm_solve       = StreamingLLMProcessor()
   persister       = Persistable(logdir)
-  ws_age          = AgeTracker()
-  ws_changes      = ChangeTracker()
+
+  file_embedder   = EmbeddingIndexBuilder(embedder=OpenAIBatchEmbedder(; model="text-embedding-3-small"))
   workspace_ctx   = Context()
+  ws_age!         = AgeTracker()
+  ws_changes      = ChangeTracker()
   question_acc    = QuestionAccumulatorProcessor()
 
+
   sys_msg         = SYSTEM_PROMPT(ChatSH)
-  sys_msg        *= workspace_format_description() # get_processor_description(:CodebaseContext,     codebase_context)
-  sys_msg        *= shell_format_description() # get_processor_description(:ShellResults,        shell_context)
-  sys_msg        *= julia_format_description() # get_processor_description(:JuliaPackageContext, package_context)
+  sys_msg        *= workspace_format_description()
+  sys_msg        *= shell_format_description()
+  sys_msg        *= julia_format_description()
   conversation    = ConversationProcessorr(sys_msg=sys_msg)
 
   
-  # prepare
+  # prepare 
   print_project_tree(workspace, show_tokens=show_tokens)
   set_terminal_title("AISH $(workspace.common_path)")
 
@@ -76,26 +80,30 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
 
     ctx_question    = user_question |> question_acc 
     ctx_shell       = extractor |> shell_ctx_2_string #format_shell_results_to_context(extractor.shell_results)
-    ctx_codebase    = begin 
-                        _0 = workspace(FullFileChunker())
-                        if isempty(_0)
+    @show workspace_ctx
+    ctx_codebase    = @chain workspace(FullFileChunker()) begin 
+                        if isempty(_)
                           ""  
                         else
-                          _1 = CTX_unwrapp(EmbeddingIndexBuilder()(CTX_wrapper(_0,ctx_question)))
-                          _2 = CTX_unwrapp(ReduceRankGPTReranker(batch_size=30, model="gpt4om")(CTX_wrapper(_1, ctx_question)))
-                          _3 = workspace_ctx(_2)
-                          _4 = ws_age(_3, max_history=5)
-                          _5 = ws_changes(_4)
-                          _6 = workspace_ctx_2_string(_5...)
+                          @chain _ begin
+                            CTX_unwrapp(file_embedder(CTX_wrapper(_, ctx_question)))
+                            CTX_unwrapp(ReduceRankGPTReranker(batch_size=30, model="gpt4om")(CTX_wrapper(_, ctx_question)))
+                            workspace_ctx
+                            ws_age!(_, max_history=5)
+                            ws_changes
+                            workspace_ctx_2_string(_...)
+                          end
                         end
     end
-    # ctx_jl_pkg      = @pipe (JuliaPackageContext()
-    #                       |> entr_tracker()
-    #                       |> BM25IndexBuilder()(_, ctx_question)
-    #                       |> ReduceRankGPTReranker(batch_size=40)(_, ctx_question)
-    #                       |> age_filter
-    #                       |> changes_tracker
-    #                       |> julia_ctx_2_string)
+    @show workspace_ctx
+    # ctx_jl_pkg      = @chain JuliaPackageContext() begin
+    #                       entr_tracker()
+    #                       BM25IndexBuilder()(_, ctx_question)
+    #                       ReduceRankGPTReranker(batch_size=40)(_, ctx_question)
+    #                       jl_age(_, max_history=5)
+    #                       jl_changes
+    #                       julia_ctx_2_string
+    # end
     
     context_combiner!(user_question, ctx_shell, ctx_codebase) |> _add_user_message!
 
