@@ -68,10 +68,10 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   # codebase_context = ContextNode(tag="Codebase", element="File")
   # package_context  = ContextNode(tag="Functions", element="Function")
   
-  _add_user_message!(msg)     = add_user_message!(conversation, msg)
-  _add_ai_message!(msg)       = add_ai_message!(conversation, msg)
-  _add_error_message!(msg)    = add_error_message!(conversation, msg)
-  to_disk!()                  = to_disk_custom!(conversation, persister)
+  _add_user_message!(msg)  = add_user_message!(conversation, msg)
+  _add_ai_message!(msg)    = add_ai_message!(conversation, msg)
+  _add_error_message!(msg) = add_error_message!(conversation, msg)
+  to_disk!()               = to_disk_custom!(conversation, persister)
 
   # forward
   while loop || !isempty(user_question)
@@ -82,7 +82,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
     ctx_shell       = extractor |> shell_ctx_2_string #format_shell_results_to_context(extractor.shell_results)
     ctx_codebase    = begin 
                         _0 = workspace(FullFileChunker())
-                        if isempty(_0) 
+                        if isempty(_0)
                           ""  
                         else
                           _1 = CTX_unwrapp(EmbeddingIndexBuilder()(CTX_wrapper(_0,ctx_question)))

@@ -47,10 +47,11 @@ code_snippets
 This way you can talk or highlight codes.
 
 
-to edit javascript .js, julia .jl or any other file every case if you want to change the content! 
+To edit javascript .js, julia .jl or any other file every case if you want to change the content! 
 
 Always use the "// ... existing code ..." if you skip or leave out codepart! 
 
+To create file you have to use correct file_path and to modify you also has to use the right filepath! 
 	
 Try to use oneliner whenever it is possible!
 
