@@ -23,7 +23,6 @@ using EasyContext: to_disk_custom!
 using EasyContext: extract_and_preprocess_codeblocks
 using EasyContext: LLM_conditonal_apply_changes
 using EasyContext: full_file_chunker
-using EasyContext: CTX_wrapper, CTX_unwrapp
 using EasyContext: workspace_format_description
 using EasyContext: shell_format_description
 using EasyContext: julia_format_description
@@ -46,7 +45,6 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   llm_solve       = StreamingLLMProcessor()
   persister       = Persistable(logdir)
 
-  file_embedder   = EmbeddingIndexBuilder(embedder=OpenAIBatchEmbedder(; model="text-embedding-3-small"))
   workspace_ctx   = Context()
   ws_age!         = AgeTracker()
   ws_changes      = ChangeTracker()
@@ -86,8 +84,8 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
                           ""  
                         else
                           @chain _ begin
-                            CTX_unwrapp(file_embedder(CTX_wrapper(_, ctx_question)))
-                            CTX_unwrapp(ReduceRankGPTReranker(batch_size=30, model="gpt4om")(CTX_wrapper(_, ctx_question)))
+                            EmbeddingIndexBuilder()(_, ctx_question)
+                            ReduceRankGPTReranker(batch_size=30, model="gpt4om")(_, ctx_question)
                             workspace_ctx
                             ws_age!(_, max_history=5)
                             ws_changes
