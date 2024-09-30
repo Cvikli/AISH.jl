@@ -78,7 +78,6 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
 
     ctx_question    = user_question |> question_acc 
     ctx_shell       = extractor |> shell_ctx_2_string #format_shell_results_to_context(extractor.shell_results)
-    @show workspace_ctx
     ctx_codebase    = @chain workspace(FullFileChunker()) begin 
                         if isempty(_)
                           ""  
@@ -93,7 +92,6 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
                           end
                         end
     end
-    @show workspace_ctx
     # ctx_jl_pkg      = @chain JuliaPackageContext() begin
     #                       entr_tracker()
     #                       BM25IndexBuilder()(_, ctx_question)
