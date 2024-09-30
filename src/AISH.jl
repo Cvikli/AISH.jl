@@ -64,10 +64,6 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
   !silent && isempty(user_question) && println("Your multiline input (empty line to finish):")
 
-  # shell_context    = ContextNode(tag="ShellRunResults", element="sh_script")
-  # codebase_context = ContextNode(tag="Codebase", element="File")
-  # package_context  = ContextNode(tag="Functions", element="Function")
-  
   _add_user_message!(msg)  = add_user_message!(conversation, msg)
   _add_ai_message!(msg)    = add_ai_message!(conversation, msg)
   _add_error_message!(msg) = add_error_message!(conversation, msg)
