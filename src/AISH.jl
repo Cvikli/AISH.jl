@@ -115,6 +115,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
     )
 
     user_question=""
+    silent && break
   end
 end
 
@@ -135,7 +136,7 @@ function main(;contexter=nothing, loop=true)
         contexter=contexter,
   )
 end
-julia_main(;contexter=nothing, loop=true) = main(;contexter, loop)
+julia_main(;loop=true) = main(;loop)
 
 export main, julia_main
 

@@ -51,8 +51,6 @@ To edit javascript .js, julia .jl or any other file every case if you want to ch
 
 Always use the "// ... existing code ..." if you skip or leave out codepart! 
 
-To create file you have to use correct file_path and to modify you also has to use the right filepath! 
-	
 Try to use oneliner whenever it is possible!
 
 If you asked to run an sh block. Never do it! You MUSTN'T run any sh block, it will be run by the SYSTEM later! You propose the sh script that should be run in a most concise short way and wait for feedback!
