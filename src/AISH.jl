@@ -15,7 +15,7 @@ using EasyContext: workspace_ctx_2_string, julia_ctx_2_string, shell_ctx_2_strin
 using EasyContext: ChangeTracker, AgeTracker
 using EasyContext: StreamingLLMProcessor
 using EasyContext: CodeBlockExtractor, Persistable
-using EasyContext: BM25IndexBuilder
+using EasyContext: BM25IndexBuilder, EmbeddingIndexBuilder
 using EasyContext: ReduceRankGPTReranker, QuestionAccumulatorProcessor
 using EasyContext: print_project_tree
 using EasyContext: context_combiner!
@@ -27,6 +27,8 @@ using EasyContext: CTX_wrapper, CTX_unwrapp
 using EasyContext: workspace_format_description
 using EasyContext: shell_format_description
 using EasyContext: julia_format_description
+using EasyContext: get_cache_setting
+using EasyContext: FullFileChunker
 
 include("utils.jl")
 include("arg_parser.jl")
@@ -77,14 +79,19 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
 
     ctx_question    = user_question |> question_acc 
     ctx_shell       = extractor |> shell_ctx_2_string #format_shell_results_to_context(extractor.shell_results)
-    ctx_codebase    = @pipe (workspace()  # CodebaseContextV3 
-                             |> full_file_chunker
-                             |> CTX_unwrapp(BM25IndexBuilder()(CTX_wrapper(_,ctx_question)))
-                             |> CTX_unwrapp(ReduceRankGPTReranker(batch_size=30, model="gpt4om")(CTX_wrapper(_, ctx_question)))
-                             |> workspace_ctx
-                             |> ws_age(_, max_history=5)
-                             |> ws_changes
-                             |> workspace_ctx_2_string(_...))
+    ctx_codebase    = begin 
+                             _0 = workspace(FullFileChunker())
+                             if isempty(_0) 
+                              ""  
+                             else
+                              _1 = CTX_unwrapp(EmbeddingIndexBuilder()(CTX_wrapper(_0,ctx_question)))
+                              _2 = CTX_unwrapp(ReduceRankGPTReranker(batch_size=30, model="gpt4om")(CTX_wrapper(_1, ctx_question)))
+                              _3 = workspace_ctx(_2)
+                              _4 = ws_age(_3, max_history=5)
+                              _5 = ws_changes(_4)
+                              _6 = workspace_ctx_2_string(_5...)
+                             end
+    end
     # ctx_jl_pkg      = @pipe (JuliaPackageContext()
     #                       |> entr_tracker()
     #                       |> BM25IndexBuilder()(_, ctx_question)
@@ -110,7 +117,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   end
 end
 
-function start(message=""; resume=false, streaming=true, project_paths=String[], logdir, contexter=nothing, show_tokens=false, loop=true)
+function start(message=""; resume=false, streaming=true, project_paths=String[], logdir="", contexter=nothing, show_tokens=false, loop=true)
   nice_exit_handler()
   start_conversation(message; loop, resume, streaming, project_paths, logdir, show_tokens, silent=!isempty(message))
 end
