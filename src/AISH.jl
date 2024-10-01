@@ -3,7 +3,7 @@ module AISH
 
 using Chain
 
-using EasyContext: get_processor_description, ContextNode
+using EasyContext: get_processor_description
 using EasyContext: ConversationCTX
 using EasyContext: Workspace, WorkspaceLoader
 using EasyContext: format_shell_results_to_context
@@ -58,10 +58,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   llm_solve       = StreamingLLMProcessor()
   persister       = Persistable(logdir)
 
-
-
   question_acc    = QuestionCTX()
-
 
   sys_msg         = SYSTEM_PROMPT(ChatSH)
   sys_msg        *= workspace_format_description()
@@ -75,8 +72,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   set_terminal_title("AISH $(workspace.common_path)")
 
   !silent && greet(ChatSH, llm_solve)
-  isdefined(Base, :active_repl) && println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ")
-  !silent && isempty(user_question) && println("Your multiline input (empty line to finish):")
+  !silent && isempty(user_question) && (isdefined(Base, :active_repl) ? println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ") : println("Your multiline input (empty line to finish):"))
 
   _add_error_message!(msg) = add_error_message!(conv_ctx, msg)
   to_disk!()               = to_disk_custom!(conv_ctx, persister)
