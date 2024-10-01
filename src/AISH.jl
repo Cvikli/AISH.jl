@@ -4,7 +4,7 @@ module AISH
 using Chain
 
 using EasyContext: get_processor_description, ContextNode
-using EasyContext: ConversationProcessor, ConversationProcessorr
+using EasyContext: ConversationCTX, ConversationProcessorr
 using EasyContext: Workspace, WorkspaceLoader
 using EasyContext: format_shell_results_to_context
 using EasyContext: greet, Context
@@ -16,7 +16,7 @@ using EasyContext: ChangeTracker, AgeTracker
 using EasyContext: StreamingLLMProcessor
 using EasyContext: CodeBlockExtractor, Persistable
 using EasyContext: BM25IndexBuilder, EmbeddingIndexBuilder
-using EasyContext: ReduceRankGPTReranker, QuestionAccumulatorProcessor
+using EasyContext: ReduceRankGPTReranker, QuestionCTX
 using EasyContext: print_project_tree
 using EasyContext: context_combiner!
 using EasyContext: to_disk_custom!
@@ -48,7 +48,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   workspace_ctx   = Context()
   ws_age!         = AgeTracker()
   ws_changes      = ChangeTracker()
-  question_acc    = QuestionAccumulatorProcessor()
+  question_acc    = QuestionCTX()
 
 
   sys_msg         = SYSTEM_PROMPT(ChatSH)
