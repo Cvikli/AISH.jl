@@ -30,6 +30,7 @@ using EasyContext: get_cache_setting
 using EasyContext: FullFileChunker
 using EasyContext: codeblock_runner
 using EasyContext: OpenAIBatchEmbedder
+using EasyContext: JuliaLoader, JuliaSourceChunker
 using EasyContext
 
 include("utils.jl")
@@ -41,17 +42,24 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
 
   # init
   workspace       = WorkspaceLoader(project_paths)
-  similarity_filterer = create_combined_index_builder(top_k=30)
-  reranker_filterer   = ReduceRankGPTReranker(batch_size=30, model="gpt4om")
-
-  extractor       = CodeBlockExtractor()
-  # package_ctx     = JuliaPackageContext()
-  llm_solve       = StreamingLLMProcessor()
-  persister       = Persistable(logdir)
-
   workspace_ctx   = Context()
   ws_age!         = AgeTracker()
   ws_changes      = ChangeTracker()
+
+  similarity_filterer = create_combined_index_builder(top_k=30)
+  reranker_filterer   = ReduceRankGPTReranker(batch_size=30, model="gpt4om")
+
+  julia_pkgs      = JuliaLoader()
+  julia_ctx       = Context()
+  jl_age!         = AgeTracker()
+  jl_changes      = ChangeTracker()
+
+  extractor       = CodeBlockExtractor()
+  llm_solve       = StreamingLLMProcessor()
+  persister       = Persistable(logdir)
+
+
+
   question_acc    = QuestionCTX()
 
 
@@ -88,22 +96,28 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
       else
         file_chunks_selected = similarity_filterer(file_chunks, ctx_question)
         file_chunks_reranked = reranker_filterer(file_chunks_selected, ctx_question)
-        merged_file_chunks = workspace_ctx(file_chunks_reranked)
+        merged_file_chunks   = workspace_ctx(file_chunks_reranked)
         ws_age!(merged_file_chunks, max_history=5)
-        state, scr_content = ws_changes(merged_file_chunks)
+        state, scr_content   = ws_changes(merged_file_chunks)
         workspace_ctx_2_string(state, scr_content)
       end
     end
-    # ctx_jl_pkg      = @chain JuliaPackageContext() begin
-    #                       entr_tracker()
-    #                       BM25IndexBuilder()(_, ctx_question)
-    #                       ReduceRankGPTReranker(batch_size=40)(_, ctx_question)
-    #                       jl_age(_, max_history=5)
-    #                       jl_changes
-    #                       julia_ctx_2_string
-    # end
+    ctx_jl_pkg      = begin
+      file_chunks = julia_pkgs(JuliaSourceChunker())
+      if isempty(file_chunks)
+        ""
+      else
+        # entr_tracker()
+        file_chunks_selected = similarity_filterer(file_chunks, ctx_question)
+        file_chunks_reranked = reranker_filterer(file_chunks_selected, ctx_question)
+        merged_file_chunks   = julia_ctx(file_chunks_reranked)
+        jl_age!(merged_file_chunks, max_history=5)
+        state, scr_content   = jl_changes(merged_file_chunks)
+        julia_ctx_2_string(state, scr_content)
+      end
+    end
     
-    query = context_combiner!(user_question, ctx_shell, ctx_codebase)
+    query = context_combiner!(user_question, ctx_shell, ctx_codebase, ctx_jl_pkg)
 
     conversation  = conv_ctx(create_user_message(query))
 
@@ -119,7 +133,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
                       on_done     = ()       -> codeblock_runner(extractor),
                       on_error    = (error)  -> ((user_question = "ERROR: $error"); to_disk!()),
     )
-
+  
     silent && break
   end
 end
