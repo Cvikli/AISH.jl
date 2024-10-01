@@ -41,6 +41,9 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
 
   # init
   workspace       = WorkspaceLoader(project_paths)
+  similarity_filterer = create_combined_index_builder(top_k=30)
+  reranker_filterer   = ReduceRankGPTReranker(batch_size=30, model="gpt4om")
+
   extractor       = CodeBlockExtractor()
   # package_ctx     = JuliaPackageContext()
   llm_solve       = StreamingLLMProcessor()
@@ -78,19 +81,18 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
 
     ctx_question    = user_question |> question_acc 
     ctx_shell       = extractor |> shell_ctx_2_string #format_shell_results_to_context(extractor.shell_results)
-    ctx_codebase    = @chain workspace(FullFileChunker()) begin 
-                        if isempty(_)
-                          ""  
-                        else
-                          @chain _ begin
-                            EmbeddingIndexBuilder()(_, ctx_question)
-                            ReduceRankGPTReranker(batch_size=30, model="gpt4om")(_, ctx_question)
-                            workspace_ctx
-                            ws_age!(_, max_history=5)
-                            ws_changes
-                            workspace_ctx_2_string(_...)
-                          end
-                        end
+    ctx_codebase    = begin 
+      file_chunks = workspace(FullFileChunker()) 
+      if isempty(file_chunks)
+        ""  
+      else
+        file_chunks_selected = similarity_filterer(file_chunks, ctx_question)
+        file_chunks_reranked = reranker_filterer(file_chunks_selected, ctx_question)
+        merged_file_chunks = workspace_ctx(file_chunks_reranked)
+        ws_age!(merged_file_chunks, max_history=5)
+        state, scr_content = ws_changes(merged_file_chunks)
+        workspace_ctx_2_string(state, scr_content)
+      end
     end
     # ctx_jl_pkg      = @chain JuliaPackageContext() begin
     #                       entr_tracker()
