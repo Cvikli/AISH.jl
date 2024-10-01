@@ -4,7 +4,7 @@ using AISH
 @testset "Conversation Initialization" begin
     # Mock the necessary components
     workspace = AISH.WorkspaceLoader(["."])
-    conversation = AISH.ConversationProcessorr(sys_msg="Test system message")
+    conversation = AISH.ConversationCTX(sys_msg="Test system message")
     
     @test conversation.messages[1].role == "system"
     @test conversation.messages[1].content == "Test system message"
