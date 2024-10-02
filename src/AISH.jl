@@ -49,7 +49,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   julia_pkgs      = JuliaLoader()
   julia_ctx       = Context()
   jl_age!         = AgeTracker()
-  jl_changes      = ChangeTracker()
+  jl_changes      = ChangeTracker(;need_source_reparse=false)
   jl_simi_filter = create_combined_index_builder(top_k=30)
   
   reranker_filterer   = ReduceRankGPTReranker(batch_size=30, model="gpt4om")
