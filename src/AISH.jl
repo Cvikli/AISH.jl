@@ -30,7 +30,7 @@ using EasyContext: get_cache_setting
 using EasyContext: FullFileChunker
 using EasyContext: codeblock_runner
 using EasyContext: OpenAIBatchEmbedder
-using EasyContext: JuliaLoader, JuliaSourceChunker
+using EasyContext: JuliaLoader, JuliaSourceChunker, SourceChunker
 using EasyContext
 
 include("utils.jl")
@@ -45,14 +45,16 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   workspace_ctx   = Context()
   ws_age!         = AgeTracker()
   ws_changes      = ChangeTracker()
+  ws_simi_filterer = create_combined_index_builder(top_k=30)
 
-  similarity_filterer = create_combined_index_builder(top_k=30)
-  reranker_filterer   = ReduceRankGPTReranker(batch_size=30, model="gpt4om")
-
+  
   julia_pkgs      = JuliaLoader()
   julia_ctx       = Context()
   jl_age!         = AgeTracker()
   jl_changes      = ChangeTracker()
+  jl_simi_filter = create_combined_index_builder(top_k=30)
+  
+  reranker_filterer   = ReduceRankGPTReranker(batch_size=30, model="gpt4om")
 
   extractor       = CodeBlockExtractor()
   llm_solve       = StreamingLLMProcessor()
@@ -90,7 +92,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
       if isempty(file_chunks)
         ""  
       else
-        file_chunks_selected = similarity_filterer(file_chunks, ctx_question)
+        file_chunks_selected = ws_simi_filterer(file_chunks, ctx_question)
         file_chunks_reranked = reranker_filterer(file_chunks_selected, ctx_question)
         merged_file_chunks   = workspace_ctx(file_chunks_reranked)
         ws_age!(merged_file_chunks, max_history=5)
@@ -99,12 +101,13 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
       end
     end
     ctx_jl_pkg      = begin
-      file_chunks = julia_pkgs(JuliaSourceChunker())
+      file_chunks = julia_pkgs(SourceChunker())
+      @show file_chunks
       if isempty(file_chunks)
         ""
       else
         # entr_tracker()
-        file_chunks_selected = similarity_filterer(file_chunks, ctx_question)
+        file_chunks_selected = jl_simi_filter(file_chunks, ctx_question)
         file_chunks_reranked = reranker_filterer(file_chunks_selected, ctx_question)
         merged_file_chunks   = julia_ctx(file_chunks_reranked)
         jl_age!(merged_file_chunks, max_history=5)
@@ -112,7 +115,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
         julia_ctx_2_string(state, scr_content)
       end
     end
-    
+    # @show ctx_jl_pkg
     query = context_combiner!(user_question, ctx_shell, ctx_codebase, ctx_jl_pkg)
 
     conversation  = conv_ctx(create_user_message(query))
