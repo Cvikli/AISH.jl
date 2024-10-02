@@ -81,7 +81,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   while loop || !isempty(user_question)
 
     user_question   = isempty(user_question) ? wait_user_question(user_question) : user_question
-    println("Thinking...")
+    !silent && println("Thinking...")  # Only print if not silent
 
     ctx_question    = user_question |> question_acc 
     ctx_shell       = extractor |> shell_ctx_2_string #format_shell_results_to_context(extractor.shell_results)
