@@ -1,8 +1,6 @@
 
 module AISH
 
-using Chain
-
 using EasyContext: get_processor_description
 using EasyContext: ConversationCTX
 using EasyContext: Workspace, WorkspaceLoader
@@ -102,7 +100,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
     end
     ctx_jl_pkg      = begin
       file_chunks = julia_pkgs(SourceChunker())
-      @show file_chunks
+    #   if isempty(file_chunks)
       if isempty(file_chunks)
         ""
       else

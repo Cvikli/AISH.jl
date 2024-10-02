@@ -1,4 +1,5 @@
 using AISH
+using EasyContext
 
 # Simulate a basic run of the main function
-AISH.main(loop=false)
+main(loop=false)

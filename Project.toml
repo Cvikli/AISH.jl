@@ -5,6 +5,5 @@ version = "1.0.0"
 
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
-Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
 EasyContext = "5067fbba-b9ec-41e5-aa31-a8c1ac509a30"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
