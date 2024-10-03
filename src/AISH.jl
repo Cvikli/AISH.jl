@@ -43,6 +43,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   ws_age!         = AgeTracker()
   ws_changes      = ChangeTracker()
   ws_simi_filterer = create_combined_index_builder(top_k=30)
+  ws_reranker_filterer   = ReduceRankGPTReranker(batch_size=30, model="gpt4om")
 
   
   julia_pkgs_cached= CachedLoader(loader=JuliaLoader())
@@ -52,7 +53,6 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   jl_simi_filter = create_combined_index_builder(top_k=120)
   jl_reranker_filterer   = ReduceRankGPTReranker(batch_size=40, model="gpt4om")
   
-  reranker_filterer   = ReduceRankGPTReranker(batch_size=30, model="gpt4om")
 
   extractor       = CodeBlockExtractor()
   llm_solve       = StreamingLLMProcessor()
@@ -87,7 +87,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
     ctx_codebase    = @async begin 
       file_chunks = workspace(FullFileChunker()) 
       file_chunks_selected = ws_simi_filterer(file_chunks, ctx_question)
-      file_chunks_reranked = reranker_filterer(file_chunks_selected, ctx_question)
+      file_chunks_reranked = ws_reranker_filterer(file_chunks_selected, ctx_question)
       merged_file_chunks   = workspace_ctx(file_chunks_reranked)
       ws_age!(merged_file_chunks, max_history=5)
       state, scr_content   = ws_changes(merged_file_chunks)
