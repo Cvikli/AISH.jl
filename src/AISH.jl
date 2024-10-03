@@ -1,6 +1,7 @@
 
 module AISH
 
+using BoilerplateCvikli: @async_showerr
 using EasyContext: greet
 using EasyContext: update_last_user_message_meta
 using EasyContext: add_error_message!
@@ -54,8 +55,9 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
 
     ctx_question = user_question |> question_acc 
     ctx_shell    = extractor |> shell_ctx_2_string
-    ctx_codebase = @async process_workspace_context(workspace_context, ctx_question)
-    ctx_jl_pkg   = @async process_julia_context(julia_context, ctx_question)
+    ctx_codebase = @async_showerr process_workspace_context(workspace_context, ctx_question)
+    ctx_jl_pkg   = @async_showerr process_julia_context(julia_context, ctx_question)
+
 
     query = context_combiner!(
       user_question, 
