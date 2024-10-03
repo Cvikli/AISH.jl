@@ -48,7 +48,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
 
   
   jl_simi_filter       = create_combined_index_builder(top_k=120)
-  jl_pkg_index         = get_index(jl_simi_filter, Cacheable(loader=JuliaLoader())(SourceChunker()))
+  jl_pkg_index         = get_index(jl_simi_filter, CachedLoader(loader=JuliaLoader())(SourceChunker()))
   julia_ctx            = Context()
   jl_age!              = AgeTracker()
   jl_changes           = ChangeTracker(;need_source_reparse=false)
