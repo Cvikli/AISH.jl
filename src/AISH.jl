@@ -31,7 +31,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   # init
   workspace_context = init_workspace_context(project_paths)
   julia_context     = init_julia_context()
-  conv_ctx          = init_conversation_context()
+  conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH))
   
   question_acc      = QuestionCTX()  
   extractor         = CodeBlockExtractor()
@@ -42,8 +42,6 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   set_terminal_title("AISH $(workspace_context.workspace.common_path)")
   !silent && greet(ChatSH)
   !silent && isempty(user_question) && (isdefined(Base, :active_repl) ? println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ") : println("Your multiline input (empty line to finish):"))
-
-  to_disk!()        = to_disk_custom!(conv_ctx, persister)
 
   # forward
   while loop || !isempty(user_question)
@@ -72,9 +70,9 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
     error = LLM_solve(conversation, cache;
                       on_text     = (text)   -> extract_and_preprocess_codeblocks(text, extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb)),
                       on_meta_usr = (meta)   -> update_last_user_message_meta(conv_ctx, meta),
-                      on_meta_ai  = (ai_msg) -> (conv_ctx(ai_msg); to_disk!()),
+                      on_meta_ai  = (ai_msg) -> conv_ctx(ai_msg),
                       on_done     = ()       -> codeblock_runner(extractor),
-                      on_error    = (error)  -> (add_error_message!(conv_ctx,"ERROR: $error"); to_disk!()),
+                      on_error    = (error)  -> add_error_message!(conv_ctx,"ERROR: $error"),
     )
   
     silent && break
