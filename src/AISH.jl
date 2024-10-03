@@ -19,6 +19,8 @@ using EasyContext: shell_ctx_2_string
 using EasyContext: init_workspace_context
 using EasyContext: init_julia_context
 using EasyContext: init_conversation_context
+using EasyContext: process_workspace_context
+using EasyContext: process_julia_context
 using EasyContext
 
 include("utils.jl")

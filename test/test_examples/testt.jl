@@ -22,3 +22,28 @@ else
 	EasyContext.julia_ctx_2_string(state, scr_content)
 end
 
+
+#%%
+using EasyContext: JuliaLoader
+using EasyContext: SourceChunker
+using EasyContext: cache_key
+using SHA 
+
+function fn(loader, args...)
+	@show args
+	key = cache_key(loader, args...)
+	@show key
+end
+fn(JuliaLoader(), SourceChunker())
+cache_key(JuliaLoader(), SourceChunker())
+#%%
+using EasyContext: JuliaLoader
+using EasyContext: SourceChunker
+using EasyContext: cache_key
+
+using DataStructures
+using EasyContext: CachedLoader
+CachedLoader(loader=JuliaLoader(),memory=Dict{String,OrderedDict{String,String}}())(SourceChunker())
+
+#%%
+6d29165b79575b4e433503a474e87b33a90476664e462b94aae0610f225de6d3
