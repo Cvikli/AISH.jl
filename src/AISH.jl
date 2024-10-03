@@ -28,6 +28,7 @@ using EasyContext: codeblock_runner
 using EasyContext: OpenAIBatchEmbedder
 using EasyContext: JuliaLoader, JuliaSourceChunker, SourceChunker
 using EasyContext: CachedLoader
+using EasyContext: get_index
 using EasyContext
 
 include("utils.jl")
@@ -38,20 +39,20 @@ include("AI_prompt.jl")
 function start_conversation(user_question=""; resume, streaming, project_paths, logdir, show_tokens, silent, loop=true)
 
   # init
-  workspace       = WorkspaceLoader(project_paths)
-  workspace_ctx   = Context()
-  ws_age!         = AgeTracker()
-  ws_changes      = ChangeTracker()
-  ws_simi_filterer = create_combined_index_builder(top_k=30)
-  ws_reranker_filterer   = ReduceRankGPTReranker(batch_size=30, model="gpt4om")
+  workspace             = WorkspaceLoader(project_paths)
+  workspace_ctx         = Context()
+  ws_age!               = AgeTracker()
+  ws_changes            = ChangeTracker()
+  ws_simi_filterer      = create_combined_index_builder(top_k=30)
+  ws_reranker_filterer  = ReduceRankGPTReranker(batch_size=30, model="gpt4om")
 
   
-  julia_pkgs_cached= CachedLoader(loader=JuliaLoader())
-  julia_ctx       = Context()
-  jl_age!         = AgeTracker()
-  jl_changes      = ChangeTracker(;need_source_reparse=false)
-  jl_simi_filter = create_combined_index_builder(top_k=120)
-  jl_reranker_filterer   = ReduceRankGPTReranker(batch_size=40, model="gpt4om")
+  jl_simi_filter       = create_combined_index_builder(top_k=120)
+  jl_pkg_index         = get_index(jl_simi_filter, JuliaLoader()(SourceChunker()))
+  julia_ctx            = Context()
+  jl_age!              = AgeTracker()
+  jl_changes           = ChangeTracker(;need_source_reparse=false)
+  jl_reranker_filterer = ReduceRankGPTReranker(batch_size=40, model="gpt4om")
   
 
   extractor       = CodeBlockExtractor()
@@ -85,21 +86,21 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
     ctx_question    = user_question |> question_acc 
     ctx_shell       = extractor |> shell_ctx_2_string #format_shell_results_to_context(extractor.shell_results)
     ctx_codebase    = @async begin 
-      file_chunks = workspace(FullFileChunker()) 
-      file_chunks_selected = ws_simi_filterer(file_chunks, ctx_question)
+      file_chunks          = workspace(FullFileChunker()) 
+      index                = get_index(ws_simi_filterer, file_chunks)
+      file_chunks_selected = ws_simi_filterer(index, ctx_question)
       file_chunks_reranked = ws_reranker_filterer(file_chunks_selected, ctx_question)
       merged_file_chunks   = workspace_ctx(file_chunks_reranked)
-      ws_age!(merged_file_chunks, max_history=5)
+      ws_age!(merged_file_chunks, max_history=5, refresh_these=file_chunks_reranked)
       state, scr_content   = ws_changes(merged_file_chunks)
       workspace_ctx_2_string(state, scr_content)
     end
     ctx_jl_pkg      = @async begin
-      file_chunks = julia_pkgs_cached(SourceChunker())
+      file_chunks_selected = jl_simi_filter(jl_pkg_index, ctx_question)
       # entr_tracker()
-      file_chunks_selected = jl_simi_filter(file_chunks, ctx_question)
       file_chunks_reranked = jl_reranker_filterer(file_chunks_selected, ctx_question)
-      merged_file_chunks   = julia_ctx(file_chunks_reranked) # , refresh_these=file_chunks_reranked
-      jl_age!(merged_file_chunks, max_history=5)
+      merged_file_chunks   = julia_ctx(file_chunks_reranked)
+      jl_age!(merged_file_chunks, max_history=5, refresh_these=file_chunks_reranked)
       state, scr_content   = jl_changes(merged_file_chunks)
       julia_ctx_2_string(state, scr_content)
     end
