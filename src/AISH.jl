@@ -46,8 +46,8 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   ws_simi_filterer      = create_combined_index_builder(top_k=30)
   ws_reranker_filterer  = ReduceRankGPTReranker(batch_size=30, model="gpt4om")
 
-  
-  jl_simi_filter       = create_combined_index_builder(top_k=120)
+  voyage_embedder      = create_voyage_embedder(model="voyage-code-2")
+  jl_simi_filter       = create_combined_index_builder(voyage_embedder; top_k=120)
   jl_pkg_index         = get_index(jl_simi_filter, CachedLoader(loader=JuliaLoader())(SourceChunker()))
   julia_ctx            = Context()
   jl_age!              = AgeTracker()
