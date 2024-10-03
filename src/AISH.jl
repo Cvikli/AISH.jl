@@ -1,7 +1,6 @@
 
 module AISH
 
-using EasyContext: get_processor_description
 using EasyContext: ConversationCTX
 using EasyContext: Workspace, WorkspaceLoader
 using EasyContext: format_shell_results_to_context
@@ -20,7 +19,6 @@ using EasyContext: context_combiner!
 using EasyContext: to_disk_custom!
 using EasyContext: extract_and_preprocess_codeblocks
 using EasyContext: LLM_conditonal_apply_changes
-using EasyContext: full_file_chunker
 using EasyContext: workspace_format_description
 using EasyContext: shell_format_description
 using EasyContext: julia_format_description
@@ -45,12 +43,12 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   ws_changes      = ChangeTracker()
   ws_simi_filterer = create_combined_index_builder(top_k=30)
 
-  
   julia_pkgs      = JuliaLoader()
   julia_ctx       = Context()
   jl_age!         = AgeTracker()
   jl_changes      = ChangeTracker(;need_source_reparse=false)
-  jl_simi_filter = create_combined_index_builder(top_k=30)
+  jl_simi_filter = create_combined_index_builder(top_k=120)
+  jl_reranker_filterer   = ReduceRankGPTReranker(batch_size=40, model="gpt4om")
   
   reranker_filterer   = ReduceRankGPTReranker(batch_size=30, model="gpt4om")
 
@@ -66,7 +64,6 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   sys_msg        *= julia_format_description()
   conv_ctx        = ConversationCTX_from_sysmsg(sys_msg=sys_msg)
 
-  
   # prepare 
   print_project_tree(workspace, show_tokens=show_tokens)
   set_terminal_title("AISH $(workspace.common_path)")
@@ -85,34 +82,27 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
 
     ctx_question    = user_question |> question_acc 
     ctx_shell       = extractor |> shell_ctx_2_string #format_shell_results_to_context(extractor.shell_results)
-    ctx_codebase    = begin 
+    ctx_codebase    = @async begin 
       file_chunks = workspace(FullFileChunker()) 
-      if isempty(file_chunks)
-        ""  
-      else
-        file_chunks_selected = ws_simi_filterer(file_chunks, ctx_question)
-        file_chunks_reranked = reranker_filterer(file_chunks_selected, ctx_question)
-        merged_file_chunks   = workspace_ctx(file_chunks_reranked)
-        ws_age!(merged_file_chunks, max_history=5)
-        state, scr_content   = ws_changes(merged_file_chunks)
-        workspace_ctx_2_string(state, scr_content)
-      end
+      file_chunks_selected = ws_simi_filterer(file_chunks, ctx_question)
+      file_chunks_reranked = reranker_filterer(file_chunks_selected, ctx_question)
+      merged_file_chunks   = workspace_ctx(file_chunks_reranked)
+      ws_age!(merged_file_chunks, max_history=5)
+      state, scr_content   = ws_changes(merged_file_chunks)
+      workspace_ctx_2_string(state, scr_content)
     end
-    ctx_jl_pkg      = begin
+    ctx_jl_pkg      = @async begin
       file_chunks = julia_pkgs(SourceChunker())
-    #   if isempty(file_chunks)
-      if isempty(file_chunks)
-        ""
-      else
-        # entr_tracker()
-        file_chunks_selected = jl_simi_filter(file_chunks, ctx_question)
-        file_chunks_reranked = reranker_filterer(file_chunks_selected, ctx_question)
-        merged_file_chunks   = julia_ctx(file_chunks_reranked)
-        jl_age!(merged_file_chunks, max_history=5)
-        state, scr_content   = jl_changes(merged_file_chunks)
-        julia_ctx_2_string(state, scr_content)
-      end
+      # entr_tracker()
+      file_chunks_selected = jl_simi_filter(file_chunks, ctx_question)
+      file_chunks_reranked = jl_reranker_filterer(file_chunks_selected, ctx_question)
+      merged_file_chunks   = julia_ctx(file_chunks_reranked)
+      jl_age!(merged_file_chunks, max_history=5)
+      state, scr_content   = jl_changes(merged_file_chunks)
+      julia_ctx_2_string(state, scr_content)
     end
+
+    ctx_codebase, ctx_jl_pkg = fetch.((ctx_codebase, ctx_jl_pkg))
     # @show ctx_jl_pkg
     query = context_combiner!(user_question, ctx_shell, ctx_codebase, ctx_jl_pkg)
 
@@ -120,7 +110,6 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
 
     reset!(extractor)
     user_question = ""
-
 
     cache = get_cache_setting(conv_ctx)
     error = llm_solve(conversation, cache;
