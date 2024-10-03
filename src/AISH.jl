@@ -27,6 +27,7 @@ using EasyContext: FullFileChunker
 using EasyContext: codeblock_runner
 using EasyContext: OpenAIBatchEmbedder
 using EasyContext: JuliaLoader, JuliaSourceChunker, SourceChunker
+using EasyContext: CachedLoader
 using EasyContext
 
 include("utils.jl")
@@ -43,7 +44,8 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   ws_changes      = ChangeTracker()
   ws_simi_filterer = create_combined_index_builder(top_k=30)
 
-  julia_pkgs      = JuliaLoader()
+  
+  julia_pkgs_cached= CachedLoader(loader=JuliaLoader())
   julia_ctx       = Context()
   jl_age!         = AgeTracker()
   jl_changes      = ChangeTracker(;need_source_reparse=false)
@@ -92,11 +94,11 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
       workspace_ctx_2_string(state, scr_content)
     end
     ctx_jl_pkg      = @async begin
-      file_chunks = julia_pkgs(SourceChunker())
+      file_chunks = julia_pkgs_cached(SourceChunker())
       # entr_tracker()
       file_chunks_selected = jl_simi_filter(file_chunks, ctx_question)
       file_chunks_reranked = jl_reranker_filterer(file_chunks_selected, ctx_question)
-      merged_file_chunks   = julia_ctx(file_chunks_reranked)
+      merged_file_chunks   = julia_ctx(file_chunks_reranked) # , refresh_these=file_chunks_reranked
       jl_age!(merged_file_chunks, max_history=5)
       state, scr_content   = jl_changes(merged_file_chunks)
       julia_ctx_2_string(state, scr_content)
