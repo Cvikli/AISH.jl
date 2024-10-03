@@ -15,6 +15,7 @@ using EasyContext: extract_and_preprocess_codeblocks
 using EasyContext: LLM_conditonal_apply_changes
 using EasyContext: get_cache_setting
 using EasyContext: codeblock_runner
+using EasyContext: shell_ctx_2_string
 using EasyContext: init_workspace_context
 using EasyContext: init_julia_context
 using EasyContext: init_conversation_context
