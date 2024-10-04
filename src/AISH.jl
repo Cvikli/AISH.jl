@@ -21,7 +21,7 @@ using EasyContext: init_julia_context
 using EasyContext: init_conversation_context
 using EasyContext: process_workspace_context
 using EasyContext: process_julia_context
-using EasyContext: age!
+using EasyContext: jl_age!, ws_age!, ageing!
 using EasyContext: shell_format_description, workspace_format_description, julia_format_description
 using EasyContext
 
@@ -80,8 +80,9 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
                       on_done     = ()       -> codeblock_runner(extractor),
                       on_error    = (error)  -> add_error_message!(conv_ctx,"ERROR: $error"),
     )
-    age!(julia_context, converstaion)
-    age!(workspace_context, converstaion)
+    should_age = aging!(conv_ctx, workspace_context.ws_age)
+    should_age && jl_age!(julia_context)
+    should_age && ws_age!(workspace_context)
     silent && break
   end
 end
