@@ -80,7 +80,7 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
                       on_done     = ()       -> codeblock_runner(extractor),
                       on_error    = (error)  -> add_error_message!(conv_ctx,"ERROR: $error"),
     )
-    should_age = aging!(conv_ctx, workspace_context.ws_age)
+    should_age = ageing!(conv_ctx, workspace_context.ws_age)
     should_age && jl_age!(julia_context)
     should_age && ws_age!(workspace_context)
     silent && break
