@@ -11,7 +11,6 @@ using EasyContext: CodeBlockExtractor, Persistable
 using EasyContext: QuestionCTX
 using EasyContext: print_project_tree
 using EasyContext: context_combiner!
-using EasyContext: to_disk_custom!
 using EasyContext: extract_and_preprocess_codeblocks
 using EasyContext: LLM_conditonal_apply_changes
 using EasyContext: get_cache_setting
@@ -22,6 +21,8 @@ using EasyContext: init_julia_context
 using EasyContext: init_conversation_context
 using EasyContext: process_workspace_context
 using EasyContext: process_julia_context
+using EasyContext: age!
+using EasyContext: shell_format_description, workspace_format_description, julia_format_description
 using EasyContext
 
 include("utils.jl")
@@ -35,9 +36,9 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
   # init
   workspace_context = init_workspace_context(project_paths)
   julia_context     = init_julia_context()
-  conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH))
+  conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH), shell_format_description(), workspace_format_description(), julia_format_description())
   
-  question_acc      = QuestionCTX()  
+  question_acc      = QuestionCTX()
   extractor         = CodeBlockExtractor()
   persister         = Persistable(logdir)
 
@@ -66,20 +67,21 @@ function start_conversation(user_question=""; resume, streaming, project_paths, 
       fetch(ctx_jl_pkg)
     )
 
-    conversation = conv_ctx(create_user_message(query))
+    conv_ctx(create_user_message(query))
 
     reset!(extractor)
     user_question = ""
 
-    cache = get_cache_setting(conv_ctx)
-    error = LLM_solve(conversation, cache;
+    cache = get_cache_setting(workspace_context.ws_age, conv_ctx)
+    error = LLM_solve(conv_ctx, cache;
                       on_text     = (text)   -> extract_and_preprocess_codeblocks(text, extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb)),
                       on_meta_usr = (meta)   -> update_last_user_message_meta(conv_ctx, meta),
                       on_meta_ai  = (ai_msg) -> conv_ctx(ai_msg),
                       on_done     = ()       -> codeblock_runner(extractor),
                       on_error    = (error)  -> add_error_message!(conv_ctx,"ERROR: $error"),
     )
-  
+    age!(julia_context, converstaion)
+    age!(workspace_context, converstaion)
     silent && break
   end
 end
