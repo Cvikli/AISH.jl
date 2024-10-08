@@ -59,7 +59,6 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
 
   # forward
   while loop || !isempty(user_question)  || !isempty(LLM_reflection) 
-    @show loop
     user_question = !isempty(LLM_reflection) ? LLM_reflection : 
                     !isempty(user_question)  ? user_question  : wait_user_question(user_question)
     !silent && println("Thinking...")  # Only print if not silent
@@ -91,12 +90,12 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
     )
 
     ctx_test       = run_tests(test_frame) |> test_ctx_2_string
-    @show "----------ctx_test"
-    println(ctx_test)
+    # @show "----------ctx_test"
+    # println(ctx_test)
     ctx_shell      = extractor |> shell_ctx_2_string
     LLM_answer     = LLM_reflect(ctx_question, ctx_shell, ctx_test, last_msg(conv_ctx))
-    println("-------LLM stuff")
-    println(LLM_answer)
+    # println("-------LLM stuff")
+    # println(LLM_answer)
     LLM_reflection = is_continue(LLM_reflect_condition(LLM_answer)) ? LLM_answer : ""
 
     cut_old_history!(age_tracker, conv_ctx, julia_context, workspace_context, )
