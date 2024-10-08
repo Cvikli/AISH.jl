@@ -16,9 +16,6 @@ function parse_commandline()
         "--resume", "-r"
             help = "Flag to resume last conversation"
             action = :store_true
-        "--no-streaming"
-            help = "Disable streaming mode"
-            action = :store_true
         "--skip-code-execution", "-x"
             help = "Skip execution of code blocks"
             action = :store_true
@@ -31,6 +28,9 @@ function parse_commandline()
         "--log-dir"
             arg_type = String
             default = joinpath(@__DIR__, "..", "conversations")
+        "--no-confirm", "-y"
+            help = "Run shell blocks without confirmation"
+            action = :store_true
     end
 
     return parse_args(s)

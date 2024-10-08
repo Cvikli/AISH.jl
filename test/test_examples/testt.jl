@@ -47,3 +47,8 @@ CachedLoader(loader=JuliaLoader(),memory=Dict{String,OrderedDict{String,String}}
 
 #%%
 6d29165b79575b4e433503a474e87b33a90476664e462b94aae0610f225de6d3
+#%%
+
+ctx_test = "    <TestCode>\n\t\t@testitem \"027_flip_case.jl\" tags=[:HumanEval] begin\n\n    include(joinpath(ENV[\"GENERATION_DIR\"], \"027_flip_case.jl\"))\n\n    @test flip_case(\"\") == \"\"\n    @test flip_case(\"Hello!\") == \"hELLO!\"\n    @test flip_case(\"These violent delights have violent ends\") == \"tHESE VIOLENT DELIGHTS HAVE VIOLENT ENDS\"\nend\n    </TestCode>\n    <TestResults sh=\"`bash -c julia 9d4126ba-aac9-4bf6-8002-06b91d1f4312`\">\n\t\texit_code=0\n    </TestResults>\n    "
+
+println(ctx_test)
