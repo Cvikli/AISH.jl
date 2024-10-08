@@ -105,7 +105,7 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
   end
 end
 
-function start(message=""; resume=false, project_paths=String[], logdir="", show_tokens=false, no_confirm=false, loop=true, test_cases="", test_filepath="")
+function start(message=""; resume=false, project_paths=String[], logdir="conversations", show_tokens=false, no_confirm=false, loop=true, test_cases="", test_filepath="")
   nice_exit_handler()
   start_conversation(message, silent=!isempty(message); loop, resume, project_paths, logdir, show_tokens, no_confirm, test_cases, test_filepath)
 end
