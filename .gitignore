@@ -35,3 +35,5 @@ benchmarks/
 .vscode/
 
 archive/
+
+cache/
