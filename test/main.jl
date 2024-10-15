@@ -1,8 +1,10 @@
+using Revise
 using RelevanceStacktrace
-using AISH: start	
+using AISH: start
 
-# start("what julia packages do you see?", project_paths=["."])
+start("", project_paths=["../TODO4AI"])
 # start("his implementation efficiently computes the n-th element of the fib4 sequence without using recursion. It uses a loop to iterate through the sequence, updating four variables that represent the last four numbers in the sequence. The function also handles the base cases for n = 0, 1, 2, and 3 as specified in the problem description.", project_paths=["."], loop=true)
+#%%
 
 message ="""
     remove_duplicates(numbers::Vector{Int})::Vector{Int}

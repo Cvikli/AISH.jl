@@ -7,7 +7,7 @@
 # AISH.extract_shell_commands("```sh\necho 'Hello, World!'\n```")
 
 
-using PrecompileTools
+# using PrecompileTools
 
 # @setup_workload begin
 #     @compile_workload begin

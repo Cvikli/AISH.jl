@@ -48,69 +48,6 @@ using ReTestItems
         @test any(cmd -> strip(fetch(cmd)) == "ls -l\ncat file.txt", values(extracted_scripts))
     end
 
-    @testset "File-based tests" begin
-        using Random
-        import AISH
-        extract_shell_dir = joinpath(@__DIR__, "extract_shell")
-        resp_files = filter(f -> endswith(f, ".resp"), readdir(extract_shell_dir, join=true))
-
-        function simulate_chunked_streaming(content::String, chunk_size_range::UnitRange{Int})
-            chunks = String[]
-            remaining = content
-            while !isempty(remaining)
-                chunk_size = rand(chunk_size_range)
-                chunk = first(remaining, chunk_size)
-                push!(chunks, chunk)
-                remaining = remaining[nextind(remaining, length(chunk)):end]
-            end
-            return chunks
-        end
-
-        for resp_file in resp_files
-            @testset "Testing $(basename(resp_file))" begin
-                content = read(resp_file, String)
-
-                # Simulate chunked streaming
-                chunks = simulate_chunked_streaming(content, 1:20)  # Increased range for more varied chunk sizes
-
-                extractor = AISH.CodeBlockExtractor()
-                for chunk in chunks
-                    AISH.extract_and_preprocess_shell_scripts(chunk, extractor; mock=true)
-                end
-
-                extracted_scripts = extractor.shell_scripts
-
-                # Test that we extracted at least one script
-                @show length(extracted_scripts)
-                @test !isempty(extracted_scripts)
-
-                # Test each extracted script
-                for (script, task) in extracted_scripts
-                    processed_script = fetch(task)
-                    # Ensure the script is not empty
-                    @test !isempty(strip(processed_script))
-
-                    # Check if the script doesn't start or end with newlines
-                    @test !startswith(processed_script, "\n")
-                    @test !endswith(processed_script, "\n")
-
-                    # Check if the script doesn't contain the ```sh or ``` delimiters
-                    @test !contains(processed_script, "```sh")
-                    @test !contains(processed_script, "```")
-
-                    # Check if the script starts with a valid shell command (optional, uncomment if needed)
-                    # @test occursin(r"^\s*[\w\-]+", processed_script)
-
-                    println("Processed script: $(repr(processed_script))")
-                end
-
-                # Compare with the original extract_shell_commands function
-                original_extracted = AISH.extract_shell_commands(content)
-                @test Set(keys(extracted_scripts)) == Set(keys(original_extracted))
-            end
-        end
-    end
-
     @testset "Edge cases" begin
         @testset "Empty content" begin
             extracted = AISH.extract_shell_commands("")

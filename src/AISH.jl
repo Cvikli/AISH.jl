@@ -21,7 +21,7 @@ using EasyContext: init_conversation_context
 using EasyContext: process_workspace_context
 using EasyContext: process_julia_context
 using EasyContext: cut_old_history!
-using EasyContext: shell_format_description, workspace_format_description, julia_format_description, test_format_description
+using EasyContext: shell_format_description, workspace_format_description, julia_format_description, test_format_description, virtual_workspace_description
 using EasyContext: last_msg, init_testframework
 using EasyContext: is_continue
 using EasyContext
@@ -35,11 +35,13 @@ include("AI_prompt.jl")
 function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, test_cases="", test_filepath="")
   
   # init
-  persister         = Persistable(logdir)
+  persist           = Persistable(logdir)
+  conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH)) |> persist
+  virtual_workspace = init_virtual_workspace_context(conv_ctx)         |> persist
+  @show virtual_workspace.rel_path
+  workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
+  test_frame        = init_testframework(test_cases, folder_path=virtual_workspace.rel_path)
   julia_context     = init_julia_context()
-  conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH))
-  test_frame        = init_testframework(persister, conv_ctx, test_cases, test_filepath)
-  workspace_context = init_workspace_context(project_paths, append_files=[test_frame.filename])
   
   age_tracker       = AgeTracker(max_history=14, cut_to=6)
   question_acc      = QuestionCTX()
@@ -47,15 +49,19 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
   LLM_reflection    = ""
   
   # prepare 
-  print_project_tree(workspace_context.workspace, show_tokens=show_tokens)
   set_terminal_title("AISH $(workspace_context.workspace.root_path)")
   !silent && greet(ChatSH)
   !silent && isempty(user_question) && (isdefined(Base, :active_repl) ? println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ") : println("Your multiline input (empty line to finish):"))
   
-  append_ctx_descriptors(conv_ctx, shell_format_description(), workspace_format_description(), julia_format_description(), test_format_description(test_frame))
+  append_ctx_descriptors(conv_ctx, 
+                          shell_format_description(), 
+                          workspace_format_description(), 
+                          # virtual_workspace_description(virtual_workspace), 
+                          julia_format_description(), 
+                          test_format_description(test_frame))
   
   ctx_test          = run_tests(test_frame) |> test_ctx_2_string
-  ctx_shell      = extractor |> shell_ctx_2_string
+  ctx_shell         = extractor |> shell_ctx_2_string
 
   # forward
   while loop || !isempty(user_question)  || !isempty(LLM_reflection) 
