@@ -24,90 +24,26 @@ using EasyContext: cut_old_history!
 using EasyContext: shell_format_description, workspace_format_description, julia_format_description, test_format_description, virtual_workspace_description
 using EasyContext: last_msg, init_testframework
 using EasyContext: is_continue
+using EasyContext: ToSolve, TestFramework, PersistableState
 using EasyContext
 
 include("utils.jl")
 include("arg_parser.jl")
 
 include("AI_prompt.jl")
+include("agentflows/AI_SRloop.jl")
 
 
 function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, test_cases="", test_filepath="")
-  
-  # init
-  persist           = Persistable(logdir)
-  conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH)) |> persist
-  virtual_workspace = init_virtual_workspace_context(conv_ctx)         |> persist
-  @show virtual_workspace.rel_path
-  workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
-  test_frame        = init_testframework(test_cases, folder_path=virtual_workspace.rel_path)
-  julia_context     = init_julia_context()
-  
-  age_tracker       = AgeTracker(max_history=14, cut_to=6)
-  question_acc      = QuestionCTX()
-  extractor         = CodeBlockExtractor()
-  LLM_reflection    = ""
-  
-  # prepare 
-  set_terminal_title("AISH $(workspace_context.workspace.root_path)")
   !silent && greet(ChatSH)
+
+  model = init(SRWorkFlow; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, test_cases="", test_filepath="")
+
+  preparation(model)
+  
   !silent && isempty(user_question) && (isdefined(Base, :active_repl) ? println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ") : println("Your multiline input (empty line to finish):"))
-  
-  append_ctx_descriptors(conv_ctx, 
-                          shell_format_description(), 
-                          workspace_format_description(), 
-                          # virtual_workspace_description(virtual_workspace), 
-                          julia_format_description(), 
-                          test_format_description(test_frame))
-  
-  ctx_test          = run_tests(test_frame) |> test_ctx_2_string
-  ctx_shell         = extractor |> shell_ctx_2_string
 
-  # forward
-  while loop || !isempty(user_question)  || !isempty(LLM_reflection) 
-    user_question = !isempty(LLM_reflection) ? LLM_reflection : 
-                    !isempty(user_question)  ? user_question  : wait_user_question(user_question)
-    !silent && println("Thinking...")  # Only print if not silent
-    
-    ctx_question   = user_question |> question_acc
-    ctx_codebase   = @async_showerr process_workspace_context(workspace_context, ctx_question; age_tracker)
-    ctx_jl_pkg     = @async_showerr process_julia_context(julia_context, ctx_question; age_tracker)
-
-    query = context_combiner!(
-      user_question, 
-      ctx_shell, 
-      ctx_test, 
-      fetch(ctx_codebase), 
-      fetch(ctx_jl_pkg),
-    )
-
-    conv_ctx(create_user_message(query))
-
-    reset!(extractor)
-    user_question = ""
-
-    cache = get_cache_setting(age_tracker, conv_ctx)
-    error = LLM_solve(conv_ctx, cache;
-                      on_text     = (text)   -> extract_and_preprocess_codeblocks(text, extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb)),
-                      on_meta_usr = (meta)   -> update_last_user_message_meta(conv_ctx, meta),
-                      on_meta_ai  = (ai_msg) -> conv_ctx(ai_msg),
-                      on_done     = ()       -> (codeblock_runner(extractor, no_confirm=no_confirm)),
-                      on_error    = (error)  -> add_error_message!(conv_ctx,"ERROR: $error"),
-    )
-
-    ctx_test       = run_tests(test_frame) |> test_ctx_2_string
-    # @show "----------ctx_test"
-    # println(ctx_test)
-    ctx_shell      = extractor |> shell_ctx_2_string
-    LLM_answer     = LLM_reflect(ctx_question, ctx_shell, ctx_test, last_msg(conv_ctx))
-    # println("-------LLM stuff")
-    # println(LLM_answer)
-    LLM_reflection = is_continue(LLM_reflect_condition(LLM_answer)) ? LLM_answer : ""
-
-    cut_old_history!(age_tracker, conv_ctx, julia_context, workspace_context, )
-
-    silent && break
-  end
+  forward(user_question, model; silent)
 end
 
 function start(message=""; resume=false, project_paths=String[], logdir="conversations", show_tokens=false, no_confirm=false, loop=true, test_cases="", test_filepath="")
