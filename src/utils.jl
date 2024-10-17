@@ -4,5 +4,3 @@ nice_exit_handler() = ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfuncti
 
 set_terminal_title(title::String) = print(IOContext(stdout, :color => true), "\e]0;$title\a")
 
-get_system() = strip(read(`uname -a`, String))
-get_shell() = strip(read(`$(ENV["SHELL"]) --version`, String))
