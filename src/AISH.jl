@@ -7,7 +7,7 @@ using EasyContext: update_last_user_message_meta
 using EasyContext: add_error_message!
 using EasyContext: wait_user_question, reset!
 using EasyContext: LLM_solve
-using EasyContext: CodeBlockExtractor, Persistable
+using EasyContext: CodeBlockExtractor
 using EasyContext: QuestionCTX
 using EasyContext: print_project_tree
 using EasyContext: context_combiner!
@@ -28,18 +28,19 @@ using EasyContext: ConversationX, TestFramework, PersistableState
 using EasyContext
 
 include("utils.jl")
+include("config.jl")
 include("arg_parser.jl")
 
 include("AI_prompt.jl")
-include("workflow/AI_SRloop.jl")
-include("workflow/AIModel.jl")
+include("workflow/SR_loop.jl")
+include("workflow/STD_loop.jl")
 
 
 
 function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, test_cases="", test_filepath="")
   !silent && greet(ChatSH)
 
-  model = AIModel(project_paths, logdir)
+  model = AIModel(project_paths)
   # model = SRWorkFlow(; resume, project_paths, logdir, show_tokens, silent, no_confirm, test_cases, test_filepath)
 
   set_terminal_title("AISH $(model.workspace_context.workspace.root_path)")
@@ -53,12 +54,11 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
     model(user_question)
 
     user_question = ""
-    silent && break
   end
   
 end
 
-function start(message=""; resume=false, project_paths=String[], logdir="conversations", show_tokens=false, no_confirm=false, loop=true, test_cases="", test_filepath="")
+function start(message=""; resume=false, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, test_cases="", test_filepath="")
   nice_exit_handler()
   start_conversation(message, silent=!isempty(message); loop, resume, project_paths, logdir, show_tokens, no_confirm, test_cases, test_filepath)
 end

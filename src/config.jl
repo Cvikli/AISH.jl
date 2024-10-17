@@ -1,0 +1,1 @@
+const LOGDIR = joinpath(@__DIR__, "..", "conversations")

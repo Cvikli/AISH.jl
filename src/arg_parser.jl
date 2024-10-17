@@ -27,7 +27,7 @@ function parse_commandline()
             action = :store_true
         "--log-dir"
             arg_type = String
-            default = joinpath(@__DIR__, "..", "conversations")
+            default = LOGDIR
         "--no-confirm", "-y"
             help = "Run shell blocks without confirmation"
             action = :store_true

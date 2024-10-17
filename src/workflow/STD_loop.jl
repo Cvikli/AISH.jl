@@ -9,7 +9,7 @@ struct AIModel
 	question_acc::QuestionCTX
 	extractor::CodeBlockExtractor
 
-    function AIModel(project_paths, logdir)
+    function AIModel(project_paths)
         m = new(
             init_workspace_context(project_paths),
             init_julia_context(),
