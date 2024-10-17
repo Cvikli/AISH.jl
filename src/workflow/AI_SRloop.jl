@@ -76,6 +76,7 @@ end
     # ctx_shell      = m.extractor |> shell_ctx_2_string
     LLM_answer     = LLM_reflect(ctx_question, ctx_shell, ctx_test, last_msg(m.conv_ctx))
     # println("-------LLM stuff")
+    println(LLM_answer)
     m.LLM_reflection = is_continue(LLM_reflect_condition(LLM_answer)) ? LLM_answer : ""
 
     cut_old_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context, )
