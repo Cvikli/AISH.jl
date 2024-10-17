@@ -1,7 +1,7 @@
 
 mutable struct SRWorkFlow{WORKSPACE,JULIA_CTX}
 	persist::PersistableState
-	conv_ctx::ToSolve
+	conv_ctx::ConversationX
 	workspace_context::WORKSPACE
 	test_frame::TestFramework
 	julia_context::JULIA_CTX
@@ -15,9 +15,9 @@ end
 SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm,  test_cases, test_filepath) = begin
   persist           = Persistable(logdir)
   conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH)) |> persist
-  # virtual_workspace = init_virtual_workspace_context(conv_ctx)         |> persist
   # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
   # test_frame        = init_testframework(test_cases, folder_path=virtual_workspace.rel_path)
+  project_paths = length(project_paths) > 0 ? project_paths : [init_virtual_workspace_path(conv_ctx) |> persist]
   workspace_context = init_workspace_context(project_paths)
   test_frame        = init_testframework(test_cases, folder_path=project_paths[1])
   julia_context     = init_julia_context()

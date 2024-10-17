@@ -24,7 +24,7 @@ using EasyContext: cut_old_history!
 using EasyContext: shell_format_description, workspace_format_description, julia_format_description, test_format_description, virtual_workspace_description
 using EasyContext: last_msg, init_testframework
 using EasyContext: is_continue
-using EasyContext: ToSolve, TestFramework, PersistableState
+using EasyContext: ConversationX, TestFramework, PersistableState
 using EasyContext
 
 include("utils.jl")

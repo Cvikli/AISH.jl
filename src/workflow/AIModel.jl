@@ -4,7 +4,7 @@ using BoilerplateCvikli: @async_showerr
 struct AIModel
 	workspace_context
 	julia_context
-    conv_ctx::ToSolve
+    conv_ctx::ConversationX
     age_tracker::AgeTracker
 	question_acc::QuestionCTX
 	extractor::CodeBlockExtractor
