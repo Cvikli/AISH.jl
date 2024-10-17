@@ -1,5 +1,5 @@
 
-struct SRWorkFlow{WORKSPACE,JULIA_CTX}
+mutable struct SRWorkFlow{WORKSPACE,JULIA_CTX}
 	persist::PersistableState
 	conv_ctx::ToSolve
 	workspace_context::WORKSPACE
@@ -32,7 +32,7 @@ end
 
 preparation(m::SRWorkFlow) = begin
 
-  set_terminal_title("AISH $(workspace_context.workspace.root_path)")
+  set_terminal_title("AISH $(m.workspace_context.workspace.root_path)")
 
   append_ctx_descriptors(m.conv_ctx, 
                           shell_format_description(), 
@@ -43,8 +43,11 @@ preparation(m::SRWorkFlow) = begin
   
 end
 
-forward(user_question, m::SRWorkFlow; silent) = begin
-  while loop || !isempty(user_question)  || !isempty(m.LLM_reflection) 
+forward(user_question, m::SRWorkFlow; loop, silent) = begin
+  ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
+  ctx_shell      = m.extractor |> shell_ctx_2_string
+
+  while loop || !isempty(user_question) || !isempty(m.LLM_reflection) 
     user_question = !isempty(m.LLM_reflection) ? m.LLM_reflection : 
                     !isempty(user_question)  ? user_question  : wait_user_question(user_question)
     !silent && println("Thinking...")  # Only print if not silent
@@ -52,8 +55,6 @@ forward(user_question, m::SRWorkFlow; silent) = begin
     ctx_question   = user_question |> m.question_acc
     ctx_codebase   = @async_showerr process_workspace_context(m.workspace_context, ctx_question; m.age_tracker)
     ctx_jl_pkg     = @async_showerr process_julia_context(m.julia_context, ctx_question; m.age_tracker)
-		ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
-		ctx_shell      = m.extractor |> shell_ctx_2_string
 
     query = context_combiner!(
       user_question, 
@@ -68,7 +69,7 @@ forward(user_question, m::SRWorkFlow; silent) = begin
     reset!(m.extractor)
     user_question = ""
 
-    cache = get_cache_setting(age_tracker, conv_ctx)
+    cache = get_cache_setting(m.age_tracker, m.conv_ctx)
     error = LLM_solve(m.conv_ctx, cache;
                       on_text     = (text)   -> extract_and_preprocess_codeblocks(text, m.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb)),
                       on_meta_usr = (meta)   -> update_last_user_message_meta(m.conv_ctx, meta),
@@ -86,7 +87,7 @@ forward(user_question, m::SRWorkFlow; silent) = begin
     # println(LLM_answer)
     m.LLM_reflection = is_continue(LLM_reflect_condition(last_msg(m.conv_ctx))) ? LLM_answer : ""
 
-    cut_old_history!(age_tracker, conv_ctx, julia_context, workspace_context, )
+    cut_old_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context, )
 
     silent && break
   end

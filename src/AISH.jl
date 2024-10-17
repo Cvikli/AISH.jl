@@ -43,7 +43,7 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
   
   !silent && isempty(user_question) && (isdefined(Base, :active_repl) ? println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ") : println("Your multiline input (empty line to finish):"))
 
-  forward(user_question, model; silent)
+  forward(user_question, model; loop, silent)
 end
 
 function start(message=""; resume=false, project_paths=String[], logdir="conversations", show_tokens=false, no_confirm=false, loop=true, test_cases="", test_filepath="")
