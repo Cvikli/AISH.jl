@@ -2,13 +2,12 @@ using EasyContext
 using BoilerplateCvikli: @async_showerr
 
 struct AIModel
-    workspace_context
-    julia_context
-    conv_ctx
-    age_tracker
-    question_acc
-    extractor
-    persister
+	workspace_context
+	julia_context
+    conv_ctx::ToSolve
+    age_tracker::AgeTracker
+	question_acc::QuestionCTX
+	extractor::CodeBlockExtractor
 
     function AIModel(project_paths, logdir)
         m = new(
@@ -18,7 +17,6 @@ struct AIModel
             AgeTracker(max_history=10, cut_to=4),
             QuestionCTX(),
             CodeBlockExtractor(),
-            Persistable(logdir)
         )
         append_ctx_descriptors(m.conv_ctx, shell_format_description(), workspace_format_description(), julia_format_description())
         m

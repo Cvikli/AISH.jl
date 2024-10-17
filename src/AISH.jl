@@ -31,35 +31,31 @@ include("utils.jl")
 include("arg_parser.jl")
 
 include("AI_prompt.jl")
-include("agentflows/AI_SRloop.jl")
-include("models/AIModel.jl")
-include("sys_prompts/sys_prompt.v1.jl")
+include("workflow/AI_SRloop.jl")
+include("workflow/AIModel.jl")
+
 
 
 function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, test_cases="", test_filepath="")
-  set_terminal_title("AISH $(model.workspace_context.workspace.root_path)")
-  model = AIModel(project_paths, logdir)
-
   !silent && greet(ChatSH)
 
-  model = init(SRWorkFlow; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, test_cases="", test_filepath="")
+  model = AIModel(project_paths, logdir)
+  # model = SRWorkFlow(; resume, project_paths, logdir, show_tokens, silent, no_confirm, test_cases, test_filepath)
 
-  preparation(model)
-  
+  set_terminal_title("AISH $(model.workspace_context.workspace.root_path)")
+
   !silent && isempty(user_question) && (isdefined(Base, :active_repl) ? println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ") : println("Your multiline input (empty line to finish):"))
 
-  forward(user_question, model; loop, silent)
-  
-  # forward
   while loop || !isempty(user_question)
     user_question = isempty(user_question) ? wait_user_question(user_question) : user_question
     !silent && println("Thinking...")  # Only print if not silent
-
-    error = model(user_question)
+    
+    model(user_question)
 
     user_question = ""
     silent && break
   end
+  
 end
 
 function start(message=""; resume=false, project_paths=String[], logdir="conversations", show_tokens=false, no_confirm=false, loop=true, test_cases="", test_filepath="")
