@@ -19,7 +19,7 @@ init(::Type{SRWorkFlow}; resume, project_paths, logdir, show_tokens, silent, no_
   # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
   # test_frame        = init_testframework(test_cases, folder_path=virtual_workspace.rel_path)
   workspace_context = init_workspace_context(project_paths)
-  test_frame        = init_testframework(test_cases, folder_path=[project_paths[1]])
+  test_frame        = init_testframework(test_cases, folder_path=project_paths[1])
   julia_context     = init_julia_context()
   
   age_tracker       = AgeTracker(max_history=14, cut_to=6)
