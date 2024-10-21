@@ -13,9 +13,11 @@ mutable struct SRWorkFlow{WORKSPACE,JULIA_CTX}
 	no_confirm::Bool
 end
 
-SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm,  test_cases, test_filepath) = begin
+SRWorkFlow(;user_question, resume, project_paths, logdir, show_tokens, silent, no_confirm,  test_cases, test_filepath) = begin
   persist           = PersistableState(logdir)
   conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH)) |> persist
+
+  TODO_name         = LLM_overview(user_question, max_token=25, extra="We need this to be a very concise overview about the user question")
 
   # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
   # test_frame        = init_testframework(test_cases, folder_path=virtual_workspace.rel_path)
@@ -23,8 +25,7 @@ SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm,  tes
   workspace_context = init_workspace_context(project_paths)
   test_frame        = init_testframework(test_cases, folder_path=project_paths[1])
   julia_context     = init_julia_context()
-
-  version_control   = GitTracker(p, conv_ctx, workspace_context)
+  version_control   = GitTracker!(workspace_context, p, conv_ctx, )
   init_all(version_control)
   
   age_tracker       = AgeTracker(max_history=14, cut_to=6)
@@ -76,7 +77,7 @@ end
                       on_error    = (error)  -> add_error_message!(m.conv_ctx,"ERROR: $error"),
     )
     codeblock_runner(m.extractor, no_confirm=m.no_confirm)
-    commit_changes(m.version_control)
+    commit_changes(m.version_control, user_question)
 
     ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
     ctx_shell      = m.extractor |> shell_ctx_2_string

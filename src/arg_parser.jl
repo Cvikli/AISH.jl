@@ -28,6 +28,9 @@ function parse_commandline()
         "--log-dir"
             arg_type = String
             default = LOGDIR
+        "--analytics-dir"
+            arg_type = String
+            default = ANALYTICSDIR
         "--no-confirm", "-y"
             help = "Run shell blocks without confirmation"
             action = :store_true

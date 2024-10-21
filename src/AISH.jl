@@ -40,8 +40,8 @@ include("workflow/STD_loop.jl")
 function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, test_cases="", test_filepath="")
   !silent && greet(ChatSH)
 
-  model = AIModel(project_paths)
-  # model = SRWorkFlow(; resume, project_paths, logdir, show_tokens, silent, no_confirm, test_cases, test_filepath)
+  # model = AIModel(project_paths)
+  model = SRWorkFlow(;user_question, resume, project_paths, logdir, show_tokens, silent, no_confirm, test_cases, test_filepath)
 
   set_terminal_title("AISH $(model.workspace_context.workspace.root_path)")
 
