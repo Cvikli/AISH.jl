@@ -17,8 +17,6 @@ SRWorkFlow(;user_question, resume, project_paths, logdir, show_tokens, silent, n
   persist           = PersistableState(logdir)
   conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH)) |> persist
 
-  TODO_name         = LLM_overview(user_question, max_token=25, extra="We need this to be a very concise overview about the user question")
-
   # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
   # test_frame        = init_testframework(test_cases, folder_path=virtual_workspace.rel_path)
   project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(conv_ctx) |> persist).rel_path]
@@ -44,13 +42,13 @@ end
 
 
 (m::SRWorkFlow)(user_question) = begin
-  ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
-  ctx_shell      = m.extractor |> shell_ctx_2_string
+  ctx_test         = run_tests(m.test_frame) |> test_ctx_2_string
+  ctx_shell        = m.extractor             |> shell_ctx_2_string
   m.LLM_reflection = user_question
   while !isempty(m.LLM_reflection) 
-    user_question = m.LLM_reflection
+    user_question  = m.LLM_reflection
     
-    ctx_question   = user_question |> m.question_acc
+    ctx_question   = user_question           |> m.question_acc
     ctx_codebase   = process_workspace_context(m.workspace_context, ctx_question; m.age_tracker)
     # ctx_jl_pkg     = process_julia_context(m.julia_context, ctx_question; m.age_tracker)
     @show "juliacontext is done!"
@@ -61,7 +59,9 @@ end
       (ctx_codebase), 
       # (ctx_jl_pkg),
     )
-@show "??"
+
+    @show "??"
+    
     m.conv_ctx(create_user_message(query))
 
     reset!(m.extractor)
@@ -78,7 +78,7 @@ end
     commit_changes(m.version_control, user_question)
 
     ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
-    ctx_shell      = m.extractor |> shell_ctx_2_string
+    ctx_shell      = m.extractor             |> shell_ctx_2_string
     LLM_answer     = LLM_reflect(ctx_question, ctx_shell, ctx_test, last_msg(m.conv_ctx))
     # println("-------LLM stuff")
     println(LLM_answer)
