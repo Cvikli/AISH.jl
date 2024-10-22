@@ -33,7 +33,6 @@ SRWorkFlow(;user_question, resume, project_paths, logdir, show_tokens, silent, n
   append_ctx_descriptors(conv_ctx, 
                           shell_format_description(), 
                           workspace_format_description(), 
-                          # virtual_workspace_description(virtual_workspace), 
                           julia_format_description(), 
                           test_format_description(test_frame))
   
