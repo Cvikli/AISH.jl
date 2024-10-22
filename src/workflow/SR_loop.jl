@@ -16,6 +16,7 @@ end
 SRWorkFlow(;user_question, resume, project_paths, logdir, show_tokens, silent, no_confirm,  test_cases, test_filepath) = begin
   persist           = PersistableState(logdir)
   conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH)) |> persist
+	# init_commit_msg = LLM_job_to_do(user_question)
 
   # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
   # test_frame        = init_testframework(test_cases, folder_path=virtual_workspace.rel_path)
@@ -74,10 +75,10 @@ end
                       on_error    = (error)  -> add_error_message!(m.conv_ctx,"ERROR: $error"),
     )
     codeblock_runner(m.extractor, no_confirm=m.no_confirm)
-    commit_changes(m.version_control, user_question)
-
+    
     ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
     ctx_shell      = m.extractor             |> shell_ctx_2_string
+    commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, ctx_test, last_msg(m.conv_ctx)))
     LLM_answer     = LLM_reflect(ctx_question, ctx_shell, ctx_test, last_msg(m.conv_ctx))
     # println("-------LLM stuff")
     println(LLM_answer)
