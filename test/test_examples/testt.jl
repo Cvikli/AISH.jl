@@ -74,3 +74,18 @@ println(ctx_test)
 #%%
 println("Hello, World!")
 
+#%%
+using Test
+
+@testset "Hello World Test" begin
+    @test (let
+        io = IOBuffer()
+        redirect_stdout(io) do
+            println("Hello, World!")
+        end
+        String(take!(io))
+    end) == "Hello, World!\n"
+end
+
+# ... rest of the existing code ...
+
