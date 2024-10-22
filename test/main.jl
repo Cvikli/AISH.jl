@@ -2,7 +2,15 @@ using Revise
 using RelevanceStacktrace
 using AISH: start
 
-start("say hi", project_paths=["."])
+# Add this line to include the new greeting function
+include("../src/greeting.jl")
+
+# Add this test before the start() function call
+@testset "Greeting Test" begin
+    @test greet("World") == "Hello, World!"
+end
+
+start("say hi and add the greet to the test file", project_paths=["."])
 # start("his implementation efficiently computes the n-th element of the fib4 sequence without using recursion. It uses a loop to iterate through the sequence, updating four variables that represent the last four numbers in the sequence. The function also handles the base cases for n = 0, 1, 2, and 3 as specified in the problem description.", project_paths=["."], loop=true)
 #%%
 
