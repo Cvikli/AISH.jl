@@ -37,7 +37,8 @@ include("workflow/STD_loop.jl")
 
 
 
-function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, test_cases="", test_filepath="")
+function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, 
+  test_cases="", test_filepath="")
   !silent && greet(ChatSH)
 
   # model = AIModel(project_paths)

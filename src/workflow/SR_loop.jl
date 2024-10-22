@@ -25,8 +25,7 @@ SRWorkFlow(;user_question, resume, project_paths, logdir, show_tokens, silent, n
   workspace_context = init_workspace_context(project_paths)
   test_frame        = init_testframework(test_cases, folder_path=project_paths[1])
   julia_context     = init_julia_context()
-  version_control   = GitTracker!(workspace_context, p, conv_ctx, )
-  init_all(version_control)
+  version_control   = GitTracker!(workspace_context.workspace, persist, conv_ctx, user_question)
   
   age_tracker       = AgeTracker(max_history=14, cut_to=6)
   question_acc      = QuestionCTX()
@@ -53,17 +52,16 @@ end
     
     ctx_question   = user_question |> m.question_acc
     ctx_codebase   = process_workspace_context(m.workspace_context, ctx_question; m.age_tracker)
-    @show "done"
-    ctx_jl_pkg     = process_julia_context(m.julia_context, ctx_question; m.age_tracker)
+    # ctx_jl_pkg     = process_julia_context(m.julia_context, ctx_question; m.age_tracker)
     @show "juliacontext is done!"
     query = context_combiner!(
       user_question, 
       ctx_shell, 
       ctx_test, 
       (ctx_codebase), 
-      (ctx_jl_pkg),
+      # (ctx_jl_pkg),
     )
-
+@show "??"
     m.conv_ctx(create_user_message(query))
 
     reset!(m.extractor)
