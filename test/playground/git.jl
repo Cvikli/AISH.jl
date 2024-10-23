@@ -73,3 +73,10 @@ display_commits(repo)
 
 output = read(`git branch -m unnamed-branch new_name`, String)
 
+#%%
+using BoilerplateCvikli
+
+pp="/home/hm/repo/AIStuff/AISH.jl/conversations/01JAX27TEE13REKWXG/AISH.jl"
+repo=LibGit2.GitRepo(pp)
+@typeof LibGit2.workdir(repo)
+# @edit LibGit2.path(repo)

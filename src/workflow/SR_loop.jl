@@ -21,8 +21,8 @@ SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm,  tes
   # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
   # test_frame        = init_testframework(test_cases, folder_path=virtual_workspace.rel_path)
   project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(conv_ctx) |> persist).rel_path]
-  workspace_context = init_workspace_context(project_paths)
   test_frame        = init_testframework(test_cases, folder_path=project_paths[1])
+  workspace_context = init_workspace_context(project_paths)
   julia_context     = init_julia_context()
   version_control   = GitTracker!(workspace_context.workspace, persist, conv_ctx)
   
@@ -42,6 +42,7 @@ end
 
 
 (m::SRWorkFlow)(user_question) = begin
+  local ctx_test
   cd(m.workspace_context.workspace.root_path) do
     ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
   end

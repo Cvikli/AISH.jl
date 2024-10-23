@@ -5,7 +5,7 @@ git worktree prune
 
 using LibGit2
 
-clean_branches(;paths=["."], branches=[]) = begin
+clean_branches(;paths=["."], branches=[], force=false) = begin
     for repo_path in paths
         repo = LibGit2.GitRepo(repo_path)
         @show repo
