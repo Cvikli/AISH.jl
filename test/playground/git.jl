@@ -69,7 +69,7 @@ println("\nCommits in '$current_branch' branch:")
 display_commits(repo)
 
 #%%
-
+using LibGit2
 
 clean_branches(paths=["."]) = begin
     for repo_path in paths
