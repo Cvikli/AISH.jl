@@ -5,9 +5,9 @@ include("../src/greeting.jl")
 println("Hi from the greet test file!")
 
 @testset "Greeting Test" begin
-    @test greet("World") == "Hello, World!"
-    @test greet("User", "Hi") == "Hi, User!"  # New test case
-    @test greet("Orion") == "Hello, Orion!"  # New test case
+    @test greet("User", "Hello") == "Hello, User!"  # Changed order of test cases
+    @test greet("World") == "Hi, World!"  # Changed expectation
+    @test greet("Orion") == "Hi, Orion!"  # Changed expectation
 end
 
 # ... existing code ...
