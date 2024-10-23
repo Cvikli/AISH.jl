@@ -1,3 +1,3 @@
 
-greet(name::String, greeting::String="Hello") = "$greeting, $name!"
+greet(name::String, greeting::String="Hi") = "$greeting, $name!"
 
