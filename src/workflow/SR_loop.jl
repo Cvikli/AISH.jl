@@ -42,7 +42,9 @@ end
 
 
 (m::SRWorkFlow)(user_question) = begin
-  ctx_test         = run_tests(m.test_frame) |> test_ctx_2_string
+  cd(m.workspace_context.workspace.root_path) do
+    ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
+  end
   ctx_shell        = m.extractor             |> shell_ctx_2_string
   m.LLM_reflection = user_question
   while !isempty(m.LLM_reflection) 
@@ -71,9 +73,10 @@ end
                       # on_done     = ()       -> (codeblock_runner(m.extractor, no_confirm=m.no_confirm);),
                       on_error    = (error)  -> add_error_message!(m.conv_ctx,"ERROR: $error"),
     )
-    codeblock_runner(m.extractor, no_confirm=m.no_confirm)
-    
-    ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
+	  cd(m.workspace_context.workspace.root_path) do
+      codeblock_runner(m.extractor, no_confirm=m.no_confirm)
+      ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
+    end
     ctx_shell      = m.extractor             |> shell_ctx_2_string
     commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, ctx_test, last_msg(m.conv_ctx)))
     LLM_answer     = LLM_reflect(ctx_question, ctx_shell, ctx_test, last_msg(m.conv_ctx))
