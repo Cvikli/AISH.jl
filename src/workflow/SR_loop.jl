@@ -51,7 +51,6 @@ end
     ctx_question   = user_question           |> m.question_acc
     ctx_codebase   = process_workspace_context(m.workspace_context, ctx_question; m.age_tracker)
     # ctx_jl_pkg     = process_julia_context(m.julia_context, ctx_question; m.age_tracker)
-    @show "juliacontext is done!"
     query = context_combiner!(
       user_question, 
       ctx_shell, 
@@ -60,8 +59,6 @@ end
       # (ctx_jl_pkg),
     )
 
-    @show "??"
-    
     m.conv_ctx(create_user_message(query))
 
     reset!(m.extractor)
