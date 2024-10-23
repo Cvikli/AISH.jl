@@ -21,7 +21,7 @@ SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm,  tes
   # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
   # test_frame        = init_testframework(test_cases, folder_path=virtual_workspace.rel_path)
   project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(conv_ctx) |> persist).rel_path]
-  test_frame        = init_testframework(test_cases, folder_path=project_paths[1])
+  test_frame        = TestFramework(test_cases) #, folder_path=project_paths[1])
   workspace_context = init_workspace_context(project_paths)
   julia_context     = init_julia_context()
   version_control   = GitTracker!(workspace_context.workspace, persist, conv_ctx)
@@ -35,17 +35,19 @@ SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm,  tes
                           shell_format_description(), 
                           workspace_format_description(), 
                           julia_format_description(), 
-                          test_format_description(test_frame))
+                          # test_format_description(test_frame),
+                          )
   
 	SRWorkFlow(persist, conv_ctx, workspace_context, test_frame, julia_context, age_tracker, question_acc, extractor, LLM_reflection, version_control, no_confirm)
 end
 
 
 (m::SRWorkFlow)(user_question) = begin
-  local ctx_test
-  cd(m.workspace_context.workspace.root_path) do
-    ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
-  end
+  # local ctx_test
+  # cd(m.workspace_context.workspace.root_path) do
+  #   ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
+  # end
+  user_question    = add_tests(user_question, m.test_frame)
   ctx_shell        = m.extractor             |> shell_ctx_2_string
   m.LLM_reflection = user_question
   while !isempty(m.LLM_reflection) 
@@ -57,7 +59,7 @@ end
     query = context_combiner!(
       user_question, 
       ctx_shell, 
-      ctx_test, 
+      # ctx_test, 
       (ctx_codebase), 
       # (ctx_jl_pkg),
     )
@@ -76,11 +78,11 @@ end
     )
 	  cd(m.workspace_context.workspace.root_path) do
       codeblock_runner(m.extractor, no_confirm=m.no_confirm)
-      ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
+      # ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
     end
     ctx_shell      = m.extractor             |> shell_ctx_2_string
-    commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, ctx_test, last_msg(m.conv_ctx)))
-    LLM_answer     = LLM_reflect(ctx_question, ctx_shell, ctx_test, last_msg(m.conv_ctx))
+    commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, last_msg(m.conv_ctx)))
+    LLM_answer     = LLM_reflect(ctx_question, ctx_shell, last_msg(m.conv_ctx))
     # println("-------LLM stuff")
     println(LLM_answer)
     m.LLM_reflection = is_continue(LLM_reflect_condition(LLM_answer)) ? LLM_answer : ""

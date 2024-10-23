@@ -1,3 +1,3 @@
-const AISHDIR      = joinpath(@__DIR__, "..")
-const LOGDIR       = joinpath(@__DIR__, "..", "conversations")
-const ANALYTICSDIR = joinpath(@__DIR__, "..", "analytics")
+const AISHDIR      = normpath(joinpath(@__DIR__, ".."))
+const LOGDIR       = normpath(joinpath(@__DIR__, "..", "conversations"))
+const ANALYTICSDIR = normpath(joinpath(@__DIR__, "..", "analytics"))

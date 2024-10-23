@@ -39,6 +39,7 @@ end""", test_filepath="test/humaneval/026_remove_duplicates.jl")
 
 
 #%%
+using LibGit2
 using EasyContext: merge, GitTracker, Branch
 path="/home/hm/repo/AIStuff/AISH.jl/conversations/01JAX3PK93BBX93ZWW/AISH.jl"
 original_path="/home/hm/repo/AIStuff/AISH.jl"
