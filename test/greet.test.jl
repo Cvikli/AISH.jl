@@ -9,6 +9,7 @@ println("Hi from the greet test file!")
     @test greet("Assistant") == "Hello, Assistant!"
     @test greet("Julia", "Hi") == "Hi, Julia!"
     @test greet("Test", "Hi") == "Hi, Test!"  # Added new test case
+    @test greet("User", "Hi") == "Hi, User!"  # New test case
 end
 
 # ... existing code ...
