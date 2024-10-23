@@ -13,7 +13,7 @@ mutable struct SRWorkFlow{WORKSPACE,JULIA_CTX}
 	no_confirm::Bool
 end
 
-SRWorkFlow(;user_question, resume, project_paths, logdir, show_tokens, silent, no_confirm,  test_cases, test_filepath) = begin
+SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm,  test_cases, test_filepath) = begin
   persist           = PersistableState(logdir)
   conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH)) |> persist
 	# init_commit_msg = LLM_job_to_do(user_question)
@@ -24,7 +24,7 @@ SRWorkFlow(;user_question, resume, project_paths, logdir, show_tokens, silent, n
   workspace_context = init_workspace_context(project_paths)
   test_frame        = init_testframework(test_cases, folder_path=project_paths[1])
   julia_context     = init_julia_context()
-  version_control   = GitTracker!(workspace_context.workspace, persist, conv_ctx, user_question)
+  version_control   = GitTracker!(workspace_context.workspace, persist, conv_ctx)
   
   age_tracker       = AgeTracker(max_history=14, cut_to=6)
   question_acc      = QuestionCTX()
