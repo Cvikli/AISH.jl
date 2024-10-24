@@ -43,6 +43,8 @@ end
 
 
 (m::SRWorkFlow)(user_question) = begin
+  occursin("MERGE", user_question) && return :READY
+
   # local ctx_test
   # cd(m.workspace_context.workspace.root_path) do
   #   ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
@@ -70,7 +72,7 @@ end
 
     cache = get_cache_setting(m.age_tracker, m.conv_ctx)
     error = LLM_solve(m.conv_ctx, cache;
-                      on_text     = (text)   -> extract_and_preprocess_codeblocks(text, m.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb)),
+                      on_text     = (text)   -> extract_and_preprocess_codeblocks(text, m.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb, m.workspace_context.workspace)),
                       on_meta_usr = (meta)   -> update_last_user_message_meta(m.conv_ctx, meta),
                       on_meta_ai  = (ai_msg) -> m.conv_ctx(ai_msg),
                       # on_done     = ()       -> (codeblock_runner(m.extractor, no_confirm=m.no_confirm);),
@@ -80,14 +82,14 @@ end
       codeblock_runner(m.extractor, no_confirm=m.no_confirm)
       # ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
     end
-    ctx_shell      = m.extractor             |> shell_ctx_2_string
+    ctx_shell        = m.extractor             |> shell_ctx_2_string
     commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, last_msg(m.conv_ctx)))
-    LLM_answer     = LLM_reflect(ctx_question, ctx_shell, last_msg(m.conv_ctx))
-    # println("-------LLM stuff")
+    LLM_answer       = LLM_reflect(ctx_question, ctx_shell, last_msg(m.conv_ctx))
     println(LLM_answer)
     m.LLM_reflection = is_continue(LLM_reflect_condition(LLM_answer)) ? LLM_answer : ""
 
     cut_old_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context, )
 
   end
+  return :FINISHED
 end
