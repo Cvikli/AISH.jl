@@ -1,4 +1,3 @@
-
 using Test
 include("../src/greeting.jl")
 
@@ -9,6 +8,3 @@ println("Hi from the greet test file!")
     @test greet("World") == "Hi, World!"
     @test greet("Orion") == "Hi, Orion!"
 end
-
-# ... existing code ...
-
