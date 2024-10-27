@@ -38,4 +38,6 @@ clean_branches(;paths=["."], branches=[], force=false) = begin
         # @show worktrees
     end
 end
-clean_branches(branches=["greet-me-with-hi"], force=true)
+cd("../../EasyContext.jl") do
+    clean_branches(branches=["create-gmail-draft"], force=true)
+end

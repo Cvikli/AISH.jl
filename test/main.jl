@@ -69,6 +69,6 @@ merge_git(repo_path::String, branch::String, commit_msg::String) = begin
 end
 # path="/home/hm/repo/AIStuff/AISH.jl/conversations/01JAZRNPBBH7Z3C2VE/AISH.jl"
 original_path="/home/master/repo/AIStuff/AISH.jl"
-branch="greet-user"
+branch="modify-sr-loop-to-interrupt-and-test-solutions"
 msg="Is it testabl"
 merge_git(original_path, branch, msg)

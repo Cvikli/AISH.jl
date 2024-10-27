@@ -40,8 +40,6 @@ include("workflow/STD_loop.jl")
 
 function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, 
   test_cases="", test_filepath="")
-  @show AISHDIR
-  cd(AISHDIR)
   !silent && greet(ChatSH)
 
   # model = AIModel(project_paths)
@@ -56,15 +54,10 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
     !silent && println("Thinking...")  # Only print if not silent
     
     result = model(user_question)
-    if result == :READY
-      break
-    elseif result == :INTERRUPTED
-    end
+    result == :MERGE && merge_git(model.version_control)
 
     user_question = ""
   end
-  @show user_question
-  merge_git(model.version_control)
 end
 
 function start(message=""; resume=false, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, test_cases="", test_filepath="")
