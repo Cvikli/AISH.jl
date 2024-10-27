@@ -20,7 +20,7 @@ SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, test
 
   # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
   # test_frame        = init_testframework(test_cases, folder_path=virtual_workspace.rel_path)
-  project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(conv_ctx) |> persist).rel_path]
+  project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]
   test_frame        = TestFramework(test_cases) #, folder_path=project_paths[1])
   workspace_context = init_workspace_context(project_paths)
   julia_context     = init_julia_context()
@@ -43,7 +43,7 @@ end
 
 
 (m::SRWorkFlow)(user_question) = begin
-  occursin("MERGE", user_question) && return :READY
+  occursin("MERGE", user_question) && return :MERGE
 
   # local ctx_test
   # cd(m.workspace_context.workspace.root_path) do
@@ -91,22 +91,14 @@ end
       println(LLM_answer)
       m.LLM_reflection = is_continue(LLM_reflect_condition(LLM_answer)) ? LLM_answer : ""
 
-            cut_old_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context)
-        end
-    catch e
-        if e isa InterruptException
-            println("\nSelf-reflection loop interrupted. Exiting...")
-            return :INTERRUPTED
-        elseif e isa ArgumentError
-            println("\nArgument error occurred. Please check your input.")
-            return :ERROR
-        elseif e isa MethodError
-            println("\nMethod error occurred. The function might be called with incorrect arguments.")
-            return :ERROR
-        else
-            println("\nAn unexpected error occurred: ", e)
-            return :ERROR
-        end
+      cut_old_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context)
     end
-    return :FINISHED
+  catch e
+    if e isa InterruptException
+      println("\nSelf-reflection loop interrupted. Exiting...")
+      return :INTERRUPTED
+    end
+    rethrow(e)
+  end
+  return :FINISHED
 end
