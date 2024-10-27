@@ -55,7 +55,11 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
     user_question = isempty(user_question) ? wait_user_question(user_question) : user_question
     !silent && println("Thinking...")  # Only print if not silent
     
-    model(user_question) == :READY && break
+    result = model(user_question)
+    if result == :READY
+      break
+    elseif result == :INTERRUPTED
+    end
 
     user_question = ""
   end
