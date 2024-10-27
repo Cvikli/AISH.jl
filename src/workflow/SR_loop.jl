@@ -91,15 +91,22 @@ end
       println(LLM_answer)
       m.LLM_reflection = is_continue(LLM_reflect_condition(LLM_answer)) ? LLM_answer : ""
 
-      cut_old_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context, )
+            cut_old_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context)
+        end
+    catch e
+        if e isa InterruptException
+            println("\nSelf-reflection loop interrupted. Exiting...")
+            return :INTERRUPTED
+        elseif e isa ArgumentError
+            println("\nArgument error occurred. Please check your input.")
+            return :ERROR
+        elseif e isa MethodError
+            println("\nMethod error occurred. The function might be called with incorrect arguments.")
+            return :ERROR
+        else
+            println("\nAn unexpected error occurred: ", e)
+            return :ERROR
+        end
     end
-  catch e
-    if e isa InterruptException
-      println("\nSelf-reflection loop interrupted. Exiting...")
-      return :INTERRUPTED
-    else
-      rethrow(e)
-    end
-  end
-  return :FINISHED
+    return :FINISHED
 end
