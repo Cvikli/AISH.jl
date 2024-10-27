@@ -1,16 +1,16 @@
 
 mutable struct SRWorkFlow{WORKSPACE,JULIA_CTX}
-	persist::PersistableState
-	conv_ctx::ConversationX
-	workspace_context::WORKSPACE
-	test_frame::TestFramework
-	julia_context::JULIA_CTX
-	age_tracker::AgeTracker
-	question_acc::QuestionCTX
-	extractor::CodeBlockExtractor
-	LLM_reflection::String
-	version_control::GitTracker
-	no_confirm::Bool
+    persist::PersistableState
+    conv_ctx::ConversationX
+    workspace_context::WORKSPACE
+    test_frame::TestFramework
+    julia_context::JULIA_CTX
+    age_tracker::AgeTracker
+    question_acc::QuestionCTX
+    extractor::CodeBlockExtractor
+    LLM_reflection::String
+    version_control::GitTracker
+    no_confirm::Bool
 end
 
 SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, test_cases, test_filepath) = begin
