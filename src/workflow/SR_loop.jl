@@ -1,19 +1,19 @@
 
 mutable struct SRWorkFlow{WORKSPACE,JULIA_CTX}
-	persist::PersistableState
-	conv_ctx::ConversationX
-	workspace_context::WORKSPACE
-	test_frame::TestFramework
-	julia_context::JULIA_CTX
-	age_tracker::AgeTracker
-	question_acc::QuestionCTX
-	extractor::CodeBlockExtractor
-	LLM_reflection::String
-	version_control::GitTracker
-	no_confirm::Bool
+    persist::PersistableState
+    conv_ctx::ConversationX
+    workspace_context::WORKSPACE
+    test_frame::TestFramework
+    julia_context::JULIA_CTX
+    age_tracker::AgeTracker
+    question_acc::QuestionCTX
+    extractor::CodeBlockExtractor
+    LLM_reflection::String
+    version_control::GitTracker
+    no_confirm::Bool
 end
 
-SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm,  test_cases, test_filepath) = begin
+SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, test_cases, test_filepath) = begin
   persist           = PersistableState(logdir)
   conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH)) |> persist
 	# init_commit_msg = LLM_job_to_do(user_question)
@@ -52,44 +52,61 @@ end
   user_question    = add_tests(user_question, m.test_frame)
   ctx_shell        = m.extractor             |> shell_ctx_2_string
   m.LLM_reflection = user_question
-  while !isempty(m.LLM_reflection) 
-    user_question  = m.LLM_reflection
-    
-    ctx_question   = user_question           |> m.question_acc
-    ctx_codebase   = process_workspace_context(m.workspace_context, ctx_question; m.age_tracker)
+  
+  try
+    while !isempty(m.LLM_reflection) 
+      user_question  = m.LLM_reflection
+      
+      ctx_question   = user_question           |> m.question_acc
+      ctx_codebase   = process_workspace_context(m.workspace_context, ctx_question; m.age_tracker)
     # ctx_jl_pkg     = process_julia_context(m.julia_context, ctx_question; m.age_tracker)
-    query = context_combiner!(
-      user_question, 
-      ctx_shell, 
+
+      query = context_combiner!(
+        user_question, 
+        ctx_shell, 
       # ctx_test, 
-      (ctx_codebase), 
+        (ctx_codebase),  
       # (ctx_jl_pkg),
-    )
+      )
 
-    m.conv_ctx(create_user_message(query))
+      m.conv_ctx(create_user_message(query))
 
-    reset!(m.extractor)
+      reset!(m.extractor)
 
-    cache = get_cache_setting(m.age_tracker, m.conv_ctx)
-    error = LLM_solve(m.conv_ctx, cache;
-                      on_text     = (text)   -> extract_and_preprocess_codeblocks(text, m.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb, m.workspace_context.workspace)),
-                      on_meta_usr = (meta)   -> update_last_user_message_meta(m.conv_ctx, meta),
-                      on_meta_ai  = (ai_msg) -> m.conv_ctx(ai_msg),
+      cache = get_cache_setting(m.age_tracker, m.conv_ctx)
+      error = LLM_solve(m.conv_ctx, cache;
+                        on_text     = (text)   -> extract_and_preprocess_codeblocks(text, m.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb, m.workspace_context.workspace)),
+                        on_meta_usr = (meta)   -> update_last_user_message_meta(m.conv_ctx, meta),
+                        on_meta_ai  = (ai_msg) -> m.conv_ctx(ai_msg),
                       # on_done     = ()       -> (codeblock_runner(m.extractor, no_confirm=m.no_confirm);),
-                      on_error    = (error)  -> add_error_message!(m.conv_ctx,"ERROR: $error"),
-    )
-	  cd(m.workspace_context.workspace.root_path) do
-      codeblock_runner(m.extractor, no_confirm=m.no_confirm)
+                        on_error    = (error)  -> add_error_message!(m.conv_ctx,"ERROR: $error"),
+      )
+      cd(m.workspace_context.workspace.root_path) do
+        codeblock_runner(m.extractor, no_confirm=m.no_confirm)
       # ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
+      end
+      ctx_shell        = m.extractor             |> shell_ctx_2_string
+      commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, last_msg(m.conv_ctx)))
+      LLM_answer       = LLM_reflect(ctx_question, ctx_shell, last_msg(m.conv_ctx))
+      println(LLM_answer)
+      m.LLM_reflection = is_continue(LLM_reflect_condition(LLM_answer)) ? LLM_answer : ""
+
+            cut_old_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context)
+        end
+    catch e
+        if e isa InterruptException
+            println("\nSelf-reflection loop interrupted. Exiting...")
+            return :INTERRUPTED
+        elseif e isa ArgumentError
+            println("\nArgument error occurred. Please check your input.")
+            return :ERROR
+        elseif e isa MethodError
+            println("\nMethod error occurred. The function might be called with incorrect arguments.")
+            return :ERROR
+        else
+            println("\nAn unexpected error occurred: ", e)
+            return :ERROR
+        end
     end
-    ctx_shell        = m.extractor             |> shell_ctx_2_string
-    commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, last_msg(m.conv_ctx)))
-    LLM_answer       = LLM_reflect(ctx_question, ctx_shell, last_msg(m.conv_ctx))
-    println(LLM_answer)
-    m.LLM_reflection = is_continue(LLM_reflect_condition(LLM_answer)) ? LLM_answer : ""
-
-    cut_old_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context, )
-
-  end
-  return :FINISHED
+    return :FINISHED
 end
