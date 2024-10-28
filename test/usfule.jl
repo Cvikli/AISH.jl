@@ -6,10 +6,11 @@ git worktree prune
 using LibGit2
 
 clean_branches(;paths=["."], branches=[], force=false) = begin
-    @assert force==false || !(force==true && !isempty(branches)) "Be careful to run this command with no specified branch but using FORCE delete! As it delete nearly every worktree. So only the real branches which aren't worktree stays..."
+    @assert force==false || (force==true && !isempty(branches)) "Be careful to run this command with no specified branch but using FORCE delete! As it delete nearly every worktree. So only the real branches which aren't worktree stays..."
+    @show pwd()
     for repo_path in paths
+        @show repo_path
         cd(repo_path) do
-            @show "3232"
             repo = LibGit2.GitRepo(repo_path)
             @show repo
             cmd = `git -C $repo_path worktree list`
@@ -47,4 +48,11 @@ clean_branches(;paths=["."], branches=[], force=false) = begin
         end
     end
 end
-clean_branches(branches=[], force=false)
+clean_branches(paths=["."],branches=["apply-changes-to-file-with-streaming-ai-generate"], force=true)
+
+#%%
+# split(read(`ls`, String),"\n")
+# #%%
+# cd("EasyContext.jl")
+# #%%
+# cd("../")
