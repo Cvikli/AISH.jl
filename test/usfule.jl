@@ -39,5 +39,5 @@ clean_branches(;paths=["."], branches=[], force=false) = begin
     end
 end
 cd("../../EasyContext.jl") do
-    clean_branches(branches=["create-gmail-draft"], force=true)
+    clean_branches(branches=[], force=false)
 end
