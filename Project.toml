@@ -7,3 +7,7 @@ version = "1.0.0"
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
 BoilerplateCvikli = "9c9f911a-9395-49bd-b3fc-139ceb24aa85"
 EasyContext = "5067fbba-b9ec-41e5-aa31-a8c1ac509a30"
+
+[compat]
+BoilerplateCvikli = "1.1.0"
+ArgParse = "1.2.0"

@@ -21,10 +21,11 @@ using EasyContext: init_conversation_context
 using EasyContext: process_workspace_context
 using EasyContext: process_julia_context
 using EasyContext: cut_old_history!
-using EasyContext: shell_format_description, workspace_format_description, julia_format_description, test_format_description, virtual_workspace_description
-using EasyContext: last_msg, init_testframework
+using EasyContext: shell_format_description, workspace_format_description, julia_format_description, virtual_workspace_description
+using EasyContext: last_msg
 using EasyContext: is_continue
 using EasyContext: ConversationX, TestFramework, PersistableState
+using EasyContext: merge_git
 using EasyContext
 
 include("utils.jl")
@@ -37,11 +38,12 @@ include("workflow/STD_loop.jl")
 
 
 
-function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, test_cases="", test_filepath="")
+function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, 
+  test_cases="", test_filepath="")
   !silent && greet(ChatSH)
 
-  model = AIModel(project_paths)
-  # model = SRWorkFlow(; resume, project_paths, logdir, show_tokens, silent, no_confirm, test_cases, test_filepath)
+  # model = AIModel(project_paths)
+  model = SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, test_cases, test_filepath)
 
   set_terminal_title("AISH $(model.workspace_context.workspace.root_path)")
 
@@ -51,11 +53,11 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
     user_question = isempty(user_question) ? wait_user_question(user_question) : user_question
     !silent && println("Thinking...")  # Only print if not silent
     
-    model(user_question)
+    result = model(user_question)
+    result == :MERGE && merge_git(model.version_control)
 
     user_question = ""
   end
-  
 end
 
 function start(message=""; resume=false, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, test_cases="", test_filepath="")
