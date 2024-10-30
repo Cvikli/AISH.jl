@@ -13,15 +13,14 @@ mutable struct SRWorkFlow{WORKSPACE,JULIA_CTX}
     no_confirm::Bool
 end
 
-SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, test_cases, test_filepath) = begin
+SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm) = begin
   persist           = PersistableState(logdir)
   conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH)) |> persist
 	# init_commit_msg = LLM_job_to_do(user_question)
 
   # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
-  # test_frame        = init_testframework(test_cases, folder_path=virtual_workspace.rel_path)
   project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]
-  test_frame        = TestFramework(test_cases) #, folder_path=project_paths[1])
+  # test_frame        = TestFramework(test_cases) #, folder_path=project_paths[1])
   workspace_context = init_workspace_context(project_paths)
   julia_context     = init_julia_context()
   version_control   = GitTracker!(workspace_context.workspace, persist, conv_ctx)
@@ -49,7 +48,7 @@ end
   # cd(m.workspace_context.workspace.root_path) do
   #   ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
   # end
-  user_question    = add_tests(user_question, m.test_frame)
+  # user_question    = add_tests(user_question, m.test_frame)
   ctx_shell        = m.extractor             |> shell_ctx_2_string
   m.LLM_reflection = user_question
   
@@ -64,9 +63,9 @@ end
       query = context_combiner!(
         user_question, 
         ctx_shell, 
-      # ctx_test, 
+        # ctx_test, 
         (ctx_codebase),  
-      # (ctx_jl_pkg),
+        (ctx_jl_pkg),
       )
 
       m.conv_ctx(create_user_message(query))
