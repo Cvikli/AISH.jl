@@ -67,7 +67,7 @@ end
         ctx_shell, 
         # ctx_test, 
         (ctx_codebase),  
-        (ctx_jl_pkg),
+        # (ctx_jl_pkg),
       )
 
       m.conv_ctx(create_user_message(query))
