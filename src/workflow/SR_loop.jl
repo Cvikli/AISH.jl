@@ -3,7 +3,7 @@ mutable struct SRWorkFlow{WORKSPACE,JULIA_CTX}
     persist::PersistableState
     conv_ctx::ConversationX
     workspace_context::WORKSPACE
-    test_frame::TestFramework
+    # test_frame::TestFramework
     julia_context::JULIA_CTX
     age_tracker::AgeTracker
     question_acc::QuestionCTX
@@ -32,12 +32,14 @@ SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm) = be
 
   append_ctx_descriptors(conv_ctx, 
                           shell_format_description(), 
-                          workspace_format_description(), 
+                          workspace_format_description(workspace_context.workspace), 
                           julia_format_description(), 
                           # test_format_description(test_frame),
                           )
   
-	SRWorkFlow(persist, conv_ctx, workspace_context, test_frame, julia_context, age_tracker, question_acc, extractor, LLM_reflection, version_control, no_confirm)
+	SRWorkFlow(persist, conv_ctx, workspace_context, 
+  # test_frame, 
+  julia_context, age_tracker, question_acc, extractor, LLM_reflection, version_control, no_confirm)
 end
 
 
