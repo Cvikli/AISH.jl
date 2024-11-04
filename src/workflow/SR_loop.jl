@@ -32,7 +32,7 @@ SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, test
   LLM_reflection    = ""
 
   append_ctx_descriptors(conv_ctx, 
-                          shell_format_description(), 
+                          SHELL_run_results, 
                           workspace_format_description(), 
                           julia_format_description(), 
                           # test_format_description(test_frame),

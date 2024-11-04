@@ -18,7 +18,7 @@ struct AIModel
             QuestionCTX(),
             CodeBlockExtractor(),
         )
-        append_ctx_descriptors(m.conv_ctx, shell_format_description(), workspace_format_description(), julia_format_description())
+        append_ctx_descriptors(m.conv_ctx, SHELL_run_results, workspace_format_description(), julia_format_description())
         m
     end
 end
