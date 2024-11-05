@@ -42,10 +42,10 @@ function (model::AIModel)(user_question)
 
     cache = get_cache_setting(model.age_tracker, model.conv_ctx)
     error = LLM_solve(model.conv_ctx, cache;
-                      on_text     = (text)   -> extract_and_preprocess_codeblocks(text, model.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb, m.workspace_context.workspace)),
+                      on_text     = (text)   -> extract_and_preprocess_codeblocks(text, model.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb, model.workspace_context.workspace)),
                       on_meta_usr = (meta)   -> update_last_user_message_meta(model.conv_ctx, meta),
                       on_meta_ai  = (ai_msg) -> model.conv_ctx(ai_msg),
-                      on_done     = ()       -> @async_showerr(codeblock_runner(model.extractor)),
+                      on_done     = ()       -> @async_showerr(cd(()->codeblock_runner(model.extractor), model.workspace_context)),
                       on_error    = (error)  -> add_error_message!(model.conv_ctx,"ERROR: $error"),
     )
 
