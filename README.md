@@ -5,12 +5,13 @@
 
 Everything is a transformation... You can describe every workflow soon...
 
+THE PACEKAGE is in an extremely experimental, it works for me but... no real docs yet!
+
 AI SH to do EVERYTHING on PC
 
 AISH provide a new way of coding. Basically we switch from 100% code file editing to 10% codefile editing and 90% codeblock editing from the AISH. 
 
 Vscode extension will come. 
-
 
 AISH.jl (AI Shell) is a Julia package that provides an interactive AI-powered command-line interface for assisting users with system tasks using shell commands.
 
@@ -36,6 +37,22 @@ https://github.com/user-attachments/assets/21b7504a-b06a-4579-ae27-6343079c7081
 - Shell command execution
 - Conversation logging
 
+## Version Control Integration
+
+AISH.jl supports git integration through a detached development workspace feature:
+
+- When `detached_git_dev=true` (default), AISH creates separate git worktrees for each project, allowing version control without affecting the original repository.
+- Changes are tracked and can be merged back to the original repository using the MERGE command.
+- Disable with `detached_git_dev=false` if you prefer to work directly in the original workspace without version control.
+
+Example usage:
+```julia
+# With version control (default)
+AISH.start("my question", project_paths=["path/to/project"])
+
+# Without version control
+AISH.start("my question", project_paths=["path/to/project"], detached_git_dev=false)
+```
 
 ## Limitation estimation (Sonnet 3.5)
 - On very basic cases it works around like 90-99% of the times. 
