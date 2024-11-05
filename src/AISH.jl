@@ -74,6 +74,7 @@ function main(;loop=true)
         logdir=args["log-dir"], 
         loop=!args["no-loop"] && loop, 
         no_confirm=args["no-confirm"],
+        use_git=!args["no-git"],  # Add this line
   )
 end
 julia_main(;loop=true) = main(;loop)

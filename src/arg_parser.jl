@@ -34,7 +34,11 @@ function parse_commandline()
         "--no-confirm", "-y"
             help = "Run shell blocks without confirmation"
             action = :store_true
+        "--no-git"
+            help = "Disable git tracking"
+            action = :store_true
     end
 
     return parse_args(s)
 end
+
