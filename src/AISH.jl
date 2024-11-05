@@ -37,13 +37,11 @@ include("AI_prompt.jl")
 include("workflow/SR_loop.jl")
 include("workflow/STD_loop.jl")
 
-
-
-function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true)
+function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, use_git=true)
   !silent && greet(ChatSH)
 
   # model = AIModel(project_paths)
-  model = SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm)
+  model = SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, use_git)
 
   set_terminal_title("AISH $(model.workspace_context.workspace.root_path)")
 
@@ -60,9 +58,9 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
   end
 end
 
-function start(message=""; resume=false, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true)
+function start(message=""; resume=false, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, use_git=true)
   nice_exit_handler()
-  start_conversation(message, silent=!isempty(message); loop, resume, project_paths, logdir, show_tokens, no_confirm)
+  start_conversation(message, silent=!isempty(message); loop, resume, project_paths, logdir, show_tokens, no_confirm, use_git)
 end
 
 function main(;loop=true)
@@ -74,6 +72,7 @@ function main(;loop=true)
         logdir=args["log-dir"], 
         loop=!args["no-loop"] && loop, 
         no_confirm=args["no-confirm"],
+        use_git=!args["no-git"],  # Add this line
   )
 end
 julia_main(;loop=true) = main(;loop)
