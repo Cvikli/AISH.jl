@@ -15,13 +15,14 @@ using EasyContext: extract_and_preprocess_codeblocks
 using EasyContext: LLM_conditonal_apply_changes, LLM_reflect
 using EasyContext: get_cache_setting
 using EasyContext: codeblock_runner
-using EasyContext: shell_ctx_2_string, test_ctx_2_string
+using EasyContext: shell_ctx_2_string
 using EasyContext: init_workspace_context
 using EasyContext: init_conversation_context
 using EasyContext: process_workspace_context
 using EasyContext: process_julia_context
 using EasyContext: cut_old_history!
 using EasyContext: workspace_format_description, julia_format_description
+using EasyContext: SHELL_run_results
 using EasyContext: last_msg
 using EasyContext: is_continue
 using EasyContext: ConversationX, TestFramework, PersistableState
