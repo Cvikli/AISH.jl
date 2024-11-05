@@ -9,11 +9,11 @@ mutable struct SRWorkFlow{WORKSPACE,JULIA_CTX}
     question_acc::QuestionCTX
     extractor::CodeBlockExtractor
     LLM_reflection::String
-    version_control::GitTracker
+    version_control::Union{GitTracker,Nothing}  # Make it optional
     no_confirm::Bool
 end
 
-SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm) = begin
+SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, use_git=true) = begin
   persist           = PersistableState(logdir)
   conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH)) |> persist
 	# init_commit_msg = LLM_job_to_do(user_question)
@@ -23,7 +23,7 @@ SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm) = be
   # test_frame        = TestFramework(test_cases) #, folder_path=project_paths[1])
   workspace_context = init_workspace_context(project_paths)
   julia_context     = init_julia_context()
-  version_control   = GitTracker!(workspace_context.workspace, persist, conv_ctx)
+  version_control   = use_git ? GitTracker!(workspace_context.workspace, persist, conv_ctx) : nothing
   
   age_tracker       = AgeTracker(max_history=14, cut_to=6)
   question_acc      = QuestionCTX()
@@ -87,7 +87,7 @@ end
         # ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
       end
       ctx_shell        = m.extractor             |> shell_ctx_2_string
-      commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, last_msg(m.conv_ctx)))
+      !isnothing(m.version_control) && commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, last_msg(m.conv_ctx)))
       LLM_answer       = LLM_reflect(ctx_question, ctx_shell, last_msg(m.conv_ctx))
       m.LLM_reflection = is_continue(LLM_reflect_condition(LLM_answer)) ? LLM_answer : ""
 
