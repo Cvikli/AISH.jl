@@ -37,11 +37,11 @@ include("AI_prompt.jl")
 include("workflow/SR_loop.jl")
 include("workflow/STD_loop.jl")
 
-function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, use_git=true)
+function start_conversation(user_question=""; resume, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true)
   !silent && greet(ChatSH)
 
   # model = AIModel(project_paths)
-  model = SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, use_git)
+  model = SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev)
 
   set_terminal_title("AISH $(model.workspace_context.workspace.root_path)")
 
@@ -58,9 +58,9 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
   end
 end
 
-function start(message=""; resume=false, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, use_git=true)
+function start(message=""; resume=false, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true)
   nice_exit_handler()
-  start_conversation(message, silent=!isempty(message); loop, resume, project_paths, logdir, show_tokens, no_confirm, use_git)
+  start_conversation(message, silent=!isempty(message); loop, resume, project_paths, logdir, show_tokens, no_confirm, detached_git_dev)
 end
 
 function main(;loop=true)
@@ -72,7 +72,7 @@ function main(;loop=true)
         logdir=args["log-dir"], 
         loop=!args["no-loop"] && loop, 
         no_confirm=args["no-confirm"],
-        use_git=!args["no-git"],  # Add this line
+        detached_git_dev=!args["no-git"],  # Renamed here
   )
 end
 julia_main(;loop=true) = main(;loop)
