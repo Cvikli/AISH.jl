@@ -79,12 +79,12 @@ end
                         on_text     = (text)   -> extract_and_preprocess_codeblocks(text, m.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb, m.workspace_context.workspace)),
                         on_meta_usr = (meta)   -> update_last_user_message_meta(m.conv_ctx, meta),
                         on_meta_ai  = (ai_msg) -> m.conv_ctx(ai_msg),
-                      # on_done     = ()       -> (codeblock_runner(m.extractor, no_confirm=m.no_confirm);),
+                        # on_done     = ()       -> (codeblock_runner(m.extractor, no_confirm=m.no_confirm);),
                         on_error    = (error)  -> add_error_message!(m.conv_ctx,"ERROR: $error"),
       )
-      cd(m.workspace_context.workspace.root_path) do
+      cd(m.workspace_context) do
         codeblock_runner(m.extractor, no_confirm=m.no_confirm)
-      # ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
+        # ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
       end
       ctx_shell        = m.extractor             |> shell_ctx_2_string
       commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, last_msg(m.conv_ctx)))
