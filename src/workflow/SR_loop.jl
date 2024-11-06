@@ -13,7 +13,7 @@ mutable struct SRWorkFlow{WORKSPACE,JULIA_CTX}
     no_confirm::Bool
 end
 
-SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, use_git=true) = begin
+SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev=true) = begin
   persist           = PersistableState(logdir)
   conv_ctx          = init_conversation_context(SYSTEM_PROMPT(ChatSH)) |> persist
 	# init_commit_msg = LLM_job_to_do(user_question)
@@ -23,13 +23,13 @@ SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, use_
   # test_frame        = TestFramework(test_cases) #, folder_path=project_paths[1])
   workspace_context = init_workspace_context(project_paths)
   julia_context     = init_julia_context()
-  version_control   = use_git ? GitTracker!(workspace_context.workspace, persist, conv_ctx) : nothing
+  version_control   = detached_git_dev && false ? GitTracker!(workspace_context.workspace, persist, conv_ctx) : nothing
   
   age_tracker       = AgeTracker(max_history=14, cut_to=6)
   question_acc      = QuestionCTX()
   extractor         = CodeBlockExtractor()
   LLM_reflection    = ""
-
+  
   append_ctx_descriptors(conv_ctx, 
                           SHELL_run_results, 
                           workspace_format_description(workspace_context.workspace), 
@@ -79,7 +79,7 @@ end
       error = LLM_solve(m.conv_ctx, cache;
                         on_text     = (text)   -> extract_and_preprocess_codeblocks(text, m.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb, m.workspace_context.workspace)),
                         on_meta_usr = (meta)   -> update_last_user_message_meta(m.conv_ctx, meta),
-                        on_meta_ai  = (ai_msg) -> m.conv_ctx(ai_msg) |> persist,
+                        on_meta_ai  = (ai_msg) -> m.conv_ctx(ai_msg) |> m.persist,
                         # on_done     = ()       -> (codeblock_runner(m.extractor, no_confirm=m.no_confirm);),
                         on_error    = (error)  -> add_error_message!(m.conv_ctx,"ERROR: $error"),
       )

@@ -2,7 +2,7 @@ using ArgParse
 
 function parse_commandline()
     s = ArgParseSettings()
-
+    
     @add_arg_table! s begin
         "message"
             help = "Initial message to start the conversation"
@@ -34,8 +34,8 @@ function parse_commandline()
         "--no-confirm", "-y"
             help = "Run shell blocks without confirmation"
             action = :store_true
-        "--no-git"
-            help = "Disable git tracking"
+        "--git"
+            help = "Enable detached git development workspace feature. It creates separate worktrees per session for version control and to keep the original repository intact and allow parallel workflow of 2-5-20 feature for the AIs."
             action = :store_true
     end
 

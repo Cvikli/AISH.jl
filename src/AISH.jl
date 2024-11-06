@@ -25,7 +25,7 @@ using EasyContext: workspace_format_description, julia_format_description
 using EasyContext: SHELL_run_results
 using EasyContext: last_msg
 using EasyContext: is_continue
-using EasyContext: ConversationX, TestFramework, PersistableState
+using EasyContext: ConversationX, Conversation, TestFramework, PersistableState
 using EasyContext: merge_git
 using EasyContext
 
@@ -43,6 +43,7 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
   # model = AIModel(project_paths)
   model = SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev)
 
+  nice_exit_handler(model.conv_ctx)
   set_terminal_title("AISH $(model.workspace_context.workspace.root_path)")
 
   !silent && isempty(user_question) && (isdefined(Base, :active_repl) ? println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ") : println("Your multiline input (empty line to finish):"))
@@ -52,14 +53,13 @@ function start_conversation(user_question=""; resume, project_paths, logdir, sho
     !silent && println("Thinking...")  # Only print if not silent
     
     result = model(user_question)
-    result == :MERGE && merge_git(model.version_control)
+    result == :MERGE && isdefined(model, :version_control) && !isnothing(model.version_control) && merge_git(model.version_control)
 
     user_question = ""
   end
 end
 
 function start(message=""; resume=false, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true)
-  nice_exit_handler()
   start_conversation(message, silent=!isempty(message); loop, resume, project_paths, logdir, show_tokens, no_confirm, detached_git_dev)
 end
 
@@ -72,7 +72,7 @@ function main(;loop=true)
         logdir=args["log-dir"], 
         loop=!args["no-loop"] && loop, 
         no_confirm=args["no-confirm"],
-        detached_git_dev=!args["no-git"],  # Renamed here
+        detached_git_dev=args["git"],  # Renamed here
   )
 end
 julia_main(;loop=true) = main(;loop)

@@ -2,7 +2,7 @@ using Revise
 using RelevanceStacktrace
 using AISH: start
 
-start("greet me with hi please", project_paths=["."])
+start("greet me with hi please", project_paths=["."], detached_git_dev=false)
 # start("his implementation efficiently computes the n-th element of the fib4 sequence without using recursion. It uses a loop to iterate through the sequence, updating four variables that represent the last four numbers in the sequence. The function also handles the base cases for n = 0, 1, 2, and 3 as specified in the problem description.", project_paths=["."], loop=true)
 #%%
 
