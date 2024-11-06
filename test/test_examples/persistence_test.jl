@@ -6,7 +6,7 @@ using EasyContext: Message, create_user_message
     logdir = tempname()
     mkpath(logdir)
     try
-        # First message
+        # Basic persistence test
         model = SRWorkFlow(resume=false, project_paths=String[], logdir=logdir, show_tokens=false, silent=true, no_confirm=true)
         model.conv_ctx(create_user_message("Hello"))
         model.persist(model.conv_ctx)
@@ -16,16 +16,41 @@ using EasyContext: Message, create_user_message
         model2 = SRWorkFlow(resume=true, project_paths=String[], logdir=logdir, show_tokens=false, silent=true, no_confirm=true)
         @test length(model2.conv_ctx.messages) == msg_count
         
-        # Add AI message
-        model2.conv_ctx(Message("assistant", "Hi there!"))
+        # Test large message
+        large_msg = "X" ^ 10000
+        model2.conv_ctx(Message("assistant", large_msg))
         model2.persist(model2.conv_ctx)
-        msg_count2 = length(model2.conv_ctx.messages)
         
-        # Resume and verify second state
+        # Resume and verify large message
         model3 = SRWorkFlow(resume=true, project_paths=String[], logdir=logdir, show_tokens=false, silent=true, no_confirm=true)
-        @test length(model3.conv_ctx.messages) == msg_count2
-        @test model3.conv_ctx.messages[end].content == "Hi there!"
+        @test model3.conv_ctx.messages[end].content == large_msg
+
+        # Test multiple rapid persists
+        for i in 1:5
+            model3.conv_ctx(Message("user", "Message $i"))
+            model3.persist(model3.conv_ctx)
+        end
+        msg_count3 = length(model3.conv_ctx.messages)
+
+        # Verify all messages persisted
+        model4 = SRWorkFlow(resume=true, project_paths=String[], logdir=logdir, show_tokens=false, silent=true, no_confirm=true)
+        @test length(model4.conv_ctx.messages) == msg_count3
+        @test model4.conv_ctx.messages[end].content == "Message 5"
     finally
         rm(logdir, recursive=true, force=true)
     end
 end
+
+# Test resume with missing/corrupted persistence
+@testset "Persistence Edge Cases" begin
+    logdir = tempname()
+    mkpath(logdir)
+    try
+        # Test with non-existent persistence file
+        model = SRWorkFlow(resume=true, project_paths=String[], logdir=logdir, show_tokens=false, silent=true, no_confirm=true)
+        @test length(model.conv_ctx.messages) > 0  # Should have system message at least
+    finally
+        rm(logdir, recursive=true, force=true)
+    end
+end
+
