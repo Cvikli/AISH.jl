@@ -1,41 +1,58 @@
 using Test
 using AISH
-using EasyContext: Message, create_user_message
+using EasyContext
+using EasyContext: WebMessage, create_user_message, ConversationX, init_conversation_context, save_conversation, load_conversation
+using Dates
+
+# Helper to create a WebMessage
+create_web_message(role, content) = WebMessage(;
+    timestamp=now(),
+    role=Symbol(role),
+    content=content,
+    itok=0,
+    otok=0,
+    cached=0,
+    cache_read=0,
+    price=0.0f0,
+    elapsed=0.0f0
+)
 
 @testset "Conversation Persistence" begin
     logdir = tempname()
     mkpath(logdir)
     try
         # Basic persistence test
-        model = SRWorkFlow(resume=false, project_paths=String[], logdir=logdir, show_tokens=false, silent=true, no_confirm=true)
-        model.conv_ctx(create_user_message("Hello"))
-        model.persist(model.conv_ctx)
-        msg_count = length(model.conv_ctx.messages)
+        conv = init_conversation_context("Test system prompt")
+        conv(create_web_message("user", "Hello"))  # Use WebMessage consistently
+        
+        filepath = joinpath(logdir, "test.json")
+        save_conversation(filepath, conv)
+        msg_count = length(conv.messages)
         
         # Resume and verify first state
-        model2 = SRWorkFlow(resume=true, project_paths=String[], logdir=logdir, show_tokens=false, silent=true, no_confirm=true)
-        @test length(model2.conv_ctx.messages) == msg_count
+        loaded_conv = load_conversation(filepath)
+        @test length(loaded_conv.messages) == msg_count
         
         # Test large message
         large_msg = "X" ^ 10000
-        model2.conv_ctx(Message("assistant", large_msg))
-        model2.persist(model2.conv_ctx)
+        conv(create_web_message("assistant", large_msg))
+        save_conversation(filepath, conv)
         
         # Resume and verify large message
-        model3 = SRWorkFlow(resume=true, project_paths=String[], logdir=logdir, show_tokens=false, silent=true, no_confirm=true)
-        @test model3.conv_ctx.messages[end].content == large_msg
+        loaded_conv2 = load_conversation(filepath)
+        @test loaded_conv2.messages[end].content == large_msg
 
         # Test multiple rapid persists
         for i in 1:5
-            model3.conv_ctx(Message("user", "Message $i"))
-            model3.persist(model3.conv_ctx)
+            conv(create_web_message("user", "Message $i"))
+            save_conversation(filepath, conv)
         end
-        msg_count3 = length(model3.conv_ctx.messages)
+        msg_count3 = length(conv.messages)
 
         # Verify all messages persisted
-        model4 = SRWorkFlow(resume=true, project_paths=String[], logdir=logdir, show_tokens=false, silent=true, no_confirm=true)
-        @test length(model4.conv_ctx.messages) == msg_count3
-        @test model4.conv_ctx.messages[end].content == "Message 5"
+        loaded_conv3 = load_conversation(filepath)
+        @test length(loaded_conv3.messages) == msg_count3
+        @test loaded_conv3.messages[end].content == "Message 5"
     finally
         rm(logdir, recursive=true, force=true)
     end
@@ -46,30 +63,22 @@ end
     logdir = tempname()
     mkpath(logdir)
     try
-        # Test with non-existent persistence file
-        model = SRWorkFlow(resume=true, project_paths=String[], logdir=logdir, show_tokens=false, silent=true, no_confirm=true)
-        @test length(model.conv_ctx.messages) > 0  # Should have system message at least
+        filepath = joinpath(logdir, "test.json")
         
-        # Test with corrupted persistence file
-        model.conv_ctx(create_user_message("Test message"))
-        model.persist(model.conv_ctx)
+        # Test with non-existent file
+        @test_throws SystemError load_conversation(filepath)
         
-        # Corrupt the persistence file
-        persistence_file = first(filter(f->endswith(f, ".json"), readdir(logdir, join=true)))
-        write(persistence_file, "{corrupted json")
+        # Test with corrupted file
+        write(filepath, "{corrupted json")
+        @test_throws ArgumentError load_conversation(filepath)
         
-        # Should handle corrupted file gracefully
-        model2 = SRWorkFlow(resume=true, project_paths=String[], logdir=logdir, show_tokens=false, silent=true, no_confirm=true)
-        @test length(model2.conv_ctx.messages) > 0  # Should still have system message
+        # Test with partial write
+        conv = init_conversation_context("Test")
+        conv(create_web_message("user", "Test message"))
+        save_conversation(filepath, conv)
+        truncate(filepath, filesize(filepath) ÷ 2)
         
-        # Partially written file simulation
-        model2.conv_ctx(create_user_message("Another test"))
-        model2.persist(model2.conv_ctx)
-        truncate(persistence_file, filesize(persistence_file) ÷ 2)  # Simulate partial write
-        
-        # Should handle partial file gracefully
-        model3 = SRWorkFlow(resume=true, project_paths=String[], logdir=logdir, show_tokens=false, silent=true, no_confirm=true)
-        @test length(model3.conv_ctx.messages) > 0
+        @test_throws ArgumentError load_conversation(filepath)
     finally
         rm(logdir, recursive=true, force=true)
     end
