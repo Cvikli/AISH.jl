@@ -25,7 +25,7 @@ SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, deta
   julia_context     = init_julia_context()
   version_control   = detached_git_dev && false ? GitTracker!(workspace_context.workspace, persist, conv_ctx) : nothing
   
-  age_tracker       = AgeTracker(max_history=14, cut_to=6)
+  age_tracker       = AgeTracker(max_history=10, cut_to=4)
   question_acc      = QuestionCTX()
   extractor         = CodeBlockExtractor()
   LLM_reflection    = ""
@@ -92,7 +92,7 @@ end
       LLM_answer       = LLM_reflect(ctx_question, ctx_shell, last_msg(m.conv_ctx))
       m.LLM_reflection = is_continue(LLM_reflect_condition(LLM_answer)) ? LLM_answer : ""
 
-      cut_old_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context)
+      cut_old_conversation_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context)
     end
   catch e
     if e isa InterruptException

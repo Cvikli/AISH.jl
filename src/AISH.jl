@@ -20,7 +20,7 @@ using EasyContext: init_workspace_context
 using EasyContext: init_conversation_context
 using EasyContext: process_workspace_context
 using EasyContext: process_julia_context
-using EasyContext: cut_old_history!
+using EasyContext: cut_old_conversation_history!
 using EasyContext: workspace_format_description, julia_format_description
 using EasyContext: SHELL_run_results
 using EasyContext: last_msg

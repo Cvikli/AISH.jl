@@ -48,8 +48,9 @@ function (model::AIModel)(user_question)
                       on_done     = ()       -> @async_showerr(cd(()->codeblock_runner(model.extractor), model.workspace_context)),
                       on_error    = (error)  -> add_error_message!(model.conv_ctx,"ERROR: $error"),
     )
+    log_instant_apply(model.extractor, ctx_question)
 
-    cut_old_history!(model.age_tracker, model.conv_ctx, model.julia_context, model.workspace_context)
+    cut_old_conversation_history!(model.age_tracker, model.conv_ctx, model.julia_context, model.workspace_context)
 
     return error
 end
