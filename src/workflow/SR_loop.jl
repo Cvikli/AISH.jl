@@ -71,6 +71,7 @@ end
       )
 
       m.conv_ctx(create_user_message(query))
+      m.persist(m.conv_ctx) # Persist after user message
 
       reset!(m.extractor)
 
@@ -78,7 +79,7 @@ end
       error = LLM_solve(m.conv_ctx, cache;
                         on_text     = (text)   -> extract_and_preprocess_codeblocks(text, m.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb, m.workspace_context.workspace)),
                         on_meta_usr = (meta)   -> update_last_user_message_meta(m.conv_ctx, meta),
-                        on_meta_ai  = (ai_msg) -> m.conv_ctx(ai_msg),
+                        on_meta_ai  = (ai_msg) -> (m.conv_ctx(ai_msg) |> persist,
                         # on_done     = ()       -> (codeblock_runner(m.extractor, no_confirm=m.no_confirm);),
                         on_error    = (error)  -> add_error_message!(m.conv_ctx,"ERROR: $error"),
       )
