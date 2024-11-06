@@ -17,7 +17,6 @@ using EasyContext: get_cache_setting
 using EasyContext: codeblock_runner
 using EasyContext: shell_ctx_2_string
 using EasyContext: init_workspace_context
-using EasyContext: init_conversation_context
 using EasyContext: process_workspace_context
 using EasyContext: process_julia_context
 using EasyContext: cut_old_conversation_history!
