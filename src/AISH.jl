@@ -24,7 +24,7 @@ using EasyContext: workspace_format_description, julia_format_description
 using EasyContext: SHELL_run_results
 using EasyContext: last_msg
 using EasyContext: is_continue
-using EasyContext: ConversationX, Conversation, TestFramework, PersistableState
+using EasyContext: ConversationX, Conversation, TestFramework, PersistableState, ConversationX_
 using EasyContext: merge_git
 using EasyContext
 

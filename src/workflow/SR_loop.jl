@@ -15,7 +15,7 @@ end
 
 SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev=true) = begin
   persist           = PersistableState(logdir)
-  conv_ctx          = ConversationX(SYSTEM_PROMPT(ChatSH)) |> persist
+  conv_ctx          = ConversationX_(sys_msg=SYSTEM_PROMPT(ChatSH)) |> persist
 	# init_commit_msg = LLM_job_to_do(user_question)
 
   # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)

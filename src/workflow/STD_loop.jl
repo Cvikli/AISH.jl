@@ -13,7 +13,7 @@ struct AIModel
         m = new(
             init_workspace_context(project_paths),
             init_julia_context(),
-            ConversationX(SYSTEM_PROMPT(ChatSH)),
+            ConversationX_(sys_msg=SYSTEM_PROMPT(ChatSH)),
             AgeTracker(max_history=10, cut_to=4),
             QuestionCTX(),
             CodeBlockExtractor(),
