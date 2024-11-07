@@ -1,8 +1,9 @@
 using AISH
-# using PrecompileTools
+using AISH: AIModel
+using PrecompileTools
 
-# @setup_workload begin
-#     @compile_workload begin
+@setup_workload begin
+    @compile_workload begin
 #         # Simulate parsing command line arguments
 #         args = AISH.parse_commandline()
         
@@ -17,5 +18,6 @@ using AISH
 
 #         # Simulate main function call
 #         AISH.main(loop=false)
-#     end
-# end
+        AIModel(String[])
+    end
+end

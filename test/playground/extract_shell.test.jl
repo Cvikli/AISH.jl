@@ -100,6 +100,69 @@ using ReTestItems
         end
     end
 
+    @testset "Strange content" begin
+        content = """
+        Something...
+        MODIFY ./README.md
+        ```markdown
+        # monaco-meld 
+
+        A drop in replacement for meld with monaco diff. A lightweight Electron based app for fast diffing 2 files.
+
+        ## Features
+
+        - Hopefully lightweight, so fast start
+        - Arrow based navigation
+        - Alt + Up/Down: Navigate between changes
+        - Alt + Left: Accept current change from right to left
+        - Syntax highlighting with Monaco
+
+        ## Usage
+
+        Basic file comparison:
+        ```sh
+        ./monaco-meld-1.0.0.AppImage file1.js file2.js
+        ```
+
+        Compare file with stdin content:
+        ```sh
+        ./monaco-meld-1.0.0.AppImage file1.js <(echo "modified content")
+        ```
+
+        Compare with multiline content:
+        ```sh
+        ./monaco-meld-1.0.0.AppImage file1.js <(cat <<EOF
+        new content here
+        with multiple lines
+        EOF
+        )
+        ```
+
+        ## Building
+        Processing diff with AI for higher quality...
+
+        ```sh
+        npm install
+        npm run build
+        ```
+
+        ## Requirements
+
+        Some might need to run .appImages on Ubuntu 24.04.
+
+        ```sh
+        sudo apt install libfuse2
+        ```
+
+        ## License
+        ...
+        ```
+        Ende
+        """
+        original_extracted = AISH.extract_shell_commands(content)
+    end
+        
+
     @testset "Comparison with original method" begin
         content = """
         Some text
