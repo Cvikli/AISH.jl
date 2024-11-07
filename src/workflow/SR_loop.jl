@@ -13,20 +13,41 @@ mutable struct SRWorkFlow{WORKSPACE,JULIA_CTX}
     no_confirm::Bool
 end
 
-SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev=true) = begin
+SRWorkFlow(;resume::PersistableWorkFlowSettings) = begin
+  SRWorkFlow(;resume.conv_ctx, resume.question_acc, 
+              resume.workspace_context, resume.julia_context,
+              resume.age_tracker,  
+              resume.version_control,
+              resume.config["no_confirm"], )
+end
+SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=true, kwargs...) = begin
   persist           = PersistableState(logdir)
   conv_ctx          = ConversationX_(sys_msg=SYSTEM_PROMPT(ChatSH)) |> persist
-	# init_commit_msg = LLM_job_to_do(user_question)
-
-  # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
+  question_acc      = QuestionCTX()
   project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]
   # test_frame        = TestFramework(test_cases) #, folder_path=project_paths[1])
   workspace_context = init_workspace_context(project_paths; show_tokens)
-  julia_context     = init_julia_context()
   version_control   = detached_git_dev && false ? GitTracker!(workspace_context.workspace, persist, conv_ctx) : nothing
-  
+  julia_context     = init_julia_context()
+
   age_tracker       = AgeTracker(max_history=10, cut_to=4)
-  question_acc      = QuestionCTX()
+
+  SRWorkFlow(;persist, conv_ctx, question_acc, 
+              workspace_context, julia_context,
+              age_tracker,
+              version_control,
+              no_confirm)
+end
+SRWorkFlow(;persist, conv_ctx, question_acc, 
+            workspace_context, julia_context,
+            age_tracker,
+            version_control,
+            no_confirm, kwargs...) = begin
+  
+	# init_commit_msg = LLM_job_to_do(user_question)
+
+  # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
+  
   extractor         = CodeBlockExtractor()
   LLM_reflection    = ""
   
@@ -38,8 +59,8 @@ SRWorkFlow(;resume, project_paths, logdir, show_tokens, silent, no_confirm, deta
                           )
   
 	SRWorkFlow(persist, conv_ctx, workspace_context, 
-  # test_frame, 
-  julia_context, age_tracker, question_acc, extractor, LLM_reflection, version_control, no_confirm)
+              # test_frame, 
+              julia_context, age_tracker, question_acc, extractor, LLM_reflection, version_control, no_confirm)
 end
 
 
