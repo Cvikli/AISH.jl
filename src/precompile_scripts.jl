@@ -18,6 +18,6 @@ using PrecompileTools
 
 #         # Simulate main function call
 #         AISH.main(loop=false)
-        AIModel(String[])
+        AIModel(project_paths=String[])
     end
 end
