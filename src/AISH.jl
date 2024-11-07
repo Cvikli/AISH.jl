@@ -32,7 +32,7 @@ include("utils.jl")
 include("config.jl")
 include("arg_parser.jl")
 
-include("AI_prompt.jl")
+include("prompt.jl")
 include("workflow/SR_loop.jl")
 include("workflow/STD_loop.jl")
 
