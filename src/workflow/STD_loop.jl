@@ -1,7 +1,7 @@
 using EasyContext
 using BoilerplateCvikli: @async_showerr
 
-struct AIModel
+struct AIModel <: Workflow
     workspace_context::WorkspaceCTX
     julia_context::JuliaCTX
     conv_ctx::ConversationX

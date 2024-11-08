@@ -1,5 +1,6 @@
 
-mutable struct SRWorkFlow
+
+mutable struct SRWorkFlow <: Workflow
     persist::PersistableState
     conv_ctx::ConversationX
     workspace_context::WorkspaceCTX
@@ -31,22 +32,11 @@ SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=tru
               version_control,
               no_confirm)
 end
-SRWorkFlow(resume::PersistableWorkFlowSettings) = begin
-  SRWorkFlow(resume.conv_ctx; resume.persist, resume.question_acc, 
-              resume.workspace_context, resume.julia_context,
-              resume.age_tracker,  
-              resume.version_control,
-              no_confirm=resume.config["no_confirm"], )
-end
 SRWorkFlow(conv_ctx::ConversationX; persist::PersistableState, question_acc, 
             workspace_context, julia_context,
             age_tracker,
             version_control,
             no_confirm, kwargs...) = begin
-  
-	# init_commit_msg = LLM_job_to_do(user_question)
-
-  # workspace_context = init_workspace_context(project_paths, virtual_ws=virtual_workspace)
   
   extractor         = CodeBlockExtractor()
   LLM_reflection    = ""

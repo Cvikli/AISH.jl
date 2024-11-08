@@ -27,7 +27,7 @@ using EasyContext: is_continue
 using EasyContext: ConversationX, Conversation, TestFramework, PersistableState, ConversationX_
 using EasyContext: merge_git
 using EasyContext: WorkspaceCTX, JuliaCTX
-using EasyContext: PersistableWorkFlowSettings
+using EasyContext: Workflow
 using EasyContext
 
 include("utils.jl")
