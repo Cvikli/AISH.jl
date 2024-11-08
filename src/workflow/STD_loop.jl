@@ -2,8 +2,8 @@ using EasyContext
 using BoilerplateCvikli: @async_showerr
 
 struct AIModel
-	workspace_context
-	julia_context
+    workspace_context::WorkspaceCTX
+    julia_context::JuliaCTX
     conv_ctx::ConversationX
     age_tracker::AgeTracker
 	question_acc::QuestionCTX

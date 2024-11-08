@@ -1,10 +1,10 @@
 
-mutable struct SRWorkFlow{WORKSPACE,JULIA_CTX}
+mutable struct SRWorkFlow
     persist::PersistableState
     conv_ctx::ConversationX
-    workspace_context::WORKSPACE
+    workspace_context::WorkspaceCTX
+    julia_context::JuliaCTX
     # test_frame::TestFramework
-    julia_context::JULIA_CTX
     age_tracker::AgeTracker
     question_acc::QuestionCTX
     extractor::CodeBlockExtractor
