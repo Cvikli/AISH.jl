@@ -26,6 +26,8 @@ using EasyContext: last_msg
 using EasyContext: is_continue
 using EasyContext: ConversationX, Conversation, TestFramework, PersistableState, ConversationX_
 using EasyContext: merge_git
+using EasyContext: WorkspaceCTX, JuliaCTX
+using EasyContext: PersistableWorkFlowSettings
 using EasyContext
 
 include("utils.jl")
@@ -33,7 +35,6 @@ include("config.jl")
 include("arg_parser.jl")
 
 include("prompt.jl")
-include("persistence.jl")
 include("workflow/SR_loop.jl")
 include("workflow/STD_loop.jl")
 

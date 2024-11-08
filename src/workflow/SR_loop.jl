@@ -13,13 +13,6 @@ mutable struct SRWorkFlow
     no_confirm::Bool
 end
 
-SRWorkFlow(;resume::PersistableWorkFlowSettings) = begin
-  SRWorkFlow(;resume.conv_ctx, resume.question_acc, 
-              resume.workspace_context, resume.julia_context,
-              resume.age_tracker,  
-              resume.version_control,
-              resume.config["no_confirm"], )
-end
 SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=true, kwargs...) = begin
   persist           = PersistableState(logdir)
   conv_ctx          = ConversationX_(sys_msg=SYSTEM_PROMPT(ChatSH)) |> persist
@@ -32,13 +25,20 @@ SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=tru
 
   age_tracker       = AgeTracker(max_history=10, cut_to=4)
 
-  SRWorkFlow(;persist, conv_ctx, question_acc, 
+  SRWorkFlow(conv_ctx;persist, question_acc, 
               workspace_context, julia_context,
               age_tracker,
               version_control,
               no_confirm)
 end
-SRWorkFlow(;persist, conv_ctx, question_acc, 
+SRWorkFlow(resume::PersistableWorkFlowSettings) = begin
+  SRWorkFlow(resume.conv_ctx; resume.persist, resume.question_acc, 
+              resume.workspace_context, resume.julia_context,
+              resume.age_tracker,  
+              resume.version_control,
+              no_confirm=resume.config["no_confirm"], )
+end
+SRWorkFlow(conv_ctx::ConversationX; persist::PersistableState, question_acc, 
             workspace_context, julia_context,
             age_tracker,
             version_control,
