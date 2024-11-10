@@ -1,4 +1,6 @@
 using ArgParse
+using EasyContext: MELD, MELD_PRO, VIMDIFF
+import EasyContext
 
 function parse_commandline()
     s = ArgParseSettings()
@@ -37,8 +39,18 @@ function parse_commandline()
         "--git"
             help = "Enable detached git development workspace feature. It creates separate worktrees per session for version control and to keep the original repository intact and allow parallel workflow of 2-5-20 feature for the AIs."
             action = :store_true
+        "--editor", "-e"
+            help = "Select editor for code modifications (meld, vimdiff, meld_pro)"
+            arg_type = String
+            default = "meld"
     end
 
-    return parse_args(s)
+    args = parse_args(s)
+    
+    # Set editor based on argument
+    editor_map = Dict("meld" => MELD, "vimdiff" => VIMDIFF, "meld_pro" => MELD_PRO)
+    EasyContext.CURRENT_EDITOR = get(editor_map, lowercase(args["editor"]), MELD)
+    
+    return args
 end
 
