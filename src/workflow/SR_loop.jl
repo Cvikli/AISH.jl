@@ -2,7 +2,7 @@
 
 mutable struct SRWorkFlow <: Workflow
     persist::PersistableState
-    conv_ctx::ConversationX
+    conv_ctx::Session 
     workspace_context::WorkspaceCTX
     julia_context::JuliaCTX
     # test_frame::TestFramework
@@ -10,13 +10,13 @@ mutable struct SRWorkFlow <: Workflow
     question_acc::QuestionCTX
     extractor::CodeBlockExtractor
     LLM_reflection::String
-    version_control::Union{GitTracker,Nothing}  # Make it optional
+    version_control::Union{GitTracker,Nothing}
     no_confirm::Bool
 end
 
 SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=true, kwargs...) = begin
   persist           = PersistableState(logdir)
-  conv_ctx          = ConversationX_(sys_msg=SYSTEM_PROMPT(ChatSH)) |> persist
+  conv_ctx          = Session_(sys_msg=SYSTEM_PROMPT(ChatSH)) |> persist  # Changed
   question_acc      = QuestionCTX()
   project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]
   # test_frame        = TestFramework(test_cases) #, folder_path=project_paths[1])
@@ -32,7 +32,8 @@ SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=tru
               version_control,
               no_confirm)
 end
-SRWorkFlow(conv_ctx::ConversationX; persist::PersistableState, question_acc, 
+
+SRWorkFlow(conv_ctx::Session; persist::PersistableState, question_acc,  # Changed type annotation
             workspace_context, julia_context,
             age_tracker,
             version_control,

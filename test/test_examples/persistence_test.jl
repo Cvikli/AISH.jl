@@ -1,7 +1,7 @@
 using Test
 using AISH
 using EasyContext
-using EasyContext: WebMessage, create_user_message, ConversationX, save_conversation, load_conversation
+using EasyContext: WebMessage, create_user_message, save_conversation, load_conversation
 using Dates
 
 # Helper to create a WebMessage
@@ -22,7 +22,7 @@ create_web_message(role, content) = WebMessage(;
     mkpath(logdir)
     try
         # Basic persistence test
-        conv = ConversationX("Test system prompt")
+        conv = Session("Test system prompt")
         conv(create_web_message("user", "Hello"))  # Use WebMessage consistently
         
         filepath = joinpath(logdir, "test.json")
@@ -73,7 +73,7 @@ end
         @test_throws ArgumentError load_conversation(filepath)
         
         # Test with partial write
-        conv = ConversationX("Test")
+        conv = Session("Test")
         conv(create_web_message("user", "Test message"))
         save_conversation(filepath, conv)
         truncate(filepath, filesize(filepath) ÷ 2)

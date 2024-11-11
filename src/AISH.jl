@@ -24,7 +24,7 @@ using EasyContext: workspace_format_description, julia_format_description
 using EasyContext: SHELL_run_results
 using EasyContext: last_msg
 using EasyContext: is_continue
-using EasyContext: ConversationX, Conversation, TestFramework, PersistableState, ConversationX_
+using EasyContext: Conversation, TestFramework, PersistableState
 using EasyContext: merge_git
 using EasyContext: WorkspaceCTX, JuliaCTX
 using EasyContext: Workflow
@@ -80,7 +80,7 @@ julia_main(;workflow::DataType, loop=true) = main(;workflow, loop)
 
 export main, julia_main
 
-include("precompile_scripts.jl")
+# include("precompile_scripts.jl")
 
 end # module AISH
 

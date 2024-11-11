@@ -4,16 +4,16 @@ using BoilerplateCvikli: @async_showerr
 struct AIModel <: Workflow
     workspace_context::WorkspaceCTX
     julia_context::JuliaCTX
-    conv_ctx::ConversationX
+    conv_ctx::Session
     age_tracker::AgeTracker
-	question_acc::QuestionCTX
-	extractor::CodeBlockExtractor
+    question_acc::QuestionCTX
+    extractor::CodeBlockExtractor
 
     function AIModel(;project_paths, kwargs...)
         m = new(
             init_workspace_context(project_paths), #length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]),
             init_julia_context(),
-            ConversationX_(sys_msg=SYSTEM_PROMPT(ChatSH)),
+            Session_(sys_msg=SYSTEM_PROMPT(ChatSH)),  # Changed
             AgeTracker(max_history=10, cut_to=4),
             QuestionCTX(),
             CodeBlockExtractor(),

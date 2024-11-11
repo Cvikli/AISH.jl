@@ -1,13 +1,13 @@
 using Test
 using AISH
-using EasyContext: Message, create_user_message, ConversationX, save_conversation
+using EasyContext: Message, create_user_message, save_conversation
 
 @testset "JSON Formatting" begin
     logdir = tempname()
     mkpath(logdir)
     try
         test_file = joinpath(logdir, "test.json")
-        test_conv = ConversationX()
+        test_conv = Session()
         test_conv(create_user_message("Test message"))
         
         # Save conversation
