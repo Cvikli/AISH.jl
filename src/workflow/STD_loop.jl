@@ -13,7 +13,7 @@ struct AIModel <: Workflow
         m = new(
             init_workspace_context(project_paths), #length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]),
             init_julia_context(),
-            Session_(sys_msg=SYSTEM_PROMPT(ChatSH)),  # Changed
+            initSession(sys_msg=SYSTEM_PROMPT(ChatSH)),  # Changed from Session_
             AgeTracker(max_history=10, cut_to=4),
             QuestionCTX(),
             CodeBlockExtractor(),

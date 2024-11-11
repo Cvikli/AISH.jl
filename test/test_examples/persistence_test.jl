@@ -22,7 +22,7 @@ create_web_message(role, content) = WebMessage(;
     mkpath(logdir)
     try
         # Basic persistence test
-        conv = Session("Test system prompt")
+        conv = initSession(sys_msg="Test system prompt")
         conv(create_web_message("user", "Hello"))  # Use WebMessage consistently
         
         filepath = joinpath(logdir, "test.json")
@@ -73,7 +73,7 @@ end
         @test_throws ArgumentError load_conversation(filepath)
         
         # Test with partial write
-        conv = Session("Test")
+        conv = initSession(sys_msg="Test")
         conv(create_web_message("user", "Test message"))
         save_conversation(filepath, conv)
         truncate(filepath, filesize(filepath) ÷ 2)

@@ -16,7 +16,7 @@ end
 
 SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=true, kwargs...) = begin
   persist           = PersistableState(logdir)
-  conv_ctx          = Session_(sys_msg=SYSTEM_PROMPT(ChatSH)) |> persist  # Changed
+  conv_ctx          = initSession(sys_msg=SYSTEM_PROMPT(ChatSH)) |> persist  # Changed from Session_
   question_acc      = QuestionCTX()
   project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]
   # test_frame        = TestFramework(test_cases) #, folder_path=project_paths[1])
@@ -107,7 +107,7 @@ end
       cut_old_conversation_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context)
     end
   catch e
-    if e isa InterruptException
+    if e isa EOFError   # Ctrl+D (Unix) or Ctrl+Z (Windows)
       println("\nSelf-reflection loop interrupted. Exiting...")
       return :INTERRUPTED
     end
