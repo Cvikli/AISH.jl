@@ -89,7 +89,7 @@ end
 
       cache = get_cache_setting(m.age_tracker, m.conv_ctx)
       error = LLM_solve(m.conv_ctx, cache;
-                        on_text     = (text)   -> extract_and_preprocess_codeblocks(text, m.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb, m.workspace_context.workspace)),
+                        on_text     = (text)   -> extract_and_preprocess_codeblocks(text, m.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb, ), root_path=m.workspace_context.workspace.root_path),
                         on_meta_usr = (meta)   -> update_last_user_message_meta(m.conv_ctx, meta),
                         on_meta_ai  = (ai_msg) -> m.conv_ctx(ai_msg) |> m.persist,
                         # on_done     = ()       -> (codeblock_runner(m.extractor, no_confirm=m.no_confirm);),
