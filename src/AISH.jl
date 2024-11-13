@@ -40,9 +40,9 @@ include("workflow/STD_loop.jl")
 
 function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true)
   !silent && greet(ChatSH)
-
-  model = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev) : workflow(resume_data)
-
+  
+  model = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, verbose=!silent) : workflow(resume_data)
+  
   nice_exit_handler(model.conv_ctx)
   set_terminal_title("AISH $(model.workspace_context.workspace.root_path)")
 
@@ -52,8 +52,19 @@ function start_conversation(user_question=""; workflow::DataType, resume_data=no
     user_question = isempty(user_question) ? wait_user_question(user_question) : user_question
     !silent && println("Thinking...")  # Only print if not silent
     
-    result = model(user_question)
-    result == :MERGE && isdefined(model, :version_control) && !isnothing(model.version_control) && merge_git(model.version_control)
+    try
+      _in_loop[] = true
+      result = model(user_question)
+      result == :MERGE && isdefined(model, :version_control) && !isnothing(model.version_control) && merge_git(model.version_control)
+      _in_loop[] = false 
+    catch e
+      if e isa InterruptException
+        println("\nSelf-reflection loop interrupted. Continuing...")
+      else
+        @show e
+        rethrow(e)
+      end
+    end
 
     user_question = ""
   end

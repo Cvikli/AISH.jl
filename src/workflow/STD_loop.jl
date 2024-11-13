@@ -9,9 +9,9 @@ struct AIModel <: Workflow
     question_acc::QuestionCTX
     extractor::CodeBlockExtractor
 
-    function AIModel(;project_paths, kwargs...)
+    function AIModel(;project_paths, verbose=true, kwargs...)
         m = new(
-            init_workspace_context(project_paths), #length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]),
+            init_workspace_context(project_paths; verbose), #length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]),
             init_julia_context(),
             initSession(sys_msg=SYSTEM_PROMPT(ChatSH)),  # Changed from Session_
             AgeTracker(max_history=10, cut_to=4),
