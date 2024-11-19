@@ -26,7 +26,7 @@ end
 function (model::AIModel)(user_question)
     ctx_question = user_question |> model.question_acc 
     ctx_shell    = model.extractor |> shell_ctx_2_string
-    ctx_codebase = @async_showerr process_workspace_context(model.workspace_context, ctx_question; age_tracker=model.age_tracker)
+    ctx_codebase = @async_showerr process_workspace_context(model.workspace_context, ctx_question; age_tracker=model.age_tracker, extractor=model.extractor)
     ctx_jl_pkg   = @async_showerr process_julia_context(model.julia_context, ctx_question; age_tracker=model.age_tracker)
 
     query = context_combiner!(
