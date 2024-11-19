@@ -23,7 +23,7 @@ using AISH: execute_single_shell_command
         @test !isnothing(result)
         @test result.type == :CREATE
         @test result.file_path == filepath
-        @test strip(result.pre_content) == "function hello()\n    println(\"Hello, world!\")\nend"
+        @test strip(result.content) == "function hello()\n    println(\"Hello, world!\")\nend"
 
         # Execute the code block and check if the file is created
         execute_single_shell_command(result, no_confirm=true)
@@ -61,7 +61,7 @@ using AISH: execute_single_shell_command
         @test !isnothing(result1)
         @test result1.type == :CREATE
         @test result1.file_path == f1
-        @test strip(result1.pre_content) == "println(\"File 1\")"
+        @test strip(result1.content) == "println(\"File 1\")"
 
         execute_single_shell_command(result1, no_confirm=true)
         @test isfile(f1)
@@ -71,7 +71,7 @@ using AISH: execute_single_shell_command
         @test !isnothing(result2)
         @test result2.type == :CREATE
         @test result2.file_path == f2
-        @test strip(result2.pre_content) == "println(\"File 2\")"
+        @test strip(result2.content) == "println(\"File 2\")"
 
         execute_single_shell_command(result2, no_confirm=true)
         @test isfile(f2)
@@ -102,7 +102,7 @@ using AISH: execute_single_shell_command
     #     @test !isnothing(result)
     #     @test result.type == :MODIFY
     #     @test result.file_path == "existing_file.jl"
-    #     @test result.pre_content == "# ... existing code ...\nfunction new_function()\n    println(\"This is a new function\")\nend\n"
+    #     @test result.content == "# ... existing code ...\nfunction new_function()\n    println(\"This is a new function\")\nend\n"
 
     #     # Execute the code block and check if the file is modified
     #     execute_single_shell_command(result, no_confirm=true)

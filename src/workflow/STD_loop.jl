@@ -1,22 +1,24 @@
 using EasyContext
 using BoilerplateCvikli: @async_showerr
 
-struct AIModel <: Workflow
+mutable struct AIModel <: Workflow
     workspace_context::WorkspaceCTX
     julia_context::JuliaCTX
     conv_ctx::Session
     age_tracker::AgeTracker
     question_acc::QuestionCTX
     extractor::CodeBlockExtractor
+    model::String
 
     function AIModel(;project_paths, verbose=true, kwargs...)
         m = new(
             init_workspace_context(project_paths; verbose), #length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]),
             init_julia_context(),
-            initSession(sys_msg=SYSTEM_PROMPT(ChatSH)),  # Changed from Session_
+            initSession(sys_msg=SYSTEM_PROMPT(ChatSH)),
             AgeTracker(max_history=10, cut_to=4),
             QuestionCTX(),
             CodeBlockExtractor(),
+            model,
         )
         append_ctx_descriptors(m.conv_ctx, SHELL_run_results, workspace_format_description(m.workspace_context.workspace), julia_format_description())
         m
@@ -53,4 +55,15 @@ function (model::AIModel)(user_question)
     cut_old_conversation_history!(model.age_tracker, model.conv_ctx, model.julia_context, model.workspace_context)
 
     return error
+end
+
+function update_workspace!(model::AIModel, project_paths::Vector{<:AbstractString})
+    model.workspace_context = init_workspace_context(project_paths)
+    reset_ctx_descriptors(model.conv_ctx, SYSTEM_PROMPT(ChatSH))
+    append_ctx_descriptors(model.conv_ctx, 
+        SHELL_run_results, 
+        workspace_format_description(model.workspace_context.workspace),
+        julia_format_description()
+    )
+    return model
 end
