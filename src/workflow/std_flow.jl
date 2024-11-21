@@ -33,7 +33,7 @@ end
 function run(flow::STDFlow, user_question)
     ctx_question = user_question |> flow.question_acc 
     ctx_shell    = flow.extractor |> shell_ctx_2_string
-    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, ctx_question; age_tracker=flow.age_tracker, extractor=model.extractor)
+    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, ctx_question; age_tracker=flow.age_tracker, extractor=flow.extractor)
     # ctx_jl_pkg   = @async_showerr process_julia_context(flow.julia_context, ctx_question; age_tracker=flow.age_tracker)
 
     @time "first" query = context_combiner!(
