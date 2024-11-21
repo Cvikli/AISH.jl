@@ -1,5 +1,5 @@
 using AISH
-using AISH: AIModel
+using AISH: STDFlow
 using PrecompileTools
 
 @setup_workload begin
@@ -18,6 +18,6 @@ using PrecompileTools
 
 #         # Simulate main function call
 #         AISH.main(loop=false)
-        AIModel(project_paths=String[])
+        STDFlow(project_paths=String[])
     end
 end

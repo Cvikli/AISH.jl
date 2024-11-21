@@ -3,12 +3,12 @@ using Revise
 using AISH: start
 using AISH: main
 using AISH: SRWorkFlow
-using AISH: AIModel
+using AISH: STDFlow
 
 # main(;contexter=EasyContextCreator())
 # main(;contexter=EasyContextCreatorV2())
 # main(;contexter=EasyContextCreatorV4())
-main(workflow=AIModel)
+main(workflow=STDFlow)
 
 
 

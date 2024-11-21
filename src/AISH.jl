@@ -36,8 +36,8 @@ include("arg_parser.jl")
 
 include("prompt.jl")
 include("workflow/SR_loop.jl")
-include("workflow/STD_loop.jl")
-include("ai_repl.jl")
+include("workflow/std_flow.jl")
+include("airepl.jl")
 
 function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true)
   !silent && greet(ChatSH)
@@ -95,4 +95,3 @@ export main, julia_main
 # include("precompile_scripts.jl")
 
 end # module AISH
-
