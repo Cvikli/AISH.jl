@@ -94,7 +94,7 @@ function create_ai_repl(flow::Workflow)
 end
 
 start_std_repl(;kw...) = airepl(kw...)
-function airepl(;project_paths=String[], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true)
+function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true)
     flow = STDFlow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev)
     EasyContext.CURRENT_EDITOR = MELD_PRO
 
