@@ -11,9 +11,9 @@ mutable struct STDFlow <: Workflow
     model::String
     no_confirm::Bool
 
-    function STDFlow(;project_paths, model="claude-3-5-sonnet-20241022", no_confirm=false, kwargs...)
+    function STDFlow(;project_paths, model="claude-3-5-sonnet-20241022", no_confirm=false, verbose=true, kwargs...)
         m = new(
-            init_workspace_context(project_paths),
+            init_workspace_context(project_paths; verbose),
             init_julia_context(),
             initSession(sys_msg=SYSTEM_PROMPT(ChatSH)),
             AgeTracker(max_history=10, cut_to=4),
@@ -33,7 +33,7 @@ end
 function run(flow::STDFlow, user_question)
     ctx_question = user_question |> flow.question_acc 
     ctx_shell    = flow.extractor |> shell_ctx_2_string
-    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, ctx_question; age_tracker=flow.age_tracker)
+    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, ctx_question; age_tracker=flow.age_tracker, extractor=model.extractor)
     # ctx_jl_pkg   = @async_showerr process_julia_context(flow.julia_context, ctx_question; age_tracker=flow.age_tracker)
 
     @time "first" query = context_combiner!(
@@ -52,7 +52,7 @@ function run(flow::STDFlow, user_question)
                       on_text     = (text)   -> extract_and_preprocess_codeblocks(text, flow.extractor, preprocess=(cb) -> LLM_conditonal_apply_changes(cb, ), root_path=flow.workspace_context.workspace.root_path),
                       on_meta_usr = (meta)   -> update_last_user_message_meta(flow.conv_ctx, meta),
                       on_meta_ai  = (ai_msg) -> flow.conv_ctx(ai_msg),
-                      on_done     = ()       -> @async_showerr(cd(()->codeblock_runner(flow.extractor), flow.workspace_context)),
+                      on_done     = ()       -> @async_showerr(cd(()->codeblock_runner(flow.extractor; async=true), flow.workspace_context)),
                       on_error    = (error)  -> add_error_message!(flow.conv_ctx,"ERROR: $error"),
     )
     log_instant_apply(flow.extractor, ctx_question)
