@@ -26,6 +26,8 @@ $(julia_specific_guide)
 $(system_information)
 $(ctx)
 
+Follow KISS and SOLID principles.
+
 $(conversaton_starts_here)
 """
 
