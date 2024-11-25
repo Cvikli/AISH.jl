@@ -43,7 +43,7 @@ function parse_commandline()
             help = "Select editor for code modifications (meld, vimdiff, meld_pro[:port], monacomeld[:port])"
             arg_type = String
             default = "meld_pro"
-        "--julia", "-jl"
+        "--julia", "-j"
             help = "Enable Julia package context"
             action = :store_true
     end
