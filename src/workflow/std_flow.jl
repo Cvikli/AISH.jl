@@ -26,7 +26,7 @@ mutable struct STDFlow <: Workflow
             no_confirm,
             use_planner,
             use_julia,
-            ExecutionPlannerContext()
+            ExecutionPlannerContext("oro1m")
         )
         append_ctx_descriptors(m.conv_ctx, SHELL_run_results, workspace_format_description(m.workspace_context.workspace), julia_format_description())
         m
