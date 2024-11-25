@@ -10,8 +10,11 @@ mutable struct STDFlow <: Workflow
     extractor::CodeBlockExtractor
     model::String
     no_confirm::Bool
+    use_planner::Bool
+    use_julia::Bool
+    planner::ExecutionPlannerContext
 
-    function STDFlow(;project_paths, model="claude-3-5-sonnet-20241022", no_confirm=false, verbose=true, kwargs...)
+    function STDFlow(;project_paths, model="claude-3-5-sonnet-20241022", no_confirm=false, verbose=true, use_planner=false, use_julia=false, kwargs...)
         m = new(
             init_workspace_context(project_paths; verbose),
             init_julia_context(),
@@ -21,29 +24,43 @@ mutable struct STDFlow <: Workflow
             CodeBlockExtractor(),
             model,
             no_confirm,
+            use_planner,
+            use_julia,
+            ExecutionPlannerContext()
         )
         append_ctx_descriptors(m.conv_ctx, SHELL_run_results, workspace_format_description(m.workspace_context.workspace), julia_format_description())
         m
     end
 end
 
+get_flags_str(flow::STDFlow) = string(flow.use_planner ? " [plan]" : "", flow.use_julia ? " [jl]" : "")
+
 function (flow::STDFlow)(user_question)
     run(flow, user_question)
 end
+
 function run(flow::STDFlow, user_question)
     ctx_question = user_question |> flow.question_acc 
     ctx_shell    = flow.extractor |> shell_ctx_2_string
-    allinfo = ctx_question * "\n\n" * ctx_shell
+    allinfo = ctx_shell * "\n\n" * ctx_question 
     allinfo = length(allinfo) > 24000 ? (println("WARNING: All info is too long, cutting it to 24000(length(allinfo)) characters");allinfo[1:24000]) : allinfo
+    ctx_jl_pks = flow.use_julia ? @async_showerr(process_julia_context(flow.julia_context, ctx_question; age_tracker=flow.age_tracker, extractor=flow.extractor)) : ""
     ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker, extractor=flow.extractor)
     # ctx_jl_pkg   = @async_showerr process_julia_context(flow.julia_context, ctx_question; age_tracker=flow.age_tracker)
 
     @time "first" query = context_combiner!(
         user_question, 
-        # fetch(ctx_jl_pkg), 
+        fetch(ctx_jl_pkg), 
         fetch(ctx_codebase), 
         ctx_shell, 
     )
+    
+    # Generate plan if planner is enabled, using the full context
+    if flow.use_planner
+        plan = flow.planner(flow.conv_ctx, query)
+        println("EXECUTION_PLAN\n" * plan * "\n/EXECUTION_PLAN")
+        query = query * "\n\n<EXECUTION_PLAN>\n" * plan * "\n</EXECUTION_PLAN>\n\n"
+    end
     
     flow.conv_ctx(create_user_message(query))
     reset!(flow.extractor)
@@ -61,8 +78,6 @@ function run(flow::STDFlow, user_question)
     cut_old_conversation_history!(flow.age_tracker, flow.conv_ctx, flow.julia_context, flow.workspace_context)
     return error
 end
-update_model!(flow::STDFlow, new_model::AbstractString) = (flow.model = new_model; flow)
-toggle_confirm!(flow::STDFlow) = (flow.no_confirm = !flow.no_confirm; flow)
 
 # Control functions
 update_workspace!(flow::STDFlow, project_paths::Vector{<:AbstractString}) = begin
@@ -83,5 +98,31 @@ function normalize_conversation!(flow::STDFlow)
     end
     cut_old_conversation_history!(flow.age_tracker, flow.conv_ctx, flow.julia_context, flow.workspace_context)
     flow
+end
+
+# Simplified planner control functions since planner is always initialized
+toggle_planner!(flow::STDFlow) = (flow.use_planner = !flow.use_planner; flow)
+update_planner!(flow::STDFlow, planner::ExecutionPlannerContext) = (flow.planner = planner; flow)
+
+function reset_flow!(flow::STDFlow)
+    # Create a new instance with same settings
+    new_flow = STDFlow(
+        project_paths=flow.workspace_context.workspace.project_paths,
+        model=flow.model,
+        no_confirm=flow.no_confirm,
+        use_planner=flow.use_planner,
+        use_julia=flow.use_julia
+    )
+    
+    # Copy over the fields
+    flow.workspace_context = new_flow.workspace_context
+    flow.julia_context = new_flow.julia_context
+    flow.conv_ctx = new_flow.conv_ctx
+    flow.age_tracker = new_flow.age_tracker
+    flow.question_acc = new_flow.question_acc
+    flow.extractor = new_flow.extractor
+    flow.planner = new_flow.planner
+    
+    return flow
 end
 

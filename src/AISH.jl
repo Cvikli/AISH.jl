@@ -39,10 +39,10 @@ include("workflow/SR_loop.jl")
 include("workflow/std_flow.jl")
 include("airepl.jl")
 
-function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true)
+function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false)
   !silent && greet(ChatSH)
   
-  model = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, verbose=!silent) : workflow(resume_data)
+  model = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent) : workflow(resume_data)
   
   nice_exit_handler(model.conv_ctx)
   set_terminal_title("AISH $(model.workspace_context.workspace.root_path)")
@@ -71,21 +71,22 @@ function start_conversation(user_question=""; workflow::DataType, resume_data=no
   end
 end
 
-function start(message=""; workflow::DataType, resume_data=nothing, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true)
-  start_conversation(message; workflow, loop, resume_data, project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev)
+function start(message=""; workflow::DataType, resume_data=nothing, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false)
+  start_conversation(message; workflow, loop, resume_data, project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev, use_julia)
 end
 
 function main(;workflow::DataType, loop=true)
   args = parse_commandline()
   start(args["message"]; 
         workflow, 
-        resume_data=nothing,#args["resume"], 
+        resume_data=nothing,
         project_paths=args["project-paths"], 
         show_tokens=args["tokens"], 
         logdir=args["log-dir"], 
         loop=!args["no-loop"] && loop, 
         no_confirm=args["no-confirm"],
-        detached_git_dev=args["git"],  # Renamed here
+        detached_git_dev=args["git"],
+        use_julia=args["julia"]
   )
 end
 julia_main(;workflow::DataType, loop=true) = main(;workflow, loop)

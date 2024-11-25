@@ -4,6 +4,10 @@ using REPL.LineEdit
 using Base.Filesystem
 using Base: AnyDict
 
+# interface required functions.
+get_flags_str(::Workflow) = " [unimplemented]"  # Base case for generic workflows
+reset_flow!(::Workflow) = @warn "Unimplemented."
+
 mutable struct PathCompletionProvider <: REPL.LineEdit.CompletionProvider
     modifiers::REPL.LineEdit.Modifiers
     PathCompletionProvider() = new(REPL.LineEdit.Modifiers())
@@ -43,46 +47,85 @@ end
 
 REPL.LineEdit.setmodifiers!(c::PathCompletionProvider, m::REPL.LineEdit.Modifiers) = c.modifiers = m
 
+function parse_editor_command(cmd::String)
+    # Strip the command prefix
+    editor_setting = strip(startswith(cmd, "--editor") ? cmd[9:end] : cmd[3:end])
+    
+    # Use centralized get_editor with port handling
+    editor_config = get_editor(editor_setting, nothing)
+    if editor_config.editor === nothing
+        return nothing, "Unknown editor. Available editors: $(join(keys(EDITOR_MAP), ", "))"
+    end
+    
+    return editor_config, nothing
+end
+
 function ai_parser(user_question::String, flow::Workflow)
     cmd = strip(user_question)
-    try
-        if startswith(cmd, "-p ")
-            paths = split(cmd[3:end])
-            # Check if paths exist
-            invalid_paths = filter(p -> !isdir(expanduser(p)), paths)
-            if !isempty(invalid_paths)
-                println("\nError: Following paths don't exist:")
-                foreach(p -> println("  - $p"), invalid_paths)
-            end
-            update_workspace!(flow, paths)
-            println("\nSwitched to projects: ", join(paths, ", "))
-        elseif startswith(cmd, "--model ")
-            new_model = strip(cmd[8:end])
-            update_model!(flow, new_model)
-            println("\nSwitched to model: ", new_model)
-        elseif startswith(cmd, "-y")
-            toggle_confirm!(flow)
-            println("\nConfirmation ", flow.no_confirm ? "disabled" : "enabled")
-        elseif !isempty(cmd)
-            println("\nProcessing your request...")
-            run(flow, user_question)
+    if startswith(cmd, "-p ")
+        paths = split(cmd[3:end])
+        # Check if paths exist
+        invalid_paths = filter(p -> !isdir(expanduser(p)), paths)
+        if !isempty(invalid_paths)
+            println("\nError: Following paths don't exist:")
+            foreach(p -> println("  - $p"), invalid_paths)
         end
-    catch e
-        if e isa InterruptException
-            println("\nOperation interrupted. Normalizing conversation state...")
-            flow isa STDFlow && normalize_conversation!(flow)
+        update_workspace!(flow, paths)
+        println("\nSwitched to projects: ", join(paths, ", "))
+    elseif startswith(cmd, "--editor ") || startswith(cmd, "-e ")
+        editor_setting = strip(startswith(cmd, "--editor") ? cmd[9:end] : cmd[3:end])
+        if !set_editor(editor_setting)
             return
         end
-        rethrow(e)
+        println("\nSwitched to editor: ", editor_setting)
+    elseif startswith(cmd, "--model ")
+        new_model = strip(cmd[8:end])
+        update_model!(flow, new_model)
+        println("\nSwitched to model: ", new_model)
+    elseif startswith(cmd, "-y")
+        toggle_confirm!(flow)
+        println("\nConfirmation ", flow.no_confirm ? "disabled" : "enabled")
+    elseif startswith(cmd, "-jl")
+        flow isa STDFlow && (flow.use_julia = !flow.use_julia)
+        println("\nJulia package context ", flow isa STDFlow && flow.use_julia ? "enabled" : "disabled")
+    elseif startswith(cmd, "--reset")
+        if !isempty(strip(cmd[7:end]))
+            println("\nError: --reset doesn't accept additional arguments")
+            return
+        end
+        reset_flow!(flow)
+        println("\nReset conversation and context state while maintaining current settings")
+    else
+        # Handle --plan flag if present, then process any remaining command
+        if startswith(cmd, "--plan")
+            flow isa STDFlow && toggle_planner!(flow)
+            println("\nPlanner mode ", flow isa STDFlow && flow.use_planner ? "enabled" : "disabled")
+            cmd = strip(cmd[7:end])  # Remove --plan and process remaining text
+        end
+        
+        if !isempty(cmd)
+            println("\nProcessing your request...")
+            try
+                run(flow, cmd)
+            catch e
+                if e isa InterruptException
+                    println("\nOperation interrupted. Normalizing conversation state...")
+                    flow isa STDFlow && normalize_conversation!(flow)
+                    return
+                end
+                rethrow(e)
+            end
+        end
     end
 end
+
 function create_ai_repl(flow::Workflow)
     parser(input) = ai_parser(input, flow)
     
     repl = Base.active_repl
     initrepl(
         parser;
-        prompt_text=() -> "AISH> ",
+        prompt_text=() -> "AISH$(get_flags_str(flow))> ",
         prompt_color=:cyan,
         start_key=')',
         mode_name=:ai,
@@ -96,13 +139,17 @@ end
 start_std_repl(;kw...) = airepl(kw...)
 function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true)
     flow = STDFlow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev)
-    EasyContext.CURRENT_EDITOR = MELD_PRO
+    set_editor("meld_pro")  # Set default editor
 
     ai_mode = create_ai_repl(flow)
     println("AI REPL mode initialized. Press ')' to enter and backspace to exit.")
     println("Available commands:")
     println("  -p path1 path2    : Switch projects")
     println("  --model name      : Switch model (e.g. claude, gpt4)")
+    println("  -e, --editor name[:port] : Switch editor ($(join(keys(EDITOR_MAP), ", "))[:port])")
     println("  -y               : Toggle confirmation")
+    println("  -jl              : Toggle Julia package context")
+    println("  --plan           : Toggle planner mode")
+    println("  --reset          : Reset conversation and context")
     ai_mode
 end

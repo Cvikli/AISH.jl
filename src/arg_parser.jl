@@ -1,5 +1,5 @@
 using ArgParse
-using EasyContext: MELD, MELD_PRO, VIMDIFF
+using EasyContext: EDITOR_MAP, set_editor
 import EasyContext
 
 function parse_commandline()
@@ -40,17 +40,18 @@ function parse_commandline()
             help = "Enable detached git development workspace feature. It creates separate worktrees per session for version control and to keep the original repository intact and allow parallel workflow of 2-5-20 feature for the AIs."
             action = :store_true
         "--editor", "-e"
-            help = "Select editor for code modifications (meld, vimdiff, meld_pro)"
+            help = "Select editor for code modifications (meld, vimdiff, meld_pro[:port], monacomeld[:port])"
             arg_type = String
-            default = "meld"
+            default = "meld_pro"
+        "--julia", "-jl"
+            help = "Enable Julia package context"
+            action = :store_true
     end
 
     args = parse_args(s)
     
     # Set editor based on argument
-    editor_map = Dict("meld" => MELD, "vimdiff" => VIMDIFF, "meld_pro" => MELD_PRO)
-    EasyContext.CURRENT_EDITOR = get(editor_map, lowercase(args["editor"]), MELD)
-    
+    set_editor(args["editor"])
     return args
 end
 
