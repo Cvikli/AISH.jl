@@ -1,6 +1,6 @@
 using REPL
 using ReplMaker
-using REPL.LineEdit
+using REPL.LineEdit: MIState, PromptState, default_keymap, escape_defaults
 using Base.Filesystem
 using Base: AnyDict
 
@@ -122,6 +122,22 @@ end
 function create_ai_repl(flow::Workflow)
     parser(input) = ai_parser(input, flow)
     
+    # Add flag toggle keymaps using Ctrl combinations
+    ai_keymap = AnyDict(
+        # Plan toggle (Ctrl-Q)
+        "^Q" => (s::MIState,o...)->begin
+            flow isa STDFlow && toggle_planner!(flow)
+            println("\nPlanner mode ", flow isa STDFlow && flow.use_planner ? "enabled" : "disabled")
+            return :ignore
+        end,
+        # Julia context toggle (Ctrl-O)
+        "^O" => (s::MIState,o...)->begin
+            flow isa STDFlow && (flow.use_julia = !flow.use_julia)
+            println("\nJulia package context ", flow isa STDFlow && flow.use_julia ? "enabled" : "disabled")
+            return :ignore
+        end
+    )
+    
     repl = Base.active_repl
     initrepl(
         parser;
@@ -132,11 +148,13 @@ function create_ai_repl(flow::Workflow)
         repl=repl,
         valid_input_checker=Returns(true),
         completion_provider=PathCompletionProvider(),
+        keymap=REPL.LineEdit.keymap([ai_keymap, default_keymap, escape_defaults]),
         sticky_mode=false
     )
 end
 
 start_std_repl(;kw...) = airepl(kw...)
+# To automatically start in airepl(): julia --banner=no -i -e 'using AISH; AISH.airepl(auto_switch=true)'
 function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=false)
     flow = STDFlow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev)
     set_editor("meld_pro")  # Set default editor
