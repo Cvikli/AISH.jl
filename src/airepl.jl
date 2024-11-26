@@ -137,10 +137,33 @@ function create_ai_repl(flow::Workflow)
 end
 
 start_std_repl(;kw...) = airepl(kw...)
-function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true)
+function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=false)
     flow = STDFlow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev)
     set_editor("meld_pro")  # Set default editor
 
+    # If REPL is already active, initialize directly
+    if isdefined(Base, :active_repl)
+        initialize_aish_mode(flow, auto_switch)
+        return
+    end
+
+    # Otherwise wait for REPL from an async task
+    @async begin
+        for _ in 1:100
+            isdefined(Base, :active_repl) && break
+            sleep(0.01)
+        end
+        
+        if !isdefined(Base, :active_repl)
+            println("Failed to initialize REPL after 1 second. AISH mode might not work properly.")
+            return
+        end
+        
+        initialize_aish_mode(flow, auto_switch)
+    end
+end
+
+function initialize_aish_mode(flow, auto_switch)
     ai_mode = create_ai_repl(flow)
     println("AI REPL mode initialized. Press ')' to enter and backspace to exit.")
     println("Available commands:")
@@ -151,5 +174,13 @@ function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, si
     println("  -jl              : Toggle Julia package context")
     println("  --plan           : Toggle planner mode")
     println("  --reset          : Reset conversation and context")
-    ai_mode
+
+    if auto_switch
+        try
+            ReplMaker.enter_mode!(ai_mode)
+            println("Switched to AISH mode automatically.")
+        catch e
+            @warn "Failed to switch to AISH mode automatically." exception=e
+        end
+    end
 end
