@@ -42,11 +42,9 @@ end
 function run(flow::STDFlow, user_question)
     ctx_question = user_question |> flow.question_acc 
     ctx_shell    = flow.extractor |> shell_ctx_2_string
-    allinfo = ctx_shell * "\n\n" * ctx_question 
-    allinfo = length(allinfo) > 24000 ? (println("WARNING: All info is too long, cutting it to 24000(length(allinfo)) characters");allinfo[1:24000]) : allinfo
+    allinfo = ctx_shell[1:min(20000-length(ctx_question), end)] * "\n\n" * ctx_question 
     ctx_jl_pkg = flow.use_julia ? @async_showerr(process_julia_context(flow.julia_context, ctx_question; age_tracker=flow.age_tracker)) : ""
     ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker, extractor=flow.extractor)
-    # ctx_jl_pkg   = @async_showerr process_julia_context(flow.julia_context, ctx_question; age_tracker=flow.age_tracker)
 
     @time "first" query = context_combiner!(
         user_question, 
