@@ -195,8 +195,8 @@ function initialize_aish_mode(flow, auto_switch)
 
     if auto_switch
         try
+            println("Switching to AISH mode automatically.")
             ReplMaker.enter_mode!(ai_mode)
-            println("Switched to AISH mode automatically.")
         catch e
             @warn "Failed to switch to AISH mode automatically." exception=e
         end
