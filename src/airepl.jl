@@ -60,11 +60,9 @@ function parse_editor_command(cmd::String)
     return editor_config, nothing
 end
 
-function ai_parser(user_question::String, flow::Workflow)
-    cmd = strip(user_question)
-    if startswith(cmd, "-p ")
-        paths = split(cmd[3:end])
-        # Check if paths exist
+const COMMANDS = Dict{String, Tuple{String, Function}}(
+    "-p"       => ("Switch projects", (flow, args) -> begin
+        paths = split(args)
         invalid_paths = filter(p -> !isdir(expanduser(p)), paths)
         if !isempty(invalid_paths)
             println("\nError: Following paths don't exist:")
@@ -72,50 +70,101 @@ function ai_parser(user_question::String, flow::Workflow)
         end
         update_workspace!(flow, paths)
         println("\nSwitched to projects: ", join(paths, ", "))
-    elseif startswith(cmd, "--editor ") || startswith(cmd, "-e ")
-        editor_setting = strip(startswith(cmd, "--editor") ? cmd[9:end] : cmd[3:end])
-        if !set_editor(editor_setting)
-            return
-        end
-        println("\nSwitched to editor: ", editor_setting)
-    elseif startswith(cmd, "--model ")
-        new_model = strip(cmd[8:end])
-        update_model!(flow, new_model)
-        println("\nSwitched to model: ", new_model)
-    elseif startswith(cmd, "-y")
+    end),
+    "--editor" => ("Switch editor", (flow, args) -> begin
+        !set_editor(strip(args)) && return
+        println("\nSwitched to editor: ", strip(args))
+    end),
+    "--model"  => ("Switch model (e.g. claude, gpt4)", (flow, args) -> begin
+        update_model!(flow, strip(args))
+        println("\nSwitched to model: ", strip(args))
+    end),
+    "-y"       => ("Toggle confirmation", (flow, _) -> begin
         toggle_confirm!(flow)
         println("\nConfirmation ", flow.no_confirm ? "disabled" : "enabled")
-    elseif startswith(cmd, "-jl")
+    end),
+    "-jl"      => ("Toggle Julia package context", (flow, _) -> begin
         flow isa STDFlow && (flow.use_julia = !flow.use_julia)
         println("\nJulia package context ", flow isa STDFlow && flow.use_julia ? "enabled" : "disabled")
-    elseif startswith(cmd, "--reset")
-        if !isempty(strip(cmd[7:end]))
+    end),
+    "--reset"  => ("Reset conversation and context", (flow, args) -> begin
+        if !isempty(strip(args))
             println("\nError: --reset doesn't accept additional arguments")
             return
         end
         reset_flow!(flow)
         println("\nReset conversation and context state while maintaining current settings")
-    else
-        # Handle --plan flag if present, then process any remaining command
-        if startswith(cmd, "--plan")
-            flow isa STDFlow && toggle_planner!(flow)
-            println("\nPlanner mode ", flow isa STDFlow && flow.use_planner ? "enabled" : "disabled")
-            cmd = strip(cmd[7:end])  # Remove --plan and process remaining text
+    end),
+    "--plan"   => ("Toggle planner mode, model option: [oro1, \$]", (flow, args) -> begin
+        flow isa STDFlow || return
+        if args == "\$" || args == "oro1"
+            flow.planner.model = "oro1"
+            flow.use_planner = true
+            println("\nPlanner mode enabled with oro1 model")
+        else
+            flow.use_planner && (flow.planner.model = "oro1m")  # Switch back to cheaper model when toggling
+            toggle_planner!(flow)
+            println("\nPlanner mode ", flow.use_planner ? "enabled" : "disabled", 
+                    flow.use_planner ? " with $(flow.planner.model) model" : "")
         end
-        
-        if !isempty(cmd)
-            println("\nProcessing your request...")
-            try
-                run(flow, cmd)
-            catch e
-                if e isa InterruptException
-                    println("\nOperation interrupted. Normalizing conversation state...")
-                    flow isa STDFlow && normalize_conversation!(flow)
-                    return
-                end
-                rethrow(e)
-            end
+    end)
+)
+
+# Add aliases
+COMMANDS["-e"] = (COMMANDS["--editor"][1], COMMANDS["--editor"][2])
+COMMANDS["--jl"] = (COMMANDS["-jl"][1], COMMANDS["-jl"][2])
+COMMANDS["-j"] = (COMMANDS["-jl"][1], COMMANDS["-jl"][2])
+COMMANDS["--help"] = ("Show help message", (_, _) -> print_help())
+COMMANDS["-h"] = (COMMANDS["--help"][1], COMMANDS["--help"][2])
+
+function print_help()
+    println("\nAvailable commands:")
+    # Sort by command name but show primary commands first (not aliases)
+    primary_cmds = filter(kv -> !any(c -> c != kv[1] && kv[2][2] === COMMANDS[c][2], keys(COMMANDS)), COMMANDS)
+    for (cmd, (desc, _)) in sort(collect(primary_cmds))
+        arg_hint = if cmd == "-p" "path1 path2"
+                  elseif cmd == "--model" "name"
+                  elseif cmd == "--editor" || cmd == "-e" "name[:port]"
+                  else ""
+                  end
+        padding = arg_hint == "" ? "" : " "
+        println("  $cmd$padding$arg_hint    : $desc")
+    end
+end
+
+function ai_parser(user_question::AbstractString, flow::Workflow)
+    cmd = strip(user_question)
+    isempty(cmd) && return
+
+    # Handle command or process as regular input
+    for (prefix, (_, handler)) in COMMANDS
+        if startswith(cmd, prefix * " ") || cmd == prefix
+            handler(flow, strip(cmd[length(prefix)+1:end]))
+            # Special case for --plan as it can be combined
+            prefix == "--plan" && !isempty(strip(cmd[7:end])) && ai_parser(strip(cmd[7:end]), flow)
+            return
         end
+    end
+    
+    # Handle unknown commands starting with --
+    if startswith(cmd, "--")
+        println("\nError: Unknown command '", cmd, "'")
+        println("Use --help or -h to see available commands")
+        return
+    end
+
+    # Process as regular input
+    println("\nProcessing your request...")
+    try
+        run(flow, cmd)
+        nothing
+    catch e
+        if e isa InterruptException
+            println("\nOperation interrupted. Normalizing conversation state...")
+            flow isa STDFlow && normalize_conversation!(flow)
+            return
+        end
+        rethrow(e)
     end
 end
 
@@ -155,7 +204,7 @@ end
 
 start_std_repl(;kw...) = airepl(kw...)
 # To automatically start in airepl(): julia --banner=no -i -e 'using AISH; AISH.airepl(auto_switch=true)'
-function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=false)
+function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=true)
     flow = STDFlow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev)
     set_editor("meld_pro")  # Set default editor
 
@@ -165,18 +214,8 @@ function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, si
         return
     end
 
-    # Otherwise wait for REPL from an async task
-    @async begin
-        for _ in 1:100
-            isdefined(Base, :active_repl) && break
-            sleep(0.01)
-        end
-        
-        if !isdefined(Base, :active_repl)
-            println("Failed to initialize REPL after 1 second. AISH mode might not work properly.")
-            return
-        end
-        
+    # Use atreplinit for initialization when REPL starts
+    atreplinit() do repl
         initialize_aish_mode(flow, auto_switch)
     end
 end
@@ -184,19 +223,22 @@ end
 function initialize_aish_mode(flow, auto_switch)
     ai_mode = create_ai_repl(flow)
     println("AI REPL mode initialized. Press ')' to enter and backspace to exit.")
-    println("Available commands:")
-    println("  -p path1 path2    : Switch projects")
-    println("  --model name      : Switch model (e.g. claude, gpt4)")
-    println("  -e, --editor name[:port] : Switch editor ($(join(keys(EDITOR_MAP), ", "))[:port])")
-    println("  -y               : Toggle confirmation")
-    println("  -jl              : Toggle Julia package context")
-    println("  --plan           : Toggle planner mode")
-    println("  --reset          : Reset conversation and context")
+    print_help()
 
-    if auto_switch
+    @async if auto_switch # without @async the .mistate is nothing...
         try
+            for _ in 1:50
+                isdefined(Base, :active_repl) && isdefined(Base.active_repl, :mistate) && !isnothing(Base.active_repl.mistate) && break
+                sleep(0.01)
+            end
+            
+            if !isdefined(Base, :active_repl)
+                println("Failed to enter REPL after 1 second.")
+                return
+            end
+        
             println("Switching to AISH mode automatically.")
-            ReplMaker.enter_mode!(ai_mode)
+            ReplMaker.enter_mode!(Base.active_repl.mistate, ai_mode)
         catch e
             @warn "Failed to switch to AISH mode automatically." exception=e
         end

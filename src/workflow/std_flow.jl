@@ -33,7 +33,12 @@ mutable struct STDFlow <: Workflow
     end
 end
 
-get_flags_str(flow::STDFlow) = string(flow.use_planner ? " [plan]" : "", flow.use_julia ? " [jl]" : "")
+get_flags_str(flow::STDFlow) = begin
+    flags = String[]
+    flow.use_planner && push!(flags, "plan" * (occursin("oro", flow.planner.model) ? "\$" : ""))
+    flow.use_julia && push!(flags, "jl")
+    isempty(flags) ? "" : " [" * join(flags, " ") * "]"
+end
 
 function (flow::STDFlow)(user_question)
     run(flow, user_question)
@@ -42,9 +47,10 @@ end
 function run(flow::STDFlow, user_question)
     ctx_question = user_question |> flow.question_acc 
     ctx_shell    = flow.extractor |> shell_ctx_2_string
+    length(ctx_shell) > (20000-length(ctx_question)) && println("WARNING: All info is too long, cutting it to 24000(length(allinfo)) characters")
     allinfo = ctx_shell[1:min(20000-length(ctx_question), end)] * "\n\n" * ctx_question 
     ctx_jl_pkg = flow.use_julia ? @async_showerr(process_julia_context(flow.julia_context, ctx_question; age_tracker=flow.age_tracker)) : ""
-    length(allinfo) > 24000 && println("WARNING: All info is too long, cutting it to 24000(length(allinfo)) characters")
+
     ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker, extractor=flow.extractor)
 
     @time "first" query = context_combiner!(
