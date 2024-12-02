@@ -8,7 +8,7 @@ mutable struct SRWorkFlow <: Workflow
     # test_frame::TestFramework
     age_tracker::AgeTracker
     question_acc::QuestionCTX
-    extractor::CodeBlockExtractor
+    extractor::StreamParser
     LLM_reflection::String
     version_control::Union{GitTracker,Nothing}
     no_confirm::Bool
@@ -39,7 +39,7 @@ SRWorkFlow(conv_ctx::Session; persist::PersistableState, question_acc,
             version_control,
             no_confirm, kwargs...) = begin
   
-  extractor         = CodeBlockExtractor()
+  extractor         = StreamParser()
   LLM_reflection    = ""
   
   append_ctx_descriptors(conv_ctx, 
@@ -88,14 +88,14 @@ end
 
     cache = get_cache_setting(m.age_tracker, m.conv_ctx)
     error = LLM_solve(m.conv_ctx, cache;
-                      on_text     = (text)   -> extract_and_preprocess_codeblocks(text, m.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb, ), root_path=m.workspace_context.workspace.root_path),
+                      on_text     = (text)   -> extract_commands(text, m.extractor, preprocess=(cb)->LLM_conditonal_apply_changes(cb, ), root_path=m.workspace_context.workspace.root_path),
                       on_meta_usr = (meta)   -> update_last_user_message_meta(m.conv_ctx, meta),
                       on_meta_ai  = (ai_msg) -> m.conv_ctx(ai_msg) |> m.persist,
                       # on_done     = ()       -> (codeblock_runner(m.extractor, no_confirm=m.no_confirm);),
                       on_error    = (error)  -> add_error_message!(m.conv_ctx,"ERROR: $error"),
     )
     cd(m.workspace_context) do
-      codeblock_runner(m.extractor, no_confirm=m.no_confirm)
+      run_stream_parser(m.extractor, no_confirm=m.no_confirm)
       # ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
     end
     ctx_shell        = m.extractor             |> shell_ctx_2_string

@@ -1,7 +1,7 @@
 using ArgParse
 using EasyContext: EDITOR_MAP, set_editor
 import EasyContext
-
+# todo add skills... with flags...
 function parse_commandline()
     s = ArgParseSettings()
     

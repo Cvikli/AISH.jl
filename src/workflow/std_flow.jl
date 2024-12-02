@@ -7,7 +7,7 @@ mutable struct STDFlow <: Workflow
     conv_ctx::Session
     age_tracker::AgeTracker
     question_acc::QuestionCTX
-    extractor::CodeBlockExtractor
+    extractor::StreamParser
     model::String
     no_confirm::Bool
     use_planner::Bool
@@ -21,7 +21,7 @@ mutable struct STDFlow <: Workflow
             initSession(sys_msg=SYSTEM_PROMPT(ChatSH)),
             AgeTracker(max_history=10, cut_to=4),
             QuestionCTX(),
-            CodeBlockExtractor(),
+            StreamParser(),
             model,
             no_confirm,
             use_planner,
@@ -73,10 +73,10 @@ function run(flow::STDFlow, user_question)
     cache = get_cache_setting(flow.age_tracker, flow.conv_ctx)
     @time "solve" error = LLM_solve(flow.conv_ctx, cache;
                       model       = flow.model,
-                      on_text     = (text)   -> extract_and_preprocess_codeblocks(text, flow.extractor, preprocess=(cb) -> LLM_conditonal_apply_changes(cb, ), root_path=flow.workspace_context.workspace.root_path),
+                      on_text     = (text)   -> extract_commands(text, flow.extractor, preprocess=(cb) -> LLM_conditonal_apply_changes(cb, ), root_path=flow.workspace_context.workspace.root_path),
                       on_meta_usr = (meta)   -> update_last_user_message_meta(flow.conv_ctx, meta),
                       on_meta_ai  = (ai_msg) -> flow.conv_ctx(ai_msg),
-                      on_done     = ()       -> @async_showerr(cd(()->codeblock_runner(flow.extractor; async=true), flow.workspace_context)),
+                      on_done     = ()       -> @async_showerr(cd(()->run_stream_parser(flow.extractor; async=true), flow.workspace_context)),
                       on_error    = (error)  -> add_error_message!(flow.conv_ctx,"ERROR: $error"),
     )
     log_instant_apply(flow.extractor, ctx_question)
