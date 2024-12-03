@@ -75,14 +75,26 @@ function run(flow::STDFlow, user_question)
     reset!(flow.extractor)
 
     cache = get_cache_setting(flow.age_tracker, flow.conv_ctx)
-    @time "solve" error = LLM_solve(flow.conv_ctx, cache;
-                      model       = flow.model,
-                      on_text     = (text)   -> extract_commands(text, flow.extractor, preprocess=(cb) -> LLM_conditonal_apply_changes(cb, ), root_path=flow.workspace_context.workspace.root_path),
-                      on_meta_usr = (meta)   -> update_last_user_message_meta(flow.conv_ctx, meta),
-                      on_meta_ai  = (ai_msg) -> flow.conv_ctx(ai_msg),
-                      on_done     = ()       -> @async_showerr(cd(()->run_stream_parser(flow.extractor; async=true), flow.workspace_context)),
-                      on_error    = (error)  -> add_error_message!(flow.conv_ctx,"ERROR: $error"),
-    )
+    while true
+        toolcall = false    
+        error = LLM_solve(flow.conv_ctx, cache; 
+                        stop_sequences = flow.stop_sequences,
+                        model          = flow.model,
+                        on_text        = (text)   -> extract_commands(text, flow.extractor, preprocess=(data) -> LLM_conditonal_apply_changes(data), root_path=flow.workspace_context.workspace.root_path),
+                        on_meta_usr    = (meta)   -> update_last_user_message_meta(flow.conv_ctx, meta),
+                        on_meta_ai     = (ai_msg) -> (flow.conv_ctx(ai_msg); !isempty(ai_msg.stop_sequence) && (toolcall = true)),
+                        # on_done        = ()       -> (cd(()->run_stream_parser(flow.extractor; async=true), flow.workspace_context)),
+                        on_error       = (error)  -> add_error_message!(flow.conv_ctx,"ERROR: $error"),
+        )
+        !toolcall && break
+        @show flow.extractor.command_tasks
+        @show last(last(flow.extractor.command_tasks))
+        @show last((flow.extractor.command_tasks))[2]
+        @show fetch(last((flow.extractor.command_tasks))[2])
+        result = execute(fetch(last(last(flow.extractor.command_tasks))))
+        @show result
+        flow.conv_ctx(create_user_message(result))
+    end
     log_instant_apply(flow.extractor, ctx_question)
     cut_old_conversation_history!(flow.age_tracker, flow.conv_ctx, flow.julia_context, flow.workspace_context)
     return error

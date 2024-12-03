@@ -24,6 +24,7 @@ using EasyContext: Conversation, TestFramework, PersistableState
 using EasyContext: merge_git
 using EasyContext: WorkspaceCTX, JuliaCTX
 using EasyContext: Workflow
+using EasyContext: execute
 using EasyContext
 
 include("utils.jl")
@@ -31,7 +32,7 @@ include("config.jl")
 include("arg_parser.jl")
 
 include("prompt.jl")
-include("workflow/SR_loop.jl")
+include("workflow/selfreflect_flow.jl")
 include("workflow/std_flow.jl")
 include("airepl.jl")
 
@@ -71,15 +72,16 @@ function start(message=""; workflow::DataType, resume_data=nothing, project_path
   start_conversation(message; workflow, loop, resume_data, project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev, use_julia, skills)
 end
 
-function main(;workflow::DataType, skills=[
+function main(;workflow::DataType, message="", skills=[
   create_file_skill, 
   modify_file_skill,
   shell_skill, 
   catfile_skill, 
 ], loop=true)
   args = parse_commandline()
-  start(args["message"]; 
-        workflow, 
+  msg = isempty(args["message"]) ? message : args["message"]
+  start(msg; 
+        workflow,   
         resume_data=nothing,
         project_paths=args["project-paths"], 
         show_tokens=args["tokens"], 

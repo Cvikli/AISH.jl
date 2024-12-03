@@ -4,8 +4,9 @@ using AISH: start
 using AISH: main
 using AISH: SRWorkFlow
 using AISH: STDFlow
+using RelevanceStacktrace
 
-main(workflow=STDFlow)
+main(workflow=STDFlow, message="echo a short hi")
 
 
 
