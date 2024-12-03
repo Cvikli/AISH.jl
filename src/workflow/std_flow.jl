@@ -72,17 +72,17 @@ function run(flow::STDFlow, user_question)
     end
     
     flow.conv_ctx(create_user_message(query))
-    reset!(flow.extractor)
-
-    cache = get_cache_setting(flow.age_tracker, flow.conv_ctx)
+    
     while true
         toolcall = false    
+        reset!(flow.extractor)
+        cache = get_cache_setting(flow.age_tracker, flow.conv_ctx)
         error = LLM_solve(flow.conv_ctx, cache; 
                         stop_sequences = flow.stop_sequences,
                         model          = flow.model,
                         on_text        = (text)   -> extract_commands(text, flow.extractor, preprocess=(data) -> LLM_conditonal_apply_changes(data), root_path=flow.workspace_context.workspace.root_path),
                         on_meta_usr    = (meta)   -> update_last_user_message_meta(flow.conv_ctx, meta),
-                        on_meta_ai     = (ai_msg) -> (flow.conv_ctx(ai_msg); !isempty(ai_msg.stop_sequence) && (toolcall = true)),
+                        on_meta_ai     = (ai_msg) -> (flow.conv_ctx(ai_msg); println("ai_msg",ai_msg); !isempty(ai_msg.stop_sequence) && (toolcall = true)),
                         # on_done        = ()       -> (cd(()->run_stream_parser(flow.extractor; async=true), flow.workspace_context)),
                         on_error       = (error)  -> add_error_message!(flow.conv_ctx,"ERROR: $error"),
         )
