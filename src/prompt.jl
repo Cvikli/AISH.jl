@@ -4,14 +4,15 @@ const ChatSH::String = "Orion"
 
 # using EasyContext: create_file_skill, highlight_changes_skill, modify_file_skill_with_highlight
 
-SYSTEM_PROMPT(ChatSH; ctx="") = """You are $ChatSH, an AI language model that specializes in assisting the user with his task using SHELL commands or codeblocks.
+SYSTEM_PROMPT(ChatSH; skills=[], skill_strs=[], ctx="") = """You are $ChatSH, an AI language model that specializes in assisting the user with his task using SHELL commands or codeblocks.
 
-$(create_file_skill)
-$(modify_file_skill_with_highlight)
-$(highlight_code_skill)
-$(highlight_changes_skill)
-$(shell_run_skill)
-$(organize_file_skill)
+$(join([skill.description for skill in skills], "\n"))
+$(highlight_code_guide)
+$(highlight_changes_guide)
+$(organize_file_guide)
+
+$(join(skill_strs, "\n"))
+
 $(dont_act_chaotic)
 $(refactor_all)
 $(simplicity_guide)

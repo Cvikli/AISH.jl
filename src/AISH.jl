@@ -35,10 +35,10 @@ include("workflow/SR_loop.jl")
 include("workflow/std_flow.jl")
 include("airepl.jl")
 
-function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false)
+function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=[])
   !silent && greet(ChatSH)
   
-  model = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent) : workflow(resume_data)
+  model = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, skills) : workflow(resume_data)
   
   nice_exit_handler(model.conv_ctx)
   set_terminal_title("AISH $(model.workspace_context.workspace.root_path)")
@@ -67,11 +67,16 @@ function start_conversation(user_question=""; workflow::DataType, resume_data=no
   end
 end
 
-function start(message=""; workflow::DataType, resume_data=nothing, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false)
-  start_conversation(message; workflow, loop, resume_data, project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev, use_julia)
+function start(message=""; workflow::DataType, resume_data=nothing, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=[])
+  start_conversation(message; workflow, loop, resume_data, project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev, use_julia, skills)
 end
 
-function main(;workflow::DataType, loop=true)
+function main(;workflow::DataType, skills=[
+  create_file_skill, 
+  modify_file_skill,
+  shell_skill, 
+  catfile_skill, 
+], loop=true)
   args = parse_commandline()
   start(args["message"]; 
         workflow, 
@@ -82,7 +87,8 @@ function main(;workflow::DataType, loop=true)
         loop=!args["no-loop"] && loop, 
         no_confirm=args["no-confirm"],
         detached_git_dev=args["git"],
-        use_julia=args["julia"]
+        use_julia=args["julia"],
+        skills
   )
 end
 julia_main(;workflow::DataType, loop=true) = main(;workflow, loop)

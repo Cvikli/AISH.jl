@@ -9,26 +9,30 @@ mutable struct STDFlow <: Workflow
     question_acc::QuestionCTX
     extractor::StreamParser
     model::String
+    stop_sequences::Vector{String}
     no_confirm::Bool
     use_planner::Bool
     use_julia::Bool
     planner::ExecutionPlannerContext
 
-    function STDFlow(;project_paths, model="claude-3-5-sonnet-20241022", no_confirm=false, verbose=true, use_planner=false, use_julia=false, kwargs...)
+    function STDFlow(;project_paths, model="claude-3-5-sonnet-20241022", no_confirm=false, verbose=true, use_planner=false, 
+        use_julia=false, skills=[], kwargs...)
         m = new(
             init_workspace_context(project_paths; verbose),
             init_julia_context(),
-            initSession(sys_msg=SYSTEM_PROMPT(ChatSH)),
+            initSession(),
             AgeTracker(max_history=10, cut_to=4),
             QuestionCTX(),
             StreamParser(),
             model,
+            unique([s.stop_sequence for s in skills if !isempty(s.stop_sequence)]),
             no_confirm,
             use_planner,
             use_julia,
             ExecutionPlannerContext(model="oro1m")
         )
-        append_ctx_descriptors(m.conv_ctx, SHELL_run_results, workspace_format_description(m.workspace_context.workspace), julia_format_description())
+        @show m.stop_sequences
+        m.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; skills, skill_strs=[workspace_format_description(m.workspace_context.workspace), (use_julia ? julia_format_guide : "")])
         m
     end
 end
