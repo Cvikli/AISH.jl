@@ -17,7 +17,7 @@ using EasyContext: init_workspace_context
 using EasyContext: process_workspace_context
 using EasyContext: process_julia_context
 using EasyContext: cut_old_conversation_history!
-using EasyContext: workspace_format_description, julia_format_description
+using EasyContext: workspace_format_description, julia_format_guide
 using EasyContext: last_msg
 using EasyContext: is_continue
 using EasyContext: Conversation, TestFramework, PersistableState
