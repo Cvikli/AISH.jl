@@ -87,7 +87,7 @@ function run(flow::STDFlow, user_question)
                         on_error       = (error)  -> add_error_message!(flow.conv_ctx,"ERROR: $error"),
         )
         (!toolcall || isempty(flow.extractor.command_tasks)) && break
-        result = execute(fetch(last(last(flow.extractor.command_tasks))))
+        result = execute_last_command(flow.extractor)
         print_tool_result(result)
         flow.conv_ctx(create_user_message(truncate_output(result)))
     end
