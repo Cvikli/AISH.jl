@@ -10,7 +10,7 @@ using EasyContext: LLM_solve
 using EasyContext: QuestionCTX
 using EasyContext: print_project_tree
 using EasyContext: context_combiner!
-using EasyContext: LLM_conditonal_apply_changes, LLM_reflect
+using EasyContext: LLM_reflect
 using EasyContext: get_cache_setting
 using EasyContext: shell_ctx_2_string
 using EasyContext: init_workspace_context

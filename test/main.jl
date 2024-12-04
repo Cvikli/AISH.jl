@@ -1,6 +1,8 @@
 using Revise
 using AISH: start
 using AISH: SRWorkFlow
+using AISH: STDFlow
+using RelevanceStacktrace
 
 start("correct mistake in the file that is included in the config.jl", workflow=STDFlow, project_paths=".")
 # start("greet me with hi please", workflow=SRWorkFlow, project_paths=["."], detached_git_dev=false)

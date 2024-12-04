@@ -89,7 +89,7 @@ function run(flow::STDFlow, user_question)
         (!toolcall || isempty(flow.extractor.command_tasks)) && break
         result = execute(fetch(last(last(flow.extractor.command_tasks))))
         print_tool_result(result)
-        flow.conv_ctx(create_user_message(result))
+        flow.conv_ctx(create_user_message(truncate_output(result)))
     end
     log_instant_apply(flow.extractor, ctx_question)
     cut_old_conversation_history!(flow.age_tracker, flow.conv_ctx, flow.julia_context, flow.workspace_context)
