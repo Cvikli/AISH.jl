@@ -31,8 +31,8 @@ mutable struct STDFlow <: Workflow
             use_julia,
             ExecutionPlannerContext(model="oro1m")
         )
-        @show m.stop_sequences
-        m.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; skills, skill_strs=[workspace_format_description(m.workspace_context.workspace), (use_julia ? julia_format_guide : "")])
+        m.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; skills, guide_strs=[workspace_format_description(m.workspace_context.workspace), (use_julia ? julia_format_guide : "")])
+        println(workspace_format_description(m.workspace_context.workspace))
         m
     end
 end
@@ -55,12 +55,12 @@ function run(flow::STDFlow, user_question)
     allinfo = ctx_shell[1:min(20000-length(ctx_question), end)] * "\n\n" * ctx_question 
     ctx_jl_pkg = flow.use_julia ? @async_showerr(process_julia_context(flow.julia_context, ctx_question; age_tracker=flow.age_tracker)) : ""
 
-    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker, extractor=flow.extractor)
+    # ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker, extractor=flow.extractor)
 
-    @time "first" query = context_combiner!(
+    query = context_combiner!(
         user_question, 
         fetch(ctx_jl_pkg), 
-        fetch(ctx_codebase), 
+        # fetch(ctx_codebase), 
         ctx_shell, 
     )
     
@@ -80,19 +80,15 @@ function run(flow::STDFlow, user_question)
         error = LLM_solve(flow.conv_ctx, cache; 
                         stop_sequences = flow.stop_sequences,
                         model          = flow.model,
-                        on_text        = (text)   -> extract_commands(text, flow.extractor, preprocess=(data) -> LLM_conditonal_apply_changes(data), root_path=flow.workspace_context.workspace.root_path),
+                        on_text        = (text)   -> extract_commands(text, flow.extractor, root_path=flow.workspace_context.workspace.root_path),
                         on_meta_usr    = (meta)   -> update_last_user_message_meta(flow.conv_ctx, meta),
-                        on_meta_ai     = (ai_msg) -> (flow.conv_ctx(ai_msg); println("ai_msg",ai_msg); !isempty(ai_msg.stop_sequence) && (toolcall = true)),
-                        # on_done        = ()       -> (cd(()->run_stream_parser(flow.extractor; async=true), flow.workspace_context)),
+                        on_meta_ai     = (ai_msg) -> (flow.conv_ctx(ai_msg); (!isempty(ai_msg.stop_sequence) && (toolcall = true))),
+                        on_done        = ()       -> (cd(()->run_stream_parser(flow.extractor; async=true), flow.workspace_context)),
                         on_error       = (error)  -> add_error_message!(flow.conv_ctx,"ERROR: $error"),
         )
-        !toolcall && break
-        @show flow.extractor.command_tasks
-        @show last(last(flow.extractor.command_tasks))
-        @show last((flow.extractor.command_tasks))[2]
-        @show fetch(last((flow.extractor.command_tasks))[2])
+        (!toolcall || isempty(flow.extractor.command_tasks)) && break
         result = execute(fetch(last(last(flow.extractor.command_tasks))))
-        @show result
+        print_tool_result(result)
         flow.conv_ctx(create_user_message(result))
     end
     log_instant_apply(flow.extractor, ctx_question)

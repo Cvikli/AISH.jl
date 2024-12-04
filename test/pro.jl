@@ -6,7 +6,7 @@ using AISH: SRWorkFlow
 using AISH: STDFlow
 using RelevanceStacktrace
 
-main(workflow=STDFlow, message="echo a short hi")
+start("correct mistake in the file that is included in the config.jl", workflow=STDFlow, project_paths=".")
 
 
 

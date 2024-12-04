@@ -22,6 +22,7 @@ using EasyContext: last_msg
 using EasyContext: is_continue
 using EasyContext: Conversation, TestFramework, PersistableState
 using EasyContext: merge_git
+using EasyContext: Skill
 using EasyContext: WorkspaceCTX, JuliaCTX
 using EasyContext: Workflow
 using EasyContext: execute
@@ -38,7 +39,6 @@ include("airepl.jl")
 
 function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=[])
   !silent && greet(ChatSH)
-  
   model = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, skills) : workflow(resume_data)
   
   nice_exit_handler(model.conv_ctx)
@@ -54,7 +54,7 @@ function start_conversation(user_question=""; workflow::DataType, resume_data=no
       _in_loop[] = true
       result = model(user_question)
       result == :MERGE && isdefined(model, :version_control) && !isnothing(model.version_control) && merge_git(model.version_control)
-      _in_loop[] = false 
+      _in_loop[] = false
     catch e
       if e isa InterruptException
         println("\nSelf-reflection loop interrupted. Continuing...")
@@ -67,19 +67,14 @@ function start_conversation(user_question=""; workflow::DataType, resume_data=no
     user_question = ""
   end
 end
-
-function start(message=""; workflow::DataType, resume_data=nothing, project_paths=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=[])
+function start(message=""; workflow::DataType, resume_data=nothing, project_paths::Union{String,Vector{String}}=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=DEFAULT_SKILLS)
+  isa(project_paths, String) && (project_paths = [project_paths])
   start_conversation(message; workflow, loop, resume_data, project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev, use_julia, skills)
 end
 
-function main(;workflow::DataType, message="", skills=[
-  create_file_skill, 
-  modify_file_skill,
-  shell_skill, 
-  catfile_skill, 
-], loop=true)
+function main(;workflow::DataType, skills=DEFAULT_SKILLS, loop=true)
   args = parse_commandline()
-  msg = isempty(args["message"]) ? message : args["message"]
+  msg  = args["message"]
   start(msg; 
         workflow,   
         resume_data=nothing,
