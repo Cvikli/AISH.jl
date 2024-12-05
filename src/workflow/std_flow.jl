@@ -16,7 +16,7 @@ mutable struct STDFlow <: Workflow
     planner::ExecutionPlannerContext
 
     function STDFlow(;project_paths, model="claude-3-5-sonnet-20241022", no_confirm=false, verbose=true, use_planner=false, 
-        use_julia=false, skills=[], kwargs...)
+        use_julia=false, skills=DEFAULT_SKILLS, kwargs...)
         m = new(
             init_workspace_context(project_paths; verbose),
             init_julia_context(),
@@ -44,23 +44,19 @@ get_flags_str(flow::STDFlow) = begin
     isempty(flags) ? "" : " [" * join(flags, " ") * "]"
 end
 
-function (flow::STDFlow)(user_question)
-    run(flow, user_question)
-end
-
+(flow::STDFlow)(user_question) = run(flow, user_question)
 function run(flow::STDFlow, user_question)
     ctx_question = user_question |> flow.question_acc 
     ctx_shell    = flow.extractor |> shell_ctx_2_string
     length(ctx_shell) > (20000-length(ctx_question)) && println("WARNING: All info is too long, cutting it to 24000(length(allinfo)) characters")
     allinfo = ctx_shell[1:min(20000-length(ctx_question), end)] * "\n\n" * ctx_question 
     ctx_jl_pkg = flow.use_julia ? @async_showerr(process_julia_context(flow.julia_context, ctx_question; age_tracker=flow.age_tracker)) : ""
-
-    # ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker, extractor=flow.extractor)
+    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker, extractor=flow.extractor)
 
     query = context_combiner!(
         user_question, 
         fetch(ctx_jl_pkg), 
-        # fetch(ctx_codebase), 
+        fetch(ctx_codebase), 
         ctx_shell, 
     )
     

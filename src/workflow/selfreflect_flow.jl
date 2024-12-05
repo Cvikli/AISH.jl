@@ -14,9 +14,9 @@ mutable struct SRWorkFlow <: Workflow
     no_confirm::Bool
 end
 
-SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=true, verbose=true, kwargs...) = begin
+SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=true, verbose=true, skills=DEFAULT_SKILLS, kwargs...) = begin
   persist           = PersistableState(logdir)
-  conv_ctx          = initSession(sys_msg=SYSTEM_PROMPT(ChatSH)) |> persist  
+  conv_ctx          = initSession(sys_msg=SYSTEM_PROMPT(ChatSH; skills)) |> persist  
   question_acc      = QuestionCTX()
   project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]
   # test_frame        = TestFramework(test_cases) #, folder_path=project_paths[1])
@@ -101,8 +101,8 @@ end
     end
     ctx_shell        = m.extractor             |> shell_ctx_2_string
     !isnothing(m.version_control) && commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, last_msg(m.conv_ctx)))
-    LLM_answer       = LLM_reflect(ctx_question, ctx_shell, last_msg(m.conv_ctx))
-    m.LLM_reflection = is_continue(LLM_reflect_condition(LLM_answer)) ? LLM_answer : ""
+    LLM_answer, decision = LLM_reflect(ctx_question, ctx_shell, last_msg(m.conv_ctx))
+    m.LLM_reflection = LLM_reflect_is_continue(decision) ? LLM_answer : ""
 
     cut_old_conversation_history!(m.age_tracker, m.conv_ctx, m.julia_context, m.workspace_context)
   end

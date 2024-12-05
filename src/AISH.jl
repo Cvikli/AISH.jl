@@ -19,7 +19,6 @@ using EasyContext: process_julia_context
 using EasyContext: cut_old_conversation_history!
 using EasyContext: workspace_format_description, julia_format_guide
 using EasyContext: last_msg
-using EasyContext: is_continue
 using EasyContext: Conversation, TestFramework, PersistableState
 using EasyContext: merge_git
 using EasyContext: Skill
@@ -37,7 +36,7 @@ include("workflow/selfreflect_flow.jl")
 include("workflow/std_flow.jl")
 include("airepl.jl")
 
-function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=[])
+function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=DEFAULT_SKILLS)
   !silent && greet(ChatSH)
   model = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, skills) : workflow(resume_data)
   
