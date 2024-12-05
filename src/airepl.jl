@@ -204,23 +204,23 @@ end
 
 start_std_repl(;kw...) = airepl(kw...)
 # To automatically start in airepl(): julia --banner=no -i -e 'using AISH; AISH.airepl(auto_switch=true)'
-function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=true, skills=DEFAULT_SKILLS)
+function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=true, initial_message="", skills=DEFAULT_SKILLS)
     flow = STDFlow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, skills)
     set_editor("meld_pro")  # Set default editor
 
     # If REPL is already active, initialize directly
     if isdefined(Base, :active_repl)
-        initialize_aish_mode(flow, auto_switch)
+        initialize_aish_mode(flow, auto_switch, initial_message)
         return
     end
 
     # Use atreplinit for initialization when REPL starts
     atreplinit() do repl
-        initialize_aish_mode(flow, auto_switch)
+        initialize_aish_mode(flow, auto_switch, initial_message)
     end
 end
 
-function initialize_aish_mode(flow, auto_switch)
+function initialize_aish_mode(flow, auto_switch, initial_message="")
     ai_mode = create_ai_repl(flow)
     println("AI REPL mode initialized. Press ')' to enter and backspace to exit.")
     print_help()
@@ -239,6 +239,9 @@ function initialize_aish_mode(flow, auto_switch)
         
             println("Switching to AISH mode automatically.")
             ReplMaker.enter_mode!(Base.active_repl.mistate, ai_mode)
+            
+            # Process initial message if provided
+            !isempty(initial_message) && ai_parser(initial_message, flow)
         catch e
             @warn "Failed to switch to AISH mode automatically." exception=e
         end

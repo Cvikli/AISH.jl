@@ -6,7 +6,7 @@ function parse_commandline()
     s = ArgParseSettings()
     
     @add_arg_table! s begin
-        "message"
+        "message", "-m"
             help = "Initial message to start the conversation"
             arg_type = String
             default = ""

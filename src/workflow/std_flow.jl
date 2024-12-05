@@ -62,7 +62,7 @@ function run(flow::STDFlow, user_question)
     
     # Generate plan if planner is enabled, using the full context
     if flow.use_planner
-        plan = flow.planner(flow.conv_ctx, query)
+        plan = flow.planner(flow.conv_ctx, query, history_count=3)
         println("EXECUTION_PLAN\n" * plan * "\n/EXECUTION_PLAN")
         query = query * "\n\n<EXECUTION_PLAN>\n" * plan * "\n</EXECUTION_PLAN>\n\n"
     end

@@ -39,7 +39,7 @@ end
 
 function execute_shell_commands(shell_commands::Dict{String, String})
   for (code, _) in shell_commands
-      output = execute_code_block(code)
+      output = execute_codeblock(code)
       shell_commands[code] = output
   end
   return shell_commands
