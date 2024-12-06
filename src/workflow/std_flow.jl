@@ -31,8 +31,12 @@ mutable struct STDFlow <: Workflow
             use_julia,
             ExecutionPlannerContext(model="oro1m")
         )
-        m.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; skills, guide_strs=[workspace_format_description(m.workspace_context.workspace), (use_julia ? julia_format_guide : "")])
-        println(workspace_format_description(m.workspace_context.workspace))
+        m.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; skills, 
+        guide_strs=[
+            print_project_tree(m.workspace_context.workspace, summary_callback=LLM_summary), 
+            (use_julia ? julia_format_guide : "")])
+        
+        # println(workspace_format_description(m.workspace_context.workspace))
         m
     end
 end
