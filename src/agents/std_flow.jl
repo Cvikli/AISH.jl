@@ -90,12 +90,9 @@ function run(flow::STDFlow, user_question)
                         model          = flow.model,
                         on_error       = (error)  -> add_error_message!(flow.conv_ctx,"ERROR: $error"),
         )
-        flow.conv_ctx(aimessage)
-        update_last_user_message_meta(flow.conv_ctx, cb)
         
         run_stream_parser(flow.extractor, root_path=flow.workspace_context.workspace.root_path, async=true)
         # postcall saves.
-        !isnothing(cb.run_info.stop_sequence) && !isempty(cb.run_info.stop_sequence) && (toolcall = true)
         (!toolcall || isempty(flow.extractor.command_tasks)) && break
 
         result = execute_last_command(flow.extractor)
