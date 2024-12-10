@@ -31,8 +31,8 @@ include("utils.jl")
 
 include("prompt.jl")
 
-include("workflow/selfreflect_flow.jl")
-include("workflow/std_flow.jl")
+include("agents/selfreflect_flow.jl")
+include("agents/std_flow.jl")
 
 include("interfaces/cmd_config.jl")
 include("interfaces/cmd_arg_parser.jl")
