@@ -34,10 +34,10 @@ include("prompt.jl")
 include("workflow/selfreflect_flow.jl")
 include("workflow/std_flow.jl")
 
-include("mode/cmd_config.jl")
-include("mode/cmd_arg_parser.jl")
-include("mode/repl.jl")
-include("mode/cmd.jl")
+include("interfaces/cmd_config.jl")
+include("interfaces/cmd_arg_parser.jl")
+include("interfaces/repl.jl")
+include("interfaces/cmd.jl")
 
 
 # include("precompile_scripts.jl")
