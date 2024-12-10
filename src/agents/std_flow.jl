@@ -81,21 +81,20 @@ function run(flow::STDFlow, user_question)
     flow.conv_ctx(create_user_message(query))
 
     while true
-        toolcall = false
-        reset!(flow.extractor)
+        toolcall = false    
         cache = get_cache_setting(flow.age_tracker, flow.conv_ctx)
         aimessage, cb = LLM_solve(flow.conv_ctx, cache;
+                        flow.extractor,
+                        root_path      = flow.workspace_context.workspace.root_path,
                         stop_sequences = get_stop_sequences(flow),
                         model          = flow.model,
-                        on_text        = (text)   -> extract_commands(text, flow.extractor, root_path=flow.workspace_context.workspace.root_path),
-                        on_done        = ()       -> (flush!(flow.extractor);
-                                                    run_stream_parser(flow.extractor, root_path=flow.workspace_context.workspace.root_path, async=true)),
                         on_error       = (error)  -> add_error_message!(flow.conv_ctx,"ERROR: $error"),
         )
-        
-        # postcall saves.
         flow.conv_ctx(aimessage)
         update_last_user_message_meta(flow.conv_ctx, cb)
+        
+        run_stream_parser(flow.extractor, root_path=flow.workspace_context.workspace.root_path, async=true)
+        # postcall saves.
         !isnothing(cb.run_info.stop_sequence) && !isempty(cb.run_info.stop_sequence) && (toolcall = true)
         (!toolcall || isempty(flow.extractor.command_tasks)) && break
 
