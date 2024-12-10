@@ -1,5 +1,7 @@
-using EasyContext
-using BoilerplateCvikli: @async_showerr
+# Add at top with imports
+using Memoize
+using Markdown  # Add at top with imports
+using EasyContext: flush!
 
 mutable struct STDFlow <: Workflow
     workspace_context::WorkspaceCTX
@@ -9,13 +11,13 @@ mutable struct STDFlow <: Workflow
     question_acc::QuestionCTX
     extractor::StreamParser
     model::String
-    stop_sequences::Vector{String}
+    skills::Vector{Skill}  # Store skills instead of stop_sequences
     no_confirm::Bool
     use_planner::Bool
     use_julia::Bool
     planner::ExecutionPlannerContext
 
-    function STDFlow(;project_paths, model="claude-3-5-sonnet-20241022", no_confirm=false, verbose=true, use_planner=false, 
+    function STDFlow(;project_paths, model="claude-3-5-sonnet-20241022", no_confirm=false, verbose=true, use_planner=false,
         use_julia=false, skills=DEFAULT_SKILLS, kwargs...)
         m = new(
             init_workspace_context(project_paths; verbose),
@@ -25,7 +27,7 @@ mutable struct STDFlow <: Workflow
             QuestionCTX(),
             StreamParser(),
             model,
-            unique([s.stop_sequence for s in skills if !isempty(s.stop_sequence)]),
+            skills,  # Store skills directly
             no_confirm,
             use_planner,
             use_julia,
@@ -41,6 +43,11 @@ mutable struct STDFlow <: Workflow
     end
 end
 
+# Add memoized getter for stop_sequences
+@memoize function get_stop_sequences(flow::STDFlow)
+    unique([s.stop_sequence for s in flow.skills if !isempty(s.stop_sequence)])
+end
+
 get_flags_str(flow::STDFlow) = begin
     flags = String[]
     flow.use_planner && push!(flags, "plan" * (occursin("oro", flow.planner.model) ? "\$" : ""))
@@ -50,43 +57,48 @@ end
 
 (flow::STDFlow)(user_question) = run(flow, user_question)
 function run(flow::STDFlow, user_question)
-    ctx_question = user_question |> flow.question_acc 
+    ctx_question = user_question |> flow.question_acc
     ctx_shell    = flow.extractor |> shell_ctx_2_string
     length(ctx_shell) > (20000-length(ctx_question)) && println("WARNING: All info is too long, cutting it to 24000(length(allinfo)) characters")
-    allinfo = ctx_shell[1:min(20000-length(ctx_question), end)] * "\n\n" * ctx_question 
+    allinfo = ctx_shell[1:min(20000-length(ctx_question), end)] * "\n\n" * ctx_question
     ctx_jl_pkg = flow.use_julia ? @async_showerr(process_julia_context(flow.julia_context, ctx_question; age_tracker=flow.age_tracker)) : ""
-    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker, extractor=flow.extractor)
+    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker)
 
     query = context_combiner!(
-        user_question, 
-        fetch(ctx_jl_pkg), 
-        fetch(ctx_codebase), 
-        ctx_shell, 
+        user_question,
+        fetch(ctx_jl_pkg),
+        fetch(ctx_codebase),
+        ctx_shell,
     )
-    
+
     # Generate plan if planner is enabled, using the full context
     if flow.use_planner
         plan = flow.planner(flow.conv_ctx, query, history_count=3)
-        println("EXECUTION_PLAN\n" * plan * "\n/EXECUTION_PLAN")
+        display(Markdown.parse("# EXECUTION_PLAN\n" * plan))
         query = query * "\n\n<EXECUTION_PLAN>\n" * plan * "\n</EXECUTION_PLAN>\n\n"
     end
-    
+
     flow.conv_ctx(create_user_message(query))
-    
+
     while true
-        toolcall = false    
+        toolcall = false
         reset!(flow.extractor)
         cache = get_cache_setting(flow.age_tracker, flow.conv_ctx)
-        error = LLM_solve(flow.conv_ctx, cache; 
-                        stop_sequences = flow.stop_sequences,
+        aimessage, cb = LLM_solve(flow.conv_ctx, cache;
+                        stop_sequences = get_stop_sequences(flow),
                         model          = flow.model,
                         on_text        = (text)   -> extract_commands(text, flow.extractor, root_path=flow.workspace_context.workspace.root_path),
-                        on_meta_usr    = (meta)   -> update_last_user_message_meta(flow.conv_ctx, meta),
-                        on_meta_ai     = (ai_msg) -> (flow.conv_ctx(ai_msg); (!isempty(ai_msg.stop_sequence) && (toolcall = true))),
-                        on_done        = ()       -> (cd(()->run_stream_parser(flow.extractor; async=true), flow.workspace_context)),
+                        on_done        = ()       -> (flush!(flow.extractor);
+                                                    run_stream_parser(flow.extractor, root_path=flow.workspace_context.workspace.root_path, async=true)),
                         on_error       = (error)  -> add_error_message!(flow.conv_ctx,"ERROR: $error"),
         )
+        
+        # postcall saves.
+        flow.conv_ctx(aimessage)
+        update_last_user_message_meta(flow.conv_ctx, cb)
+        !isnothing(cb.run_info.stop_sequence) && !isempty(cb.run_info.stop_sequence) && (toolcall = true)
         (!toolcall || isempty(flow.extractor.command_tasks)) && break
+
         result = execute_last_command(flow.extractor)
         print_tool_result(result)
         flow.conv_ctx(create_user_message(truncate_output(result)))
@@ -99,12 +111,7 @@ end
 # Control functions
 update_workspace!(flow::STDFlow, project_paths::Vector{<:AbstractString}) = begin
     flow.workspace_context = init_workspace_context(project_paths)
-    reset_ctx_descriptors(flow.conv_ctx, SYSTEM_PROMPT(ChatSH))
-    append_ctx_descriptors(flow.conv_ctx, 
-        SHELL_run_results, 
-        workspace_format_description(flow.workspace_context.workspace),
-        julia_format_description()
-    )
+    flow.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; skills=flow.skills, guide_strs=[workspace_format_description(flow.workspace_context.workspace), (flow.use_julia ? julia_format_guide : "")])
     return flow
 end
 
@@ -119,7 +126,6 @@ end
 
 # Simplified planner control functions since planner is always initialized
 toggle_planner!(flow::STDFlow) = (flow.use_planner = !flow.use_planner; flow)
-update_planner!(flow::STDFlow, planner::ExecutionPlannerContext) = (flow.planner = planner; flow)
 
 function reset_flow!(flow::STDFlow)
     # Create a new instance with same settings
@@ -128,7 +134,8 @@ function reset_flow!(flow::STDFlow)
         model=flow.model,
         no_confirm=flow.no_confirm,
         use_planner=flow.use_planner,
-        use_julia=flow.use_julia
+        use_julia=flow.use_julia,
+        skills=flow.skills  # Pass the existing skills
     )
     
     # Copy over the fields

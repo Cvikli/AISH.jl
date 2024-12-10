@@ -3,6 +3,7 @@ using ReplMaker
 using REPL.LineEdit: MIState, PromptState, default_keymap, escape_defaults
 using Base.Filesystem
 using Base: AnyDict
+using EasyContext: set_editor
 
 # interface required functions.
 get_flags_str(::Workflow) = " [unimplemented]"  # Base case for generic workflows
@@ -47,19 +48,6 @@ end
 
 REPL.LineEdit.setmodifiers!(c::PathCompletionProvider, m::REPL.LineEdit.Modifiers) = c.modifiers = m
 
-function parse_editor_command(cmd::String)
-    # Strip the command prefix
-    editor_setting = strip(startswith(cmd, "--editor") ? cmd[9:end] : cmd[3:end])
-    
-    # Use centralized get_editor with port handling
-    editor_config = get_editor(editor_setting, nothing)
-    if editor_config.editor === nothing
-        return nothing, "Unknown editor. Available editors: $(join(keys(EDITOR_MAP), ", "))"
-    end
-    
-    return editor_config, nothing
-end
-
 const COMMANDS = Dict{String, Tuple{String, Function}}(
     "-p"       => ("Switch projects", (flow, args) -> begin
         paths = split(args)
@@ -95,18 +83,23 @@ const COMMANDS = Dict{String, Tuple{String, Function}}(
         reset_flow!(flow)
         println("\nReset conversation and context state while maintaining current settings")
     end),
-    "--plan"   => ("Toggle planner mode, model option: [oro1, \$]", (flow, args) -> begin
+    "--plan"   => ("Toggle planner mode, models: [oro1, oro1m, gpt4, claude, gemexp, tqwen25b72, ]", (flow, args) -> begin
         flow isa STDFlow || return
-        if args == "\$" || args == "oro1"
-            flow.planner.model = "oro1"
+        model = strip(args)
+        valid_models = ["oro1", "oro1m", "gpt4", "claude", "gemexp", "tqwen25b72"]
+        if !isempty(model)
+            if !(model in valid_models)
+                println("\nUnrecognized model, but might work: ", join(valid_models, ", "))
+            end
+            flow.planner.model = model
             flow.use_planner = true
-            println("\nPlanner mode enabled with oro1 model")
-        else
-            flow.use_planner && (flow.planner.model = "oro1m")  # Switch back to cheaper model when toggling
-            toggle_planner!(flow)
-            println("\nPlanner mode ", flow.use_planner ? "enabled" : "disabled", 
-                    flow.use_planner ? " with $(flow.planner.model) model" : "")
+            println("\nPlanner mode enabled with $model model")
+            return  # Early return to prevent processing user message
         end
+        flow.use_planner && (flow.planner.model = "oro1m")  # Switch back to cheaper model when toggling
+        toggle_planner!(flow)
+        println("\nPlanner mode ", flow.use_planner ? "enabled" : "disabled",
+                flow.use_planner ? " with $(flow.planner.model) model" : "")
     end)
 )
 
@@ -125,6 +118,7 @@ function print_help()
         arg_hint = if cmd == "-p" "path1 path2"
                   elseif cmd == "--model" "name"
                   elseif cmd == "--editor" || cmd == "-e" "name[:port]"
+                  elseif cmd == "--plan" "[oro1|oro1m|gpt4|claude|gemexp|...]"
                   else ""
                   end
         padding = arg_hint == "" ? "" : " "
@@ -140,12 +134,10 @@ function ai_parser(user_question::AbstractString, flow::Workflow)
     for (prefix, (_, handler)) in COMMANDS
         if startswith(cmd, prefix * " ") || cmd == prefix
             handler(flow, strip(cmd[length(prefix)+1:end]))
-            # Special case for --plan as it can be combined
-            prefix == "--plan" && !isempty(strip(cmd[7:end])) && ai_parser(strip(cmd[7:end]), flow)
-            return
+            return  # Return immediately after handling command
         end
     end
-    
+
     # Handle unknown commands starting with --
     if startswith(cmd, "--")
         println("\nError: Unknown command '", cmd, "'")
@@ -168,24 +160,36 @@ function ai_parser(user_question::AbstractString, flow::Workflow)
     end
 end
 
+# Define a callback function that will run Revise and print a message
+function run_revise!(repl, args...)
+    try
+        Revise.revise()
+        println("Revise: Code changes have been applied!")
+    catch err
+        println("Error running Revise.revise(): ", err)
+    end
+end
+
 function create_ai_repl(flow::Workflow)
     parser(input) = ai_parser(input, flow)
     
-    # Add flag toggle keymaps using Ctrl combinations
-    ai_keymap = AnyDict(
-        # Plan toggle (Ctrl-Q)
-        "^Q" => (s::MIState,o...)->begin
-            flow isa STDFlow && toggle_planner!(flow)
-            println("\nPlanner mode ", flow isa STDFlow && flow.use_planner ? "enabled" : "disabled")
-            return :ignore
-        end,
-        # Julia context toggle (Ctrl-O)
-        "^O" => (s::MIState,o...)->begin
-            flow isa STDFlow && (flow.use_julia = !flow.use_julia)
-            println("\nJulia package context ", flow isa STDFlow && flow.use_julia ? "enabled" : "disabled")
-            return :ignore
-        end
-    )
+    ai_keymap = Dict(
+    '\x11' => (s::MIState, o...) -> begin # Ctrl+Q
+        flow isa STDFlow && toggle_planner!(flow)
+        println("\nPlanner mode ", flow isa STDFlow && flow.use_planner ? "enabled" : "disabled")
+        return :ignore
+    end,
+    '\x0f' => (s::MIState, o...) -> begin # Ctrl+O
+        flow isa STDFlow && (flow.use_julia = !flow.use_julia)
+        println("\nJulia package context ", flow isa STDFlow && flow.use_julia ? "enabled" : "disabled")
+        return :ignore
+    end,
+    '\x05' => (s::MIState, o...) -> begin # Ctrl+E
+        println("Ctrl+E pressed. This should print!")
+        # run_revise!()  # call your run_revise! function if defined
+        return :ignore
+    end
+)
     
     repl = Base.active_repl
     initrepl(
@@ -197,7 +201,8 @@ function create_ai_repl(flow::Workflow)
         repl=repl,
         valid_input_checker=Returns(true),
         completion_provider=PathCompletionProvider(),
-        keymap=REPL.LineEdit.keymap([ai_keymap, default_keymap, escape_defaults]),
+        # keymap=REPL.LineEdit.keymap([ai_keymap, default_keymap, escape_defaults]),
+        keymap=ai_keymap,
         sticky_mode=false
     )
 end
@@ -225,25 +230,21 @@ function initialize_aish_mode(flow, auto_switch, initial_message="")
     println("AI REPL mode initialized. Press ')' to enter and backspace to exit.")
     print_help()
 
-    @async if auto_switch # without @async the .mistate is nothing...
-        try
-            for _ in 1:50
-                isdefined(Base, :active_repl) && isdefined(Base.active_repl, :mistate) && !isnothing(Base.active_repl.mistate) && break
-                sleep(0.01)
-            end
-            
-            if !isdefined(Base, :active_repl)
-                println("Failed to enter REPL after 1 second.")
-                return
-            end
-        
-            println("Switching to AISH mode automatically.")
-            ReplMaker.enter_mode!(Base.active_repl.mistate, ai_mode)
-            
-            # Process initial message if provided
-            !isempty(initial_message) && ai_parser(initial_message, flow)
-        catch e
-            @warn "Failed to switch to AISH mode automatically." exception=e
+    @async_showerr if auto_switch # without @async the .mistate is nothing...
+        for _ in 1:50
+            isdefined(Base, :active_repl) && isdefined(Base.active_repl, :mistate) && !isnothing(Base.active_repl.mistate) && break
+            sleep(0.01)
         end
+        
+        if !isdefined(Base, :active_repl)
+            println("Failed to enter REPL after 1 second.")
+            return
+        end
+    
+        println("Switching to AISH mode automatically.")
+        ReplMaker.enter_mode!(Base.active_repl.mistate, ai_mode)
+        
+        # Process initial message if provided
+        !isempty(initial_message) && ai_parser(initial_message, flow)
     end
 end
