@@ -4,7 +4,7 @@ function start_conversation(user_question=""; workflow::DataType, resume_data=no
   model = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, skills) : workflow(resume_data)
   
   nice_exit_handler(model.conv_ctx)
-  set_terminal_title("AISH $(basename(model.workspace_context.workspace.root_path))")
+  set_terminal_title("AISH \"$(basename(rstrip(model.workspace_context.workspace.root_path, '/')))\"")
 
   !silent && isempty(user_question) && (isdefined(Base, :active_repl) ? println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ") : println("Your multiline input (empty line to finish):"))
 
