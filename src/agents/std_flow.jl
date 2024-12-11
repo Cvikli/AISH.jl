@@ -73,7 +73,7 @@ function run(flow::STDFlow, user_question)
 
     # Generate plan if planner is enabled, using the full context
     if flow.use_planner
-        plan = flow.planner(flow.conv_ctx, query, history_count=3)
+        plan = LLM_ExecutionPlanner(flow.planner, flow.conv_ctx, query, history_count=3)
         display(Markdown.parse("# EXECUTION_PLAN\n" * plan))
         query = query * "\n\n<EXECUTION_PLAN>\n" * plan * "\n</EXECUTION_PLAN>\n\n"
     end
