@@ -6,24 +6,58 @@
 </head>
 <body>
   <h1>WebSocket Client</h1>
+  <input type="text" id="channel" placeholder="Channel name"/>
+  <button onclick="subscribe()">Subscribe</button>
+  <button onclick="unsubscribe()">Unsubscribe</button>
+  <br><br>
   <input type="text" id="msg" placeholder="Type message..."/>
   <button onclick="sendMessage()">Send</button>
+  <div id="messages"></div>
 
   <script>
     const socket = new WebSocket('ws://localhost:8080');
+    let currentChannel = '';
 
     socket.addEventListener('open', () => {
       console.log('Connected to server');
     });
 
     socket.addEventListener('message', (event) => {
-      console.log('Received:', event.data);
+      const data = JSON.parse(event.data);
+      const messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML += `<p>[${data.channel}] ${data.content}</p>`;
     });
 
+    function subscribe() {
+      const channel = document.getElementById('channel').value;
+      currentChannel = channel;
+      socket.send(JSON.stringify({
+        type: 'subscribe',
+        channel: channel
+      }));
+    }
+
+    function unsubscribe() {
+      const channel = document.getElementById('channel').value;
+      socket.send(JSON.stringify({
+        type: 'unsubscribe',
+        channel: channel
+      }));
+      currentChannel = '';
+    }
+
     function sendMessage() {
+      if (!currentChannel) {
+        alert('Please subscribe to a channel first!');
+        return;
+      }
       const input = document.getElementById('msg');
       const message = input.value;
-      socket.send(message);
+      socket.send(JSON.stringify({
+        type: 'message',
+        channel: currentChannel,
+        content: message
+      }));
       input.value = '';
     }
   </script>
