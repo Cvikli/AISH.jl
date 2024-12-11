@@ -118,7 +118,6 @@ function print_help()
         arg_hint = if cmd == "-p" "path1 path2"
                   elseif cmd == "--model" "name"
                   elseif cmd == "--editor" || cmd == "-e" "name[:port]"
-                  elseif cmd == "--plan" "[oro1|oro1m|gpt4|claude|gemexp|...]"
                   else ""
                   end
         padding = arg_hint == "" ? "" : " "
