@@ -27,14 +27,13 @@ using EasyContext: Workflow
 using EasyContext: execute
 using EasyContext
 
+include("config.jl")
 include("utils.jl")
-
 include("prompt.jl")
 
 include("agents/selfreflect_flow.jl")
 include("agents/std_flow.jl")
 
-include("interfaces/cmd_config.jl")
 include("interfaces/cmd_arg_parser.jl")
 include("interfaces/repl.jl")
 include("interfaces/cmd.jl")

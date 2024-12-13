@@ -5,7 +5,7 @@ const ChatSH::String = "Orion"
 const DEFAULT_SKILLS::Vector{Skill} = [
   create_file_skill, 
   modify_file_skill,
-  shell_skill, 
+  shell_block_skill, 
   catfile_skill, 
 ]
 

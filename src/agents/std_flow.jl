@@ -1,7 +1,6 @@
 # Add at top with imports
 using Memoize
 using Markdown  # Add at top with imports
-using EasyContext: flush!
 
 mutable struct STDFlow <: Workflow
     workspace_context::WorkspaceCTX
@@ -81,7 +80,6 @@ function run(flow::STDFlow, user_question)
     flow.conv_ctx(create_user_message(query))
 
     while true
-        toolcall = false    
         cache = get_cache_setting(flow.age_tracker, flow.conv_ctx)
         aimessage, cb = LLM_solve(flow.conv_ctx, cache;
                         flow.extractor,
@@ -93,9 +91,9 @@ function run(flow::STDFlow, user_question)
         
         run_stream_parser(flow.extractor, root_path=flow.workspace_context.workspace.root_path, async=true)
         # postcall saves.
-        (!toolcall || isempty(flow.extractor.command_tasks)) && break
+        (isnothing(cb.run_info.stop_sequence) || isempty(flow.extractor.command_tasks)) && break
 
-        result = execute_last_command(flow.extractor)
+        result = get_last_command_result(flow.extractor)
         isnothing(result) && continue
         print_tool_result(result)
         flow.conv_ctx(create_user_message(truncate_output(result)))
