@@ -33,7 +33,7 @@ function REPL.LineEdit.complete_line(c::PathCompletionProvider, s::REPL.LineEdit
         if isdir(dir)
             completions = String[]
             for entry in readdir(dir)
-                if isdir(joinpath(dir, entry)) && startswith(entry, base)
+                if isdir(joinpath(dir, entry)) && startswith(lowercase(entry), lowercase(base))  # Case-insensitive comparison
                     # Use normpath to handle ".." properly
                     completion_path = normpath(joinpath(dirname(current), entry))
                     push!(completions, completion_path * "/")
