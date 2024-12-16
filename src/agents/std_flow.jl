@@ -10,7 +10,7 @@ mutable struct STDFlow <: Workflow
     question_acc::QuestionCTX
     extractor::StreamParser
     model::String
-    skills::Vector{Skill}  # Store skills instead of stop_sequences
+    skills::Vector{DataType}  # Store skills instead of stop_sequences
     no_confirm::Bool
     use_planner::Bool
     use_julia::Bool
