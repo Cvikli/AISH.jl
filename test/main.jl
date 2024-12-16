@@ -4,9 +4,11 @@ using AISH: SRWorkFlow
 using AISH: STDFlow
 using RelevanceStacktrace
 
-start("""could we create a workspace_format_description's tree directory view to be refactored to be able to handle the files also with an optionable flag?
-so It would be great to have these two function merged and used only this one instead of useing the print_tree and tree_string separetely
-""", workflow=STDFlow, project_paths="../../EasyContext.jl")
+start(
+# """could we create a workspace_format_description's tree directory view to be refactored to be able to handle the files also with an optionable flag?
+# so It would be great to have these two function merged and used only this one instead of useing the print_tree and tree_string separetely
+# """, 
+workflow=STDFlow, project_paths="../../EasyContext.jl/src")
 # start("greet me with hi please", workflow=SRWorkFlow, project_paths=["."], detached_git_dev=false)
 # start("his implementation efficiently computes the n-th element of the fib4 sequence without using recursion. It uses a loop to iterate through the sequence, updating four variables that represent the last four numbers in the sequence. The function also handles the base cases for n = 0, 1, 2, and 3 as specified in the problem description.", project_paths=["."], loop=true)
 #%%

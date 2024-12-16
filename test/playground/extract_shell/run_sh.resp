@@ -1,9 +1,0 @@
-Certainly! To start the Julia script with the precompilation flag, you can use the `--track-allocation=user` flag. This flag will track memory allocations and can help identify what got precompiled. Here's the command you can use:
-
-```sh
-julia --track-allocation=user ../EasyContext.jl/playground/pro.jl -p .
-```
-
-This command will run the `pro.jl` script located in the `../EasyContext.jl/playground/` directory, with the current directory (`.`) as an argument, and track allocations during execution.
-
-Would you like me to run this command for you?
