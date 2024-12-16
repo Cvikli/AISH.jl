@@ -32,11 +32,12 @@ function REPL.LineEdit.complete_line(c::PathCompletionProvider, s::REPL.LineEdit
         # Get completions if directory exists
         if isdir(dir)
             completions = String[]
+
             for entry in readdir(dir)
-                if isdir(joinpath(dir, entry)) && startswith(lowercase(entry), lowercase(base))  # Case-insensitive comparison
+                if isdir(joinpath(dir, entry)) && startswith(entry, base)  # Case-insensitive comparison
                     # Use normpath to handle ".." properly
-                    completion_path = normpath(joinpath(dirname(current), entry))
-                    push!(completions, completion_path * "/")
+                    rel_path = isempty(dirname(current)) ? entry : joinpath(dirname(current), entry)
+                    push!(completions, normpath(rel_path) * "/")
                 end
             end
             # completions = [t[length(dir)+2:end] for t in completions]
@@ -201,7 +202,7 @@ function create_ai_repl(flow::Workflow)
         valid_input_checker=Returns(true),
         completion_provider=PathCompletionProvider(),
         # keymap=REPL.LineEdit.keymap([ai_keymap, default_keymap, escape_defaults]),
-        keymap=ai_keymap,
+        # keymap=ai_keymap,
         sticky_mode=false
     )
 end
