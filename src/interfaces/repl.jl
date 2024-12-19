@@ -211,7 +211,7 @@ start_std_repl(;kw...) = airepl(kw...)
 # To automatically start in airepl(): julia --banner=no -i -e 'using AISH; AISH.airepl(auto_switch=true)'
 function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=true, initial_message="", skills=DEFAULT_SKILLS)
     flow = STDFlow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, skills)
-    set_terminal_title("AISH \"$(basename(rstrip(flow.workspace_context.workspace.root_path, '/')))\"")
+    set_terminal_title("AISH $(basename(rstrip(flow.workspace_context.workspace.root_path, '/')))")
     set_editor("meld_pro")  # Set default editor
 
     # If REPL is already active, initialize directly
