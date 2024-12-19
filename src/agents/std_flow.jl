@@ -12,7 +12,6 @@ mutable struct STDFlow <: Workflow
     model::String
     skills::Vector{DataType}  # Store skills instead of stop_sequences
     no_confirm::Bool
-    use_planner::Bool
     use_julia::Bool
     planner::ExecutionPlannerContext
 
@@ -26,11 +25,10 @@ mutable struct STDFlow <: Workflow
             QuestionCTX(),
             StreamParser(),
             model,
-            skills,  # Store skills directly
+            skills,
             no_confirm,
-            use_planner,
             use_julia,
-            ExecutionPlannerContext(model="oro1m")
+            ExecutionPlannerContext(model="oro1m", enabled=use_planner)
         )
         m.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; skills, 
         guide_strs=[
@@ -44,12 +42,12 @@ end
 
 # Add memoized getter for stop_sequences
 @memoize function get_stop_sequences(flow::STDFlow)
-    unique([s.stop_sequence for s in flow.skills if !isempty(s.stop_sequence)])
+    unique([stop_sequence(s) for s in flow.skills if has_stop_sequence(s)])
 end
 
 get_flags_str(flow::STDFlow) = begin
     flags = String[]
-    flow.use_planner && push!(flags, "plan" * (occursin("oro", flow.planner.model) ? "\$" : ""))
+    flow.planner.enabled && push!(flags, "plan" * (occursin("oro", flow.planner.model) ? "\$" : ""))
     flow.use_julia && push!(flags, "jl")
     isempty(flags) ? "" : " [" * join(flags, " ") * "]"
 end
@@ -70,12 +68,8 @@ function run(flow::STDFlow, user_question)
         ctx_shell,
     )
 
-    # Generate plan if planner is enabled, using the full context
-    if flow.use_planner
-        plan = LLM_ExecutionPlanner(flow.planner, flow.conv_ctx, query, history_count=3)
-        display(Markdown.parse("# EXECUTION_PLAN\n" * plan))
-        query = query * "\n\n<EXECUTION_PLAN>\n" * plan * "\n</EXECUTION_PLAN>\n\n"
-    end
+    # Use transform directly if planner is enabled
+    query *= flow.planner.enabled ? "\n\n" * transform(flow.planner, query, flow.conv_ctx) : ""
 
     flow.conv_ctx(create_user_message(query))
 
@@ -120,7 +114,7 @@ function normalize_conversation!(flow::STDFlow)
 end
 
 # Simplified planner control functions since planner is always initialized
-toggle_planner!(flow::STDFlow) = (flow.use_planner = !flow.use_planner; flow)
+toggle_planner!(flow::STDFlow) = (flow.planner.enabled = !flow.planner.enabled; flow)
 
 function reset_flow!(flow::STDFlow)
     # Create a new instance with same settings
@@ -128,9 +122,9 @@ function reset_flow!(flow::STDFlow)
         project_paths=flow.workspace_context.workspace.project_paths,
         model=flow.model,
         no_confirm=flow.no_confirm,
-        use_planner=flow.use_planner,
+        use_planner=flow.planner.enabled,
         use_julia=flow.use_julia,
-        skills=flow.skills  # Pass the existing skills
+        skills=flow.skills
     )
     
     # Copy over the fields
