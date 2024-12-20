@@ -53,25 +53,31 @@ get_flags_str(flow::STDFlow) = begin
 end
 
 (flow::STDFlow)(user_question) = run(flow, user_question)
-function run(flow::STDFlow, user_question)
+function run(flow::STDFlow, user_question, io::Union{IO, Nothing}=nothing)
     ctx_question = user_question |> flow.question_acc
-    ctx_shell    = flow.extractor |> shell_ctx_2_string
+    
+    ctx_shell = flow.extractor
     length(ctx_shell) > (20000-length(ctx_question)) && println("WARNING: All info is too long, cutting it to 24000(length(allinfo)) characters")
     allinfo = ctx_shell[1:min(20000-length(ctx_question), end)] * "\n\n" * ctx_question
+    
     ctx_jl_pkg = flow.use_julia ? @async_showerr(process_julia_context(flow.julia_context, ctx_question; age_tracker=flow.age_tracker)) : ""
     ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker)
 
-    query = context_combiner!(
-        user_question,
-        fetch(ctx_jl_pkg),
-        fetch(ctx_codebase),
-        ctx_shell,
+    context = context_combiner!(
+        julia_ctx_2_string(fetch(ctx_jl_pkg)),
+        workspace_ctx_2_string(fetch(ctx_codebase)),
+        shell_ctx_2_string(ctx_shell),
     )
 
     # Use transform directly if planner is enabled
-    query *= flow.planner.enabled ? "\n\n" * transform(flow.planner, query, flow.conv_ctx) : ""
+    plan_context = transform(flow.planner, context, flow.conv_ctx)
 
-    flow.conv_ctx(create_user_message(query))
+    write_event!(io, "context_julia", ctx_jl_pkg)
+    write_event!(io, "context_codebase", ctx_codebase)
+    write_event!(io, "context_shell", ctx_shell) # TODO: only iwth request... or if it is automatic then send it up...
+    write_event!(io, "context_plan", plan_context)
+
+    flow.conv_ctx(create_user_message(user_question, context * plan_context))
 
     while true
         cache = get_cache_setting(flow.age_tracker, flow.conv_ctx)
@@ -79,19 +85,27 @@ function run(flow::STDFlow, user_question)
                         flow.extractor,
                         root_path      = flow.workspace_context.workspace.root_path,
                         stop_sequences = get_stop_sequences(flow),
-                        model          = flow.model,
-                        on_error       = (error)  -> add_error_message!(flow.conv_ctx,"ERROR: $error"),
+                        model         = flow.model,
+                        on_error      = (error) -> begin
+                            err_msg = "ERROR: $error"
+                            add_error_message!(flow.conv_ctx, err_msg)
+                            write_event!(io, "error", err_msg)
+                        end
         )
         
+        write_event!(io, "ai_message", aimessage.content)
+        
         run_stream_parser(flow.extractor, root_path=flow.workspace_context.workspace.root_path, async=true)
-        # postcall saves.
         (isnothing(cb.run_info.stop_sequence) || isempty(flow.extractor.command_tasks)) && break
 
         result = get_last_command_result(flow.extractor)
         isnothing(result) && continue
         print_tool_result(result)
         flow.conv_ctx(create_user_message(truncate_output(result)))
+        
+        # !isnothing(result) && write_event!(io, "command_result", result)
     end
+    
     log_instant_apply(flow.extractor, ctx_question)
     cut_old_conversation_history!(flow.age_tracker, flow.conv_ctx, flow.julia_context, flow.workspace_context)
     return error
