@@ -56,28 +56,26 @@ end
 function run(flow::STDFlow, user_question, io::Union{IO, Nothing}=nothing)
     ctx_question = user_question |> flow.question_acc
     
-    ctx_shell = flow.extractor
+    ctx_shell = flow.extractor |> shell_ctx_2_string
     length(ctx_shell) > (20000-length(ctx_question)) && println("WARNING: All info is too long, cutting it to 24000(length(allinfo)) characters")
-    allinfo = ctx_shell[1:min(20000-length(ctx_question), end)] * "\n\n" * ctx_question
+    ctx_shell_ = ctx_shell[1:min(20000-length(ctx_question), end)]
+    allinfo = ctx_shell_ * "\n\n" * ctx_question
+    write_event!(io, "context_shell", ctx_shell_) # TODO: only iwth request... or if it is automatic then send it up...
     
-    ctx_jl_pkg = flow.use_julia ? @async_showerr(process_julia_context(flow.julia_context, ctx_question; age_tracker=flow.age_tracker)) : ""
-    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker)
-
+    ctx_jl_pkg   = @async_showerr process_julia_context(flow.use_julia, flow.julia_context, ctx_question; age_tracker=flow.age_tracker, io=io)
+    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker, io=io)
     context = context_combiner!(
-        julia_ctx_2_string(fetch(ctx_jl_pkg)),
-        workspace_ctx_2_string(fetch(ctx_codebase)),
-        shell_ctx_2_string(ctx_shell),
+        [fetch(ctx_jl_pkg),
+        fetch(ctx_codebase),
+        ctx_shell],
     )
 
     # Use transform directly if planner is enabled
     plan_context = transform(flow.planner, context, flow.conv_ctx)
 
-    write_event!(io, "context_julia", ctx_jl_pkg)
-    write_event!(io, "context_codebase", ctx_codebase)
-    write_event!(io, "context_shell", ctx_shell) # TODO: only iwth request... or if it is automatic then send it up...
     write_event!(io, "context_plan", plan_context)
 
-    flow.conv_ctx(create_user_message(user_question, context * plan_context))
+    flow.conv_ctx(create_user_message(user_question, Dict("context" => context * plan_context)))
 
     while true
         cache = get_cache_setting(flow.age_tracker, flow.conv_ctx)
@@ -101,7 +99,7 @@ function run(flow::STDFlow, user_question, io::Union{IO, Nothing}=nothing)
         result = get_last_command_result(flow.extractor)
         isnothing(result) && continue
         print_tool_result(result)
-        flow.conv_ctx(create_user_message(truncate_output(result)))
+        flow.conv_ctx(create_user_message(truncate_output(result), Dict("context" => result)))
         
         # !isnothing(result) && write_event!(io, "command_result", result)
     end

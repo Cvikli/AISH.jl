@@ -19,7 +19,6 @@ SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=tru
   conv_ctx          = initSession(sys_msg=SYSTEM_PROMPT(ChatSH; skills)) |> persist  
   question_acc      = QuestionCTX()
   project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]
-  # test_frame        = TestFramework(test_cases) #, folder_path=project_paths[1])
   workspace_context = init_workspace_context(project_paths; show_tokens, verbose)
   version_control   = detached_git_dev && false ? GitTracker!(workspace_context.workspace, persist, conv_ctx) : nothing
   julia_context     = init_julia_context()
