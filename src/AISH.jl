@@ -20,7 +20,6 @@ using EasyContext: workspace_format_description, julia_format_guide
 using EasyContext: last_msg
 using EasyContext: Conversation, PersistableState
 using EasyContext: merge_git
-using EasyContext: Skill
 using EasyContext: WorkspaceCTX, JuliaCTX, julia_ctx_2_string, workspace_ctx_2_string, shell_ctx_2_string
 using EasyContext: Workflow
 using EasyContext: execute
