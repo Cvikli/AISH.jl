@@ -93,14 +93,14 @@ const COMMANDS = Dict{String, Tuple{String, Function}}(
                 println("\nUnrecognized model, but might work: ", join(valid_models, ", "))
             end
             flow.planner.model = model
-            flow.use_planner = true
+            flow.planner.enabled = true
             println("\nPlanner mode enabled with $model model")
             return  # Early return to prevent processing user message
         end
-        flow.use_planner && (flow.planner.model = "oro1m")  # Switch back to cheaper model when toggling
+        flow.planner.enabled && (flow.planner.model = "oro1m")  # Switch back to cheaper model when toggling
         toggle_planner!(flow)
-        println("\nPlanner mode ", flow.use_planner ? "enabled" : "disabled",
-                flow.use_planner ? " with $(flow.planner.model) model" : "")
+        println("\nPlanner mode ", flow.planner.enabled ? "enabled" : "disabled",
+        flow.planner.enabled ? " with $(flow.planner.model) model" : "")
     end)
 )
 
@@ -176,7 +176,7 @@ function create_ai_repl(flow::Workflow)
     ai_keymap = Dict(
     '\x11' => (s::MIState, o...) -> begin # Ctrl+Q
         flow isa STDFlow && toggle_planner!(flow)
-        println("\nPlanner mode ", flow isa STDFlow && flow.use_planner ? "enabled" : "disabled")
+        println("\nPlanner mode ", flow isa STDFlow && flow.planner.enabled ? "enabled" : "disabled")
         return :ignore
     end,
     '\x0f' => (s::MIState, o...) -> begin # Ctrl+O
