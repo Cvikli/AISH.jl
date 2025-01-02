@@ -3,10 +3,10 @@
 const ChatSH::String = "Orion"
 
 const DEFAULT_SKILLS::Vector{DataType} = [
-  CatFileCommand, 
-  CreateFileCommand, 
-  ModifyFileCommand,
-  ShellBlockCommand, 
+  CatFileTool, 
+  CreateFileTool, 
+  ModifyFileTool,
+  ShellBlockTool, 
 ]
 
 SYSTEM_PROMPT(ChatSH; skills=[], guide_strs=[], ctx="") = """You are $ChatSH, an AI language model that specializes in assisting the user with his task using SHELL commands or codeblocks.
