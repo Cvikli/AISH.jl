@@ -17,7 +17,7 @@ mutable struct STDFlow <: Workflow
     function STDFlow(;project_paths, model="claude-3-5-sonnet-20241022", no_confirm=false, verbose=true, use_planner=false,
         use_julia=false, skills=DEFAULT_SKILLS, kwargs...)
         m = new(
-            init_workspace_context(project_paths; verbose),
+            init_workspace_context(project_paths; model="dscode", verbose),
             init_julia_context(),
             initSession(),
             AgeTracker(max_history=10, cut_to=4),
