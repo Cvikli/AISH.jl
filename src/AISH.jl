@@ -33,9 +33,9 @@ include("prompt.jl")
 include("agents/selfreflect_flow.jl")
 include("agents/std_flow.jl")
 
-include("interfaces/cmd_arg_parser.jl")
-include("interfaces/repl.jl")
-include("interfaces/cmd.jl")
+include("interfaces/cmd/cmd_arg_parser.jl")
+include("interfaces/cmd/cmd.jl")
+include("interfaces/repl/repl.jl")
 
 
 # include("precompile_scripts.jl")
