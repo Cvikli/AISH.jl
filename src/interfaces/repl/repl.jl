@@ -60,6 +60,15 @@ const COMMANDS = Dict{String, Tuple{String, Function}}(
         update_workspace!(flow, paths)
         println("\nSwitched to projects: ", join(paths, ", "))
     end),
+    "--revise" => ("Run Revise.revise()", (flow, args) -> begin
+        try
+            @eval Main using Revise
+            @eval Main Revise.revise()
+            println("\nRevise: Code changes have been applied!")
+        catch e
+            println("\nError running Revise: ", e)
+        end
+    end),
     "--editor" => ("Switch editor", (flow, args) -> begin
         !set_editor(strip(args)) && return
         println("\nSwitched to editor: ", strip(args))
@@ -108,6 +117,7 @@ const COMMANDS = Dict{String, Tuple{String, Function}}(
 COMMANDS["-e"] = (COMMANDS["--editor"][1], COMMANDS["--editor"][2])
 COMMANDS["--jl"] = (COMMANDS["-jl"][1], COMMANDS["-jl"][2])
 COMMANDS["-j"] = (COMMANDS["-jl"][1], COMMANDS["-jl"][2])
+COMMANDS["-r"] = (COMMANDS["--revise"][1], COMMANDS["--revise"][2])  # Add revise alias
 COMMANDS["--help"] = ("Show help message", (_, _) -> print_help())
 COMMANDS["-h"] = (COMMANDS["--help"][1], COMMANDS["--help"][2])
 
@@ -119,6 +129,7 @@ function print_help()
         arg_hint = if cmd == "-p" "path1 path2"
                   elseif cmd == "--model" "name"
                   elseif cmd == "--editor" || cmd == "-e" "name[:port]"
+                  elseif cmd == "--revise" || cmd == "-r" ""
                   else ""
                   end
         padding = arg_hint == "" ? "" : " "
@@ -160,17 +171,9 @@ function ai_parser(user_question::AbstractString, flow::Workflow)
     end
 end
 
-# Define a callback function that will run Revise and print a message
-function run_revise!(repl, args...)
-    try
-        Revise.revise()
-        println("Revise: Code changes have been applied!")
-    catch err
-        println("Error running Revise.revise(): ", err)
-    end
-end
-
+global_flow = nothing 
 function create_ai_repl(flow::Workflow)
+    global global_flow = flow  # Just to make it accessible.
     parser(input) = ai_parser(input, flow)
     
     ai_keymap = Dict(
