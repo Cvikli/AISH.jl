@@ -12,13 +12,13 @@ mutable struct STDFlow <: Workflow
     skills::Vector{DataType}  # Store skills instead of stop_sequences
     no_confirm::Bool
     use_julia::Bool
-    planner::ExecutionPlannerContext
+    planner::CodeCriticsArchitectContext
 
     function STDFlow(;project_paths, model="claude-3-5-sonnet-20241022", no_confirm=false, verbose=true, use_planner=false,
         use_julia=false, skills=DEFAULT_SKILLS, kwargs...)
         m = new(
             init_workspace_context(project_paths; model="dscode", verbose),
-            init_julia_context(),
+            init_julia_context(excluded_packages=["XC", "QCODE"]),
             initSession(),
             AgeTracker(max_history=10, cut_to=4),
             QuestionCTX(),
@@ -27,7 +27,7 @@ mutable struct STDFlow <: Workflow
             skills,
             no_confirm,
             use_julia,
-            ExecutionPlannerContext(model="oro1m", enabled=use_planner)
+            CodeCriticsArchitectContext(model="dscode", enabled=use_planner)
         )
         m.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; skills, 
         guide_strs=[
@@ -93,7 +93,7 @@ function run(flow::STDFlow, user_question, io::Union{IO, Nothing}=nothing)
         write_event!(io, "ai_message", aimessage.content)
         
         run_stream_parser(flow.extractor, root_path=flow.workspace_context.workspace.root_path, async=true)
-        (isnothing(cb.run_info.stop_sequence) || isempty(flow.extractor.command_tasks)) && break
+        (isnothing(cb.run_info.stop_sequence) || isempty(flow.extractor.tool_tasks)) && break
 
         result = get_last_command_result(flow.extractor)
         isnothing(result) && continue
