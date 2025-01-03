@@ -230,6 +230,7 @@ function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, si
 end
 
 function initialize_aish_mode(flow, auto_switch, initial_message="")
+    ENV["JULIA_REVISE"] = "manual"  # Set Revise to manual mode before creating REPL
     ai_mode = create_ai_repl(flow)
     println("AI REPL mode initialized. Press ')' to enter and backspace to exit.")
     print_help()
