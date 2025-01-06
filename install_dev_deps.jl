@@ -7,7 +7,7 @@ The script clones repositories if needed and adds them as dev dependencies.
 function install_dev_deps()
     repos = [
         ("git@github.com:Sixzero/EasyRAGStore.jl.git", "EasyRAGStore.jl"),
-        ("git@github.com:sixzero/LLMRateLimiters.jl.git", "LLMRateLimiters.jl")
+        ("git@github.com:sixzero/LLMRateLimiters.jl.git", "LLMRateLimiters.jl"),
         ("git@github.com:SixZero/StreamCallbacksExt.jl.git", "StreamCallbacksExt.jl"),
         ("git@github.com:Sixzero/EasyContext.jl.git", "EasyContext.jl"),
     ]
