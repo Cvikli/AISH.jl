@@ -23,7 +23,7 @@ function install_dev_deps()
         asyncmap(existing_repos) do (_, name)
             dir_path = joinpath(base_path, name)
             cd(dir_path) do
-                echo Rebase now disabled
+                println("Rebase now disabled")
                 # run(`git pull --rebase`)
             end
             @info "Updated $name"
