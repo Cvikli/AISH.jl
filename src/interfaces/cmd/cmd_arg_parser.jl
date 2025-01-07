@@ -1,7 +1,7 @@
 using ArgParse
 using EasyContext: set_editor
-import EasyContext
-# todo add skills... with flags...
+
+# Original command line parsing
 function parse_commandline()
     s = ArgParseSettings()
     

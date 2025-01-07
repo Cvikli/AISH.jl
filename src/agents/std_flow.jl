@@ -63,7 +63,7 @@ function run(flow::STDFlow, user_question, io::Union{IO, Nothing}=nothing)
     
     ctx_jl_pkg   = @async_showerr process_julia_context(flow.use_julia, flow.julia_context, ctx_question; age_tracker=flow.age_tracker, io=io)
     ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker, io=io)
-    context = context_combiner!(
+    context = context_combiner(
         [fetch(ctx_jl_pkg),
         fetch(ctx_codebase),
         ctx_shell],
@@ -80,14 +80,14 @@ function run(flow::STDFlow, user_question, io::Union{IO, Nothing}=nothing)
         cache = get_cache_setting(flow.age_tracker, flow.conv_ctx)
         aimessage, cb = LLM_solve(flow.conv_ctx, cache;
                         flow.extractor,
-                        root_path      = flow.workspace_context.workspace.root_path,
                         stop_sequences = get_stop_sequences(flow),
                         model         = flow.model,
                         on_error      = (error) -> begin
                             err_msg = "ERROR: $error"
                             add_error_message!(flow.conv_ctx, err_msg)
                             write_event!(io, "error", err_msg)
-                        end
+                        end,
+                        tool_kwargs=Dict("root_path" => flow.workspace_context.workspace.root_path)
         )
         
         write_event!(io, "ai_message", aimessage.content)

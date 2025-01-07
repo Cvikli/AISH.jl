@@ -23,6 +23,7 @@ using EasyContext: merge_git
 using EasyContext: WorkspaceCTX, JuliaCTX, julia_ctx_2_string, workspace_ctx_2_string, shell_ctx_2_string
 using EasyContext: Workflow
 using EasyContext: execute
+using EasyContext: context_combiner
 using EasyContext: ChangeTracker, Context
 using EasyContext
 
