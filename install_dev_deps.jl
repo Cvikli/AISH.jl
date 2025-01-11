@@ -11,7 +11,7 @@ function install_dev_deps()
         ("git@github.com:sixzero/LLMRateLimiters.jl.git", "LLMRateLimiters.jl"),
         ("git@github.com:SixZero/StreamCallbacksExt.jl.git", "StreamCallbacksExt.jl"),
         ("git@github.com:Sixzero/EasyContext.jl.git", "EasyContext.jl"),
-        ("git@github.com:Sixzero/AISH.jl.git", "AISH.jl"),
+        ("git@github.com:Cvikli/AISH.jl.git", "AISH.jl"),
     ]
     
     # Create base directory based on OS
