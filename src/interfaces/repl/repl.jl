@@ -2,7 +2,7 @@ using REPL
 using ReplMaker
 using REPL.LineEdit: MIState, PromptState, default_keymap, escape_defaults
 using Base.Filesystem
-using Base: AnyDict
+using Base: AnyDict, basename, rstrip
 using EasyContext: set_editor
 
 # interface required functions.
@@ -49,9 +49,34 @@ end
 
 REPL.LineEdit.setmodifiers!(c::PathCompletionProvider, m::REPL.LineEdit.Modifiers) = c.modifiers = m
 
+const DEV_PACKAGES = [
+    "AISH.jl",
+    "EasyContext.jl",
+    "EasyRAGStore.jl",
+    "LLMRateLimiters.jl",
+    "StreamCallbacksExt.jl"
+]
+
+"""
+Check if any of the given paths are development packages that require manual Revise mode.
+Returns true if Revise should be set to manual mode.
+"""
+function is_dev_package_path(paths::Vector{<:AbstractString})
+    any(p -> basename(rstrip(expanduser(p), '/')) in DEV_PACKAGES, paths)
+end
+
+function set_revise_for_dev!(paths::Vector{<:AbstractString})
+    if is_dev_package_path(paths)
+        ENV["JULIA_REVISE"] = "manual"
+        return true
+    end
+    return false
+end
+
 const COMMANDS = Dict{String, Tuple{String, Function}}(
     "-p"       => ("Switch projects", (flow, args) -> begin
         paths = split(args)
+        set_revise_for_dev!(paths)
         invalid_paths = filter(p -> !isdir(expanduser(p)), paths)
         if !isempty(invalid_paths)
             println("\nError: Following paths don't exist:")
@@ -230,7 +255,8 @@ function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, si
 end
 
 function initialize_aish_mode(flow, auto_switch, initial_message="")
-    ENV["JULIA_REVISE"] = "manual"  # Set Revise to manual mode before creating REPL
+    set_revise_for_dev!([pwd()])  # Check current directory as single-element array
+
     ai_mode = create_ai_repl(flow)
     println("AI REPL mode initialized. Press ')' to enter and backspace to exit.")
     print_help()

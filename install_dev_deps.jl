@@ -46,8 +46,14 @@ function install_dev_deps()
         @info "Adding $name in dev mode..."
         Pkg.develop(path=dir_path)
     end
+
+    # Add Revise for development
+    Pkg.add("Revise")
     
     @info "All dependencies have been set up successfully!"
+    @info "Make sure you have one of the diff tools installed:"
+    @info "- meld a diff view available on all OS"
+    @info "- monaco-meld an AISH developed electron based diff view: https://github.com/Sixzero/monaco-meld)"
     Pkg.resolve()
 end
 

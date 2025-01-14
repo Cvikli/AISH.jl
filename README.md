@@ -70,7 +70,9 @@ AISH.start("my question", project_paths=["path/to/project"], detached_git_dev=fa
 - Streaming has "draft" data and "final" data and it manages it very poorly. Most of the time I had to finish these kind of work manually. Maybe someone has to prompt these more accurately to make sure to don't append draft values to the string endlessly. 
 
 ## Installation
-Install `meld`, `zsh`, as we use them! 
+You will need a diff view for AI proposed diffs. GUI diff views supported:
+- `meld` available on most OS
+- [`monaco-meld`](https://github.com/Sixzero/monaco-meld) electron/web based (AISH developed) diff view (recommended)
 
 ```julia
 using Pkg
