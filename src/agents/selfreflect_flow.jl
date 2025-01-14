@@ -1,7 +1,7 @@
 
 
 mutable struct SRWorkFlow <: Workflow
-    persist::PersistableState
+    persist::String
     conv_ctx::Session 
     workspace_context::WorkspaceCTX
     julia_context::JuliaCTX
@@ -15,7 +15,7 @@ mutable struct SRWorkFlow <: Workflow
 end
 
 SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=true, verbose=true, skills=DEFAULT_SKILLS, kwargs...) = begin
-  persist           = PersistableState(logdir)
+  persist           = (logdir)
   conv_ctx          = initSession(sys_msg=SYSTEM_PROMPT(ChatSH; skills)) |> persist  
   question_acc      = QuestionCTX()
   project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]
@@ -32,7 +32,7 @@ SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=tru
               no_confirm)
 end
 
-SRWorkFlow(conv_ctx::Session; persist::PersistableState, question_acc,  
+SRWorkFlow(conv_ctx::Session; persist::String, question_acc,  
             workspace_context, julia_context,
             age_tracker,
             version_control,

@@ -18,14 +18,15 @@ using EasyContext: process_julia_context
 using EasyContext: cut_old_conversation_history!
 using EasyContext: workspace_format_description, julia_format_guide
 using EasyContext: last_msg
-using EasyContext: Conversation, PersistableState
+using EasyContext: Conversation
 using EasyContext: merge_git
 using EasyContext: WorkspaceCTX, JuliaCTX, julia_ctx_2_string, workspace_ctx_2_string, shell_ctx_2_string
-using EasyContext: Workflow
 using EasyContext: execute
 using EasyContext: context_combiner
 using EasyContext: ChangeTracker, Context
 using EasyContext
+
+abstract type Workflow end
 
 include("config.jl")
 include("utils.jl")
