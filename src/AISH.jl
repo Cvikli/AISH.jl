@@ -21,11 +21,13 @@ using EasyContext: last_msg
 using EasyContext: Conversation
 using EasyContext: merge_git
 using EasyContext: WorkspaceCTX, JuliaCTX, julia_ctx_2_string, workspace_ctx_2_string, shell_ctx_2_string
+using EasyContext: reset!
 using EasyContext: workspace_format_description_raw
 using EasyContext: execute
 using EasyContext: context_combiner
 using EasyContext: ChangeTracker, Context
 using EasyContext
+using JLD2
 
 abstract type Workflow end
 
