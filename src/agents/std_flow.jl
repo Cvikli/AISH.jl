@@ -31,7 +31,7 @@ mutable struct STDFlow <: Workflow
         )
         m.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; skills, 
         guide_strs=[
-            # workspace_format_description(m.workspace_context.workspace), 
+            workspace_format_description_raw(m.workspace_context.workspace), 
             (use_julia ? julia_format_guide : "")])
         # print_project_tree(m.workspace_context.workspace, summary_callback=LLM_summary)
         # println(workspace_format_description(m.workspace_context.workspace))
