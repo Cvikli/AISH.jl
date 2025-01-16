@@ -1,6 +1,6 @@
 # Add at top with imports
 using Memoize
-using EasyContext: format_history_query
+using EasyContext: format_history_query, QueryWithHistoryAndAIMsg
 
 mutable struct STDFlow <: Workflow
     workspace_context::WorkspaceCTX
@@ -8,7 +8,7 @@ mutable struct STDFlow <: Workflow
     conv_ctx::Session
     age_tracker::AgeTracker
     question_acc::QueryWithHistory
-    # q_history::QueryWithHistoryAndAIMsg
+    q_history::QueryWithHistoryAndAIMsg
     extractor::StreamParser
     model::String
     skills::Vector{DataType}  # Store skills instead of stop_sequences
@@ -24,6 +24,7 @@ mutable struct STDFlow <: Workflow
             initSession(),
             AgeTracker(max_history=10, cut_to=4),
             QueryWithHistory(),
+            QueryWithHistoryAndAIMsg(),
             StreamParser(),
             model,
             skills,
@@ -58,13 +59,17 @@ function run(flow::STDFlow, user_question, io::Union{IO, Nothing}=nothing)
     ctx_question = format_history_query(user_question |> flow.question_acc)
     
     ctx_shell = flow.extractor |> shell_ctx_2_string
+
     length(ctx_shell) > (20000-length(ctx_question)) && println("WARNING: All info is too long, cutting it to 24000(length(allinfo)) characters")
     ctx_shell_ = ctx_shell[1:min(20000-length(ctx_question), end)]
-    allinfo = ctx_shell_ * "\n\n" * ctx_question
+    embedder_query = ctx_shell_ * "\n\n" * ctx_question
+
+    rerank_query = flow.q_history(user_question, flow.conv_ctx, ctx_shell_)
+
     write_event!(io, "context_shell", ctx_shell_) # TODO: only iwth request... or if it is automatic then send it up...
     
-    ctx_jl_pkg   = @async_showerr process_julia_context(flow.julia_context, ctx_question; enabled=flow.use_julia, age_tracker=flow.age_tracker, io=io)
-    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker, io=io)
+    ctx_jl_pkg   = @async_showerr process_julia_context(flow.julia_context, embedder_query; enabled=flow.use_julia, age_tracker=flow.age_tracker, io=io)
+    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, embedder_query; rerank_query, age_tracker=flow.age_tracker, io=io)
     context = context_combiner(
         [fetch(ctx_jl_pkg),
         fetch(ctx_codebase),
