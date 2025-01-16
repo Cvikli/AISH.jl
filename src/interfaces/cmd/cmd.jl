@@ -1,10 +1,10 @@
 
 function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=DEFAULT_SKILLS)
   !silent && greet(ChatSH)
-  model = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, skills) : workflow(resume_data)
+  flow = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, skills) : workflow(resume_data)
   
-  nice_exit_handler(model.conv_ctx)
-  set_terminal_title("AISH $(basename(rstrip(model.workspace_context.workspace.root_path, '/')))")
+  nice_exit_handler(flow.conv_ctx)
+  set_terminal_title("AISH $(basename(rstrip(flow.workspace_context.workspace.root_path, '/')))")
 
   !silent && isempty(user_question) && (isdefined(Base, :active_repl) ? println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ") : println("Your multiline input (empty line to finish):"))
 
@@ -14,8 +14,8 @@ function start_conversation(user_question=""; workflow::DataType, resume_data=no
     
     try
       _in_loop[] = true
-      result = model(user_question)
-      result == :MERGE && isdefined(model, :version_control) && !isnothing(model.version_control) && merge_git(model.version_control)
+      result = flow(user_question)
+      result == :MERGE && isdefined(flow, :version_control) && !isnothing(flow.version_control) && merge_git(flow.version_control)
       _in_loop[] = false
     catch e
       if e isa InterruptException
