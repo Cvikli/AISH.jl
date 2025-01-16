@@ -7,7 +7,7 @@ mutable struct SRWorkFlow <: Workflow
     julia_context::JuliaCTX
     # test_frame::TestFramework
     age_tracker::AgeTracker
-    question_acc::QuestionCTX
+    question_acc::QueryWithHistory
     extractor::StreamParser
     LLM_reflection::String
     version_control::Union{GitTracker,Nothing}
@@ -17,7 +17,7 @@ end
 SRWorkFlow(;project_paths, logdir, show_tokens, no_confirm, detached_git_dev=true, verbose=true, skills=DEFAULT_SKILLS, kwargs...) = begin
   persist           = (logdir)
   conv_ctx          = initSession(sys_msg=SYSTEM_PROMPT(ChatSH; skills)) |> persist  
-  question_acc      = QuestionCTX()
+  question_acc      = QueryWithHistory()
   project_paths     = length(project_paths) > 0 ? project_paths : [(init_virtual_workspace_path(persist, conv_ctx)).rel_path]
   workspace_context = init_workspace_context(project_paths; show_tokens, verbose)
   version_control   = detached_git_dev && false ? GitTracker!(workspace_context.workspace, persist, conv_ctx) : nothing
@@ -70,7 +70,7 @@ end
     
     ctx_question   = user_question           |> m.question_acc
     ctx_codebase   = process_workspace_context(m.workspace_context, ctx_question; m.age_tracker)
-  # ctx_jl_pkg     = process_julia_context(m.julia_context, ctx_question; m.age_tracker)
+  # ctx_jl_pkg     = process_julia_context(m.julia_context, ctx_question; enabled=true, m.age_tracker)
 
     query = context_combiner!(
       user_question, 

@@ -1,12 +1,14 @@
 # Add at top with imports
 using Memoize
+using EasyContext: format_history_query
 
 mutable struct STDFlow <: Workflow
     workspace_context::WorkspaceCTX
     julia_context::JuliaCTX
     conv_ctx::Session
     age_tracker::AgeTracker
-    question_acc::QuestionCTX
+    question_acc::QueryWithHistory
+    # q_history::QueryWithHistoryAndAIMsg
     extractor::StreamParser
     model::String
     skills::Vector{DataType}  # Store skills instead of stop_sequences
@@ -14,20 +16,20 @@ mutable struct STDFlow <: Workflow
     use_julia::Bool
     planner::CodeCriticsArchitectContext
 
-    function STDFlow(;project_paths, model="claude-3-5-sonnet-20241022", no_confirm=false, verbose=true, use_planner=false,
+    function STDFlow(;project_paths, model="claude", no_confirm=false, verbose=true, use_planner=false,
         use_julia=false, skills=DEFAULT_SKILLS, kwargs...)
         m = new(
             init_workspace_context(project_paths; model="dscode", verbose),
-            init_julia_context(excluded_packages=["XC", "QCODE"]),
+            init_julia_context(excluded_packages=["XC", "QCODE"], model="gem20f"),
             initSession(),
             AgeTracker(max_history=10, cut_to=4),
-            QuestionCTX(),
+            QueryWithHistory(),
             StreamParser(),
             model,
             skills,
             no_confirm,
             use_julia,
-            CodeCriticsArchitectContext(model="dscode", enabled=use_planner)
+            CodeCriticsArchitectContext(model="gem20f", enabled=use_planner)
         )
         m.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; skills, 
         guide_strs=[
@@ -53,7 +55,7 @@ end
 
 (flow::STDFlow)(user_question) = run(flow, user_question)
 function run(flow::STDFlow, user_question, io::Union{IO, Nothing}=nothing)
-    ctx_question = user_question |> flow.question_acc
+    ctx_question = format_history_query(user_question |> flow.question_acc)
     
     ctx_shell = flow.extractor |> shell_ctx_2_string
     length(ctx_shell) > (20000-length(ctx_question)) && println("WARNING: All info is too long, cutting it to 24000(length(allinfo)) characters")
@@ -61,7 +63,7 @@ function run(flow::STDFlow, user_question, io::Union{IO, Nothing}=nothing)
     allinfo = ctx_shell_ * "\n\n" * ctx_question
     write_event!(io, "context_shell", ctx_shell_) # TODO: only iwth request... or if it is automatic then send it up...
     
-    ctx_jl_pkg   = @async_showerr process_julia_context(flow.use_julia, flow.julia_context, ctx_question; age_tracker=flow.age_tracker, io=io)
+    ctx_jl_pkg   = @async_showerr process_julia_context(flow.julia_context, ctx_question; enabled=flow.use_julia, age_tracker=flow.age_tracker, io=io)
     ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, allinfo; age_tracker=flow.age_tracker, io=io)
     context = context_combiner(
         [fetch(ctx_jl_pkg),

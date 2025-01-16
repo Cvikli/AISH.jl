@@ -7,7 +7,7 @@ using EasyContext: update_last_user_message_meta
 using EasyContext: add_error_message!
 using EasyContext: wait_user_question
 using EasyContext: LLM_solve
-using EasyContext: QuestionCTX
+using EasyContext: QueryWithHistory
 using EasyContext: print_project_tree
 using EasyContext: context_combiner!
 using EasyContext: LLM_reflect
