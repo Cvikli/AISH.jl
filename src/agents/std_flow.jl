@@ -52,9 +52,10 @@ get_flags_str(flow::STDFlow) = begin
 end
 
 (flow::STDFlow)(user_question) = run(flow, user_question)
-function run(flow::STDFlow, user_question, io::Union{IO, Nothing}=nothing, ctx_shell="")
+function run(flow::STDFlow, user_question, io::Union{IO, Nothing}=nothing)
     ctx_question = user_question |> flow.question_acc
     
+    ctx_shell = flow.extractor |> shell_ctx_2_string
     length(ctx_shell) > (20000-length(ctx_question)) && println("WARNING: All info is too long, cutting it to 24000(length(allinfo)) characters")
     ctx_shell_ = ctx_shell[1:min(20000-length(ctx_question), end)]
     allinfo = ctx_shell_ * "\n\n" * ctx_question
@@ -98,14 +99,11 @@ function run(flow::STDFlow, user_question, io::Union{IO, Nothing}=nothing, ctx_s
         isnothing(result) && continue
         print_tool_result(result)
         flow.conv_ctx(create_user_message(truncate_output(result), Dict("context" => result)))
+        
         # !isnothing(result) && write_event!(io, "command_result", result)
     end
-
-    log_instant_apply(flow.extractor, ctx_question)
-    ctx_shell = flow.extractor |> shell_ctx_2_string
     
-    reset!(flow.extractor)
-    @save "workflow.jld2" flow
+    log_instant_apply(flow.extractor, ctx_question)
     cut_old_conversation_history!(flow.age_tracker, flow.conv_ctx, flow.julia_context, flow.workspace_context)
     return error
 end
