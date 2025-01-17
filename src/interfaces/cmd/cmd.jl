@@ -1,3 +1,4 @@
+include("cmd_arg_parser.jl")
 
 function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=DEFAULT_SKILLS)
   !silent && greet(ChatSH)

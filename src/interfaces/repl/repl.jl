@@ -4,6 +4,7 @@ using REPL.LineEdit: MIState, PromptState, default_keymap, escape_defaults
 using Base.Filesystem
 using Base: AnyDict, basename, rstrip
 using EasyContext: set_editor
+include("repl_arg_parser.jl")
 
 # interface required functions.
 get_flags_str(::Workflow) = " [unimplemented]"  # Base case for generic workflows
