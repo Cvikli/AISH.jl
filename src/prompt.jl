@@ -2,16 +2,16 @@
 # AI name have to be short, transcriptable not ordinary common word.
 const ChatSH::String = "Orion"
 
-const DEFAULT_SKILLS::Vector{DataType} = [
+const DEFAULT_TOOLS::Vector{DataType} = [
   CatFileTool, 
   CreateFileTool, 
   ModifyFileTool,
   ShellBlockTool, 
 ]
 
-SYSTEM_PROMPT(ChatSH; skills=[], guide_strs=[], ctx="") = """You are $ChatSH, an AI language model that specializes in assisting the user with his task using SHELL commands or codeblocks.
+SYSTEM_PROMPT(ChatSH; tools=[], guide_strs=[], ctx="") = """You are $ChatSH, an AI language model that specializes in assisting the user with his task using SHELL commands or codeblocks.
 
-$(join([get_description(skill) for skill in skills], "\n"))
+$(join([get_description(tool) for tool in tools], "\n"))
 $(highlight_code_guide)
 $(highlight_changes_guide)
 $(organize_file_guide)

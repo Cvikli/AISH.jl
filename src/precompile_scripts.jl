@@ -18,6 +18,6 @@ using PrecompileTools
 
 #         # Simulate main function call
 #         AISH.main(loop=false)
-        STDFlow(project_paths=String[])
+        STDFlow(String[])
     end
 end

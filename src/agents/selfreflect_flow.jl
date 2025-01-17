@@ -8,7 +8,7 @@ mutable struct SRWorkFlow <: Workflow
     # test_frame::TestFramework
     age_tracker::AgeTracker
     question_acc::QueryWithHistory
-    extractor::StreamParser
+    extractor::ToolTagExtractor
     LLM_reflection::String
     version_control::Union{GitTracker,Nothing}
     no_confirm::Bool
@@ -38,7 +38,7 @@ SRWorkFlow(conv_ctx::Session; persist::String, question_acc,
             version_control,
             no_confirm, kwargs...) = begin
   
-  extractor         = StreamParser()
+  extractor         = ToolTagExtractor()
   LLM_reflection    = ""
   
   append_ctx_descriptors(conv_ctx, 
@@ -62,7 +62,7 @@ end
   #   ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
   # end
   # user_question    = add_tests(user_question, m.test_frame)
-  ctx_shell        = m.extractor             |> shell_ctx_2_string
+  ctx_shell        = m.extractor             |> get_tool_results
   m.LLM_reflection = user_question
   
   while !isempty(m.LLM_reflection) 
@@ -98,7 +98,7 @@ end
       run_stream_parser(m.extractor, no_confirm=m.no_confirm)
       # ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
     end
-    ctx_shell        = m.extractor             |> shell_ctx_2_string
+    ctx_shell        = m.extractor             |> get_tool_results
     !isnothing(m.version_control) && commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, last_msg(m.conv_ctx)))
     LLM_answer, decision = LLM_reflect(ctx_question, ctx_shell, last_msg(m.conv_ctx))
     m.LLM_reflection = LLM_reflect_is_continue(decision) ? LLM_answer : ""

@@ -1,8 +1,8 @@
 include("cmd_arg_parser.jl")
 
-function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=DEFAULT_SKILLS)
+function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_SKILLS)
   !silent && greet(ChatSH)
-  flow = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, skills) : workflow(resume_data)
+  flow = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, tools) : workflow(resume_data)
   
   nice_exit_handler(flow.conv_ctx)
   set_terminal_title("AISH $(basename(rstrip(flow.workspace_context.workspace.root_path, '/')))")
@@ -36,7 +36,7 @@ function start(message=""; workflow::DataType, resume_data=nothing, project_path
   start_conversation(message; workflow, loop, resume_data, project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev, use_julia, skills)
 end
 
-function main(;workflow::DataType, skills=DEFAULT_SKILLS, loop=true)
+function main(;workflow::DataType, tools=DEFAULT_SKILLS, loop=true)
   args = parse_commandline()
   msg  = args["message"]
   start(msg; 
@@ -49,7 +49,7 @@ function main(;workflow::DataType, skills=DEFAULT_SKILLS, loop=true)
         no_confirm=args["no-confirm"],
         detached_git_dev=args["git"],
         use_julia=args["julia"],
-        skills
+        tools
   )
 end
 julia_main(;workflow::DataType, loop=true) = main(;workflow, loop)

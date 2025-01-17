@@ -110,7 +110,7 @@ const COMMANDS = Dict{String, Tuple{String, Function}}(
     "-jl"      => ("Toggle Julia package context", (flow, _) -> begin
         flow isa STDFlow && (flow.use_julia = !flow.use_julia)
         println("\nJulia package context ", flow isa STDFlow && flow.use_julia ? "enabled" : "disabled")
-    end),
+    end), 
     "--reset"  => ("Reset conversation and context", (flow, args) -> begin
         if !isempty(strip(args))
             println("\nError: --reset doesn't accept additional arguments")
@@ -238,8 +238,8 @@ end
 
 start_std_repl(;kw...) = airepl(kw...)
 # To automatically start in airepl(): julia --banner=no -i -e 'using AISH; AISH.airepl(auto_switch=true)'
-function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=true, initial_message=parse_repl_args(), skills=DEFAULT_SKILLS)
-    flow = STDFlow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, skills)
+function airepl(;project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=true, initial_message=parse_repl_args(), tools=DEFAULT_SKILLS)
+    flow = STDFlow(project_paths; logdir, show_tokens, silent, no_confirm, detached_git_dev, tools)
     set_terminal_title("AISH $(basename(rstrip(flow.workspace_context.workspace.root_path, '/')))")
     set_editor("meld_pro")  # Set default editor
 
