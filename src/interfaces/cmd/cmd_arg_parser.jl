@@ -1,4 +1,3 @@
-using ArgParse
 using EasyContext: set_editor
 
 # Original command line parsing

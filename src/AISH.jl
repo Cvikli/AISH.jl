@@ -27,6 +27,7 @@ using EasyContext: execute
 using EasyContext: context_combiner
 using EasyContext: ChangeTracker, Context
 using EasyContext
+using ArgParse
 
 abstract type Workflow end
 
