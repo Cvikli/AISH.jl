@@ -30,6 +30,7 @@ function start_conversation(user_question=""; workflow::DataType, resume_data=no
     user_question = ""
   end
 end
+
 function start(message=""; workflow::DataType, resume_data=nothing, project_paths::Union{String,Vector{String}}=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=DEFAULT_SKILLS)
   isa(project_paths, String) && (project_paths = [project_paths])
   start_conversation(message; workflow, loop, resume_data, project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev, use_julia, skills)
