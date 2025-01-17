@@ -39,6 +39,7 @@ include("agents/std_flow.jl")
 
 include("interfaces/cmd/cmd_arg_parser.jl")
 include("interfaces/cmd/cmd.jl")
+include("interfaces/repl/repl_arg_parser.jl")
 include("interfaces/repl/repl.jl")
 
 
