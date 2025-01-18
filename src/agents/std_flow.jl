@@ -14,7 +14,7 @@ using EasyContext: format_history_query, QueryWithHistoryAndAIMsg, FluidAgent
     use_julia::Bool=false
     planner::CodeCriticsArchitectContext=CodeCriticsArchitectContext(model="gem20f", enabled=false)
 end
-function STDFlow(project_paths; model="claude", no_confirm=false, verbose=true, tools=DEFAULT_SKILLS, kwargs...)
+function STDFlow(project_paths; model="claude", no_confirm=false, verbose=true, tools=DEFAULT_TOOLS, kwargs...)
 
     m = STDFlow(;
         workspace_context=init_workspace_context(project_paths; model="dscode", verbose),

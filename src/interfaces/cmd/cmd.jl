@@ -1,6 +1,6 @@
 include("cmd_arg_parser.jl")
 
-function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_SKILLS)
+function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS)
   !silent && greet(ChatSH)
   flow = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, tools) : workflow(resume_data)
   
@@ -31,12 +31,12 @@ function start_conversation(user_question=""; workflow::DataType, resume_data=no
   end
 end
 
-function start(message=""; workflow::DataType, resume_data=nothing, project_paths::Union{String,Vector{String}}=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=DEFAULT_SKILLS)
+function start(message=""; workflow::DataType, resume_data=nothing, project_paths::Union{String,Vector{String}}=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=DEFAULT_TOOLS)
   isa(project_paths, String) && (project_paths = [project_paths])
   start_conversation(message; workflow, loop, resume_data, project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev, use_julia, skills)
 end
 
-function main(;workflow::DataType, tools=DEFAULT_SKILLS, loop=true)
+function main(;workflow::DataType, tools=DEFAULT_TOOLS, loop=true)
   args = parse_commandline()
   msg  = args["message"]
   start(msg; 

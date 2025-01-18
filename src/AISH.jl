@@ -6,7 +6,6 @@ using EasyContext: greet
 using EasyContext: update_last_user_message_meta
 using EasyContext: add_error_message!
 using EasyContext: wait_user_question
-using EasyContext: LLM_solve
 using EasyContext: QueryWithHistory
 using EasyContext: print_project_tree
 using EasyContext: context_combiner!
@@ -34,8 +33,8 @@ include("config.jl")
 include("utils.jl")
 include("prompt.jl")
 
-include("agents/selfreflect_flow.jl")
 include("agents/std_flow.jl")
+include("agents/selfreflect_flow.jl")
 
 include("interfaces/cmd/cmd.jl")
 include("interfaces/repl/repl.jl")
