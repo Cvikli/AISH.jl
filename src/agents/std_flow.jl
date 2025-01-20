@@ -17,14 +17,14 @@ end
 function STDFlow(project_paths; model="claude", no_confirm=false, verbose=true, tools=DEFAULT_TOOLS, kwargs...)
 
     m = STDFlow(;
-        workspace_context=init_workspace_context(project_paths; model="dscode", verbose),
+        workspace_context=init_workspace_context(project_paths; model="gem15f", verbose, top_n=10),
         julia_context=init_julia_context(excluded_packages=["XC", "QCODE"], model="gem20f"),
-        agent=FluidAgent(; tools, model), 
+        agent=FluidAgent(; tools, model),
         no_confirm,
     )
-    m.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; tools, 
+    m.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; tools,
     guide_strs=[
-        workspace_format_description_raw(m.workspace_context.workspace), 
+        workspace_format_description_raw(m.workspace_context.workspace),
         ]) # TODO handle (use_julia ? julia_format_guide : "")
     # print_project_tree(m.workspace_context.workspace, summary_callback=LLM_summary)
     # println(workspace_format_description(m.workspace_context.workspace))
@@ -41,7 +41,7 @@ end
 (flow::STDFlow)(user_question) = run(flow, user_question)
 function run(flow::STDFlow, user_query, io::Union{IO, Nothing}=nothing)
     ctx_question = format_history_query(flow.question_acc(user_query))
-    
+
     ctx_shell, ctx_shell_cut = get_tool_results(flow.agent)
     embedder_query = ctx_shell_cut * "\n\n" * ctx_question
     rerank_query = flow.q_history(user_query, flow.conv_ctx, ctx_shell_cut)
@@ -80,7 +80,7 @@ end
 # Control functions
 update_workspace!(flow::STDFlow, project_paths::Vector{<:AbstractString}) = begin
     flow.workspace_context = init_workspace_context(project_paths)
-    flow.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; skills=flow.agent.tools, guide_strs=[workspace_format_description(flow.workspace_context.workspace), (flow.use_julia ? julia_format_guide : "")])
+    flow.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; tools=flow.agent.tools, guide_strs=[workspace_format_description(flow.workspace_context.workspace), (flow.use_julia ? julia_format_guide : "")])
     return flow
 end
 
@@ -105,7 +105,7 @@ function reset_flow!(flow::STDFlow)
         use_planner=flow.planner.enabled,
         use_julia=flow.use_julia,
     )
-    
+
     # Copy over the fields
     flow.workspace_context = new_flow.workspace_context
     flow.julia_context = new_flow.julia_context
@@ -114,7 +114,7 @@ function reset_flow!(flow::STDFlow)
     flow.question_acc = new_flow.question_acc
     flow.extractor = new_flow.extractor
     flow.planner = new_flow.planner
-    
+
     return flow
 end
 
