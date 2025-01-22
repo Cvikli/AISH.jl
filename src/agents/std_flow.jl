@@ -98,23 +98,13 @@ toggle_planner!(flow::STDFlow) = (flow.planner.enabled = !flow.planner.enabled; 
 
 function reset_flow!(flow::STDFlow)
     # Create a new instance with same settings
-    new_flow = STDFlow(
-        agent=flow.agent,
-        project_paths=flow.workspace_context.workspace.project_paths,
+    new_flow = STDFlow(flow.workspace_context.workspace.project_paths;
+        model=flow.workspace_context.ws_reranker_filterer.model,
         no_confirm=flow.no_confirm,
         use_planner=flow.planner.enabled,
-        use_julia=flow.use_julia,
     )
 
-    # Copy over the fields
-    flow.workspace_context = new_flow.workspace_context
-    flow.julia_context = new_flow.julia_context
-    flow.conv_ctx = new_flow.conv_ctx
-    flow.age_tracker = new_flow.age_tracker
-    flow.question_acc = new_flow.question_acc
-    flow.extractor = new_flow.extractor
-    flow.planner = new_flow.planner
 
-    return flow
+    return new_flow
 end
 
