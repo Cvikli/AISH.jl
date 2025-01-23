@@ -2,6 +2,7 @@ include("readline_arg_parser.jl")
 
 function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS)
   flow = readline_init_flow(;workflow, resume_data, project_paths, logdir, show_tokens, silent, no_confirm, loop, detached_git_dev, use_julia, tools)
+  set_terminal_title("$(PROGRAM_NAME) $(basename(rstrip(flow.workspace_context.workspace.root_path, '/')))")
 
   while loop || !isempty(user_question)
     user_question = isempty(user_question) ? wait_user_question(user_question) : user_question

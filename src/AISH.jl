@@ -1,6 +1,8 @@
 
 module AISH
 
+const PROGRAM_NAME = "AISH"
+
 using BoilerplateCvikli: @async_showerr
 using EasyContext: greet
 using EasyContext: update_last_user_message_meta
