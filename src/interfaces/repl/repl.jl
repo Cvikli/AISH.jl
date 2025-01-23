@@ -4,7 +4,10 @@ using REPL.LineEdit: MIState, PromptState, default_keymap, escape_defaults
 using Base.Filesystem
 using Base: AnyDict, basename, rstrip
 using EasyContext: set_editor
+
 include("repl_arg_parser.jl")
+include("repl_handler.jl")
+include("loop.jl")
 
 # interface required functions.
 get_flags_str(::Workflow) = " [unimplemented]"  # Base case for generic workflows
@@ -50,120 +53,8 @@ end
 
 REPL.LineEdit.setmodifiers!(c::PathCompletionProvider, m::REPL.LineEdit.Modifiers) = c.modifiers = m
 
-const DEV_PACKAGES = [
-    "AISH.jl",
-    "EasyContext.jl",
-    "EasyRAGStore.jl",
-    "LLMRateLimiters.jl",
-    "StreamCallbacksExt.jl"
-]
 
-"""
-Check if any of the given paths are development packages that require manual Revise mode.
-Returns true if Revise should be set to manual mode.
-"""
-function is_dev_package_path(paths::Vector{<:AbstractString})
-    any(p -> basename(rstrip(expanduser(p), '/')) in DEV_PACKAGES, paths)
-end
-
-function set_revise_for_dev!(paths::Vector{<:AbstractString})
-    if is_dev_package_path(paths)
-        ENV["JULIA_REVISE"] = "manual"
-        return true
-    end
-    return false
-end
-
-const COMMANDS = Dict{String, Tuple{String, Function}}(
-    "-p"       => ("Switch projects", (flow, args) -> begin
-        paths = split(args)
-        set_revise_for_dev!(paths)
-        invalid_paths = filter(p -> !isdir(expanduser(p)), paths)
-        if !isempty(invalid_paths)
-            println("\nError: Following paths don't exist:")
-            foreach(p -> println("  - $p"), invalid_paths)
-        end
-        update_workspace!(flow, paths)
-        println("\nSwitched to projects: ", join(paths, ", "))
-    end),
-    "--revise" => ("Run Revise.revise()", (flow, args) -> begin
-        try
-            @eval Main using Revise
-            @eval Main Revise.revise()
-            println("\nRevise: Code changes have been applied!")
-        catch e
-            println("\nError running Revise: ", e)
-        end
-    end),
-    "--editor" => ("Switch editor", (flow, args) -> begin
-        !set_editor(strip(args)) && return
-        println("\nSwitched to editor: ", strip(args))
-    end),
-    "--model"  => ("Switch model (e.g. claude, gpt4)", (flow, args) -> begin
-        update_model!(flow, strip(args))
-        println("\nSwitched to model: ", strip(args))
-    end),
-    "-y"       => ("Toggle confirmation", (flow, _) -> begin
-        toggle_confirm!(flow)
-        println("\nConfirmation ", flow.no_confirm ? "disabled" : "enabled")
-    end),
-    "-jl"      => ("Toggle Julia package context", (flow, _) -> begin
-        flow isa STDFlow && (flow.use_julia = !flow.use_julia)
-        println("\nJulia package context ", flow isa STDFlow && flow.use_julia ? "enabled" : "disabled")
-    end), 
-    "--reset"  => ("Reset conversation and context", (flow, args) -> begin
-        if !isempty(strip(args))
-            println("\nError: --reset doesn't accept additional arguments")
-            return
-        end
-        reset_flow!(flow)
-        println("\nReset conversation and context state while maintaining current settings")
-    end),
-    "--plan"   => ("Toggle planner mode, models: [oro1, oro1m, gpt4, claude, gemexp, tqwen25b72, ]", (flow, args) -> begin
-        flow isa STDFlow || return
-        model = strip(args)
-        valid_models = ["oro1", "oro1m", "gpt4", "claude", "gemexp", "tqwen25b72"]
-        if !isempty(model)
-            if !(model in valid_models)
-                println("\nUnrecognized model, but might work: ", join(valid_models, ", "))
-            end
-            flow.planner.model = model
-            flow.planner.enabled = true
-            println("\nPlanner mode enabled with $model model")
-            return  # Early return to prevent processing user message
-        end
-        flow.planner.enabled && (flow.planner.model = "oro1m")  # Switch back to cheaper model when toggling
-        toggle_planner!(flow)
-        println("\nPlanner mode ", flow.planner.enabled ? "enabled" : "disabled",
-        flow.planner.enabled ? " with $(flow.planner.model) model" : "")
-    end)
-)
-
-# Add aliases
-COMMANDS["-e"] = (COMMANDS["--editor"][1], COMMANDS["--editor"][2])
-COMMANDS["--jl"] = (COMMANDS["-jl"][1], COMMANDS["-jl"][2])
-COMMANDS["-j"] = (COMMANDS["-jl"][1], COMMANDS["-jl"][2])
-COMMANDS["-r"] = (COMMANDS["--revise"][1], COMMANDS["--revise"][2])  # Add revise alias
-COMMANDS["--help"] = ("Show help message", (_, _) -> print_help())
-COMMANDS["-h"] = (COMMANDS["--help"][1], COMMANDS["--help"][2])
-
-function print_help()
-    println("\nAvailable commands:")
-    # Sort by command name but show primary commands first (not aliases)
-    primary_cmds = filter(kv -> !any(c -> c != kv[1] && kv[2][2] === COMMANDS[c][2], keys(COMMANDS)), COMMANDS)
-    for (cmd, (desc, _)) in sort(collect(primary_cmds))
-        arg_hint = if cmd == "-p" "path1 path2"
-                  elseif cmd == "--model" "name"
-                  elseif cmd == "--editor" || cmd == "-e" "name[:port]"
-                  elseif cmd == "--revise" || cmd == "-r" ""
-                  else ""
-                  end
-        padding = arg_hint == "" ? "" : " "
-        println("  $cmd$padding$arg_hint    : $desc")
-    end
-end
-
-function ai_parser(user_question::AbstractString, flow::Workflow)
+function repl_parser(user_question::AbstractString, flow::Workflow)
     cmd = strip(user_question)
     isempty(cmd) && return
 
@@ -182,45 +73,17 @@ function ai_parser(user_question::AbstractString, flow::Workflow)
         return
     end
 
-    # Process as regular input
-    println("\nProcessing your request...")
-    try
-        run(flow, cmd)
-        nothing
-    catch e
-        if e isa InterruptException
-            println("\nOperation interrupted. Normalizing conversation state...")
-            flow isa STDFlow && normalize_conversation!(flow)
-            return
-        end
-        rethrow(e)
-    end
+    ai_parser(cmd, flow)
+    return
 end
 
 global_flow = nothing 
 function create_ai_repl(flow::Workflow)
     global global_flow = flow  # Just to make it accessible.
-    parser(input) = ai_parser(input, flow)
-    
-    ai_keymap = Dict(
-    '\x11' => (s::MIState, o...) -> begin # Ctrl+Q
-        flow isa STDFlow && toggle_planner!(flow)
-        println("\nPlanner mode ", flow isa STDFlow && flow.planner.enabled ? "enabled" : "disabled")
-        return :ignore
-    end,
-    '\x0f' => (s::MIState, o...) -> begin # Ctrl+O
-        flow isa STDFlow && (flow.use_julia = !flow.use_julia)
-        println("\nJulia package context ", flow isa STDFlow && flow.use_julia ? "enabled" : "disabled")
-        return :ignore
-    end,
-    '\x05' => (s::MIState, o...) -> begin # Ctrl+E
-        println("Ctrl+E pressed. This should print!")
-        # run_revise!()  # call your run_revise! function if defined
-        return :ignore
-    end
-)
+
     
     repl = Base.active_repl
+    parser(input) = repl_parser(input, flow)
     initrepl(
         parser;
         prompt_text=() -> "AISH$(get_flags_str(flow))> ",
@@ -260,7 +123,6 @@ function initialize_aish_mode(flow, auto_switch, initial_message="")
     set_revise_for_dev!([pwd()])  # Check current directory as single-element array
 
     ai_mode = create_ai_repl(flow)
-    println("AI REPL mode initialized. Press ')' to enter and backspace to exit.")
     print_help()
 
     @async_showerr if auto_switch # without @async the .mistate is nothing...
