@@ -42,7 +42,7 @@ end
 function run(flow::STDFlow, user_query, io::IO=devnull)
     ctx_question = format_history_query(flow.question_acc(user_query))
 
-    ctx_shell, ctx_shell_cut = get_tool_results(flow.agent)
+    ctx_shell, ctx_shell_cut = get_tool_results(flow.agent, filter_tools=[ShellBlockTool])
     embedder_query = ctx_shell_cut * "\n\n" * ctx_question
     rerank_query = flow.q_history(user_query, flow.conv_ctx, ctx_shell_cut)
 
