@@ -1,13 +1,13 @@
 
 # To automatically start in airepl(): julia --banner=no -i -e 'using AISH; AISH.airepl(auto_switch=true)'
-function init_flow(;workflow::DataType=STDFlow, project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, tools=DEFAULT_TOOLS)
+function repl_init_flow(;workflow::DataType=STDFlow, project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, tools=DEFAULT_TOOLS)
     flow = workflow(project_paths; logdir, show_tokens, silent, no_confirm, detached_git_dev, tools)
     set_terminal_title("AISH $(basename(rstrip(flow.workspace_context.workspace.root_path, '/')))")
     set_editor("meld_pro")
     return flow
 end
 
-function run_flow(flow, cmd)
+function repl_run_flow(flow, cmd)
     println("\nProcessing your request...")
     try
         run(flow, cmd)

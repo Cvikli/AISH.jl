@@ -71,7 +71,7 @@ function repl_parser(user_question::AbstractString, flow::Workflow)
         return
     end
 
-    run_flow(flow, cmd)
+    repl_run_flow(flow, cmd)
     return
 end
 
@@ -118,7 +118,7 @@ function initialize_aish_mode(flow, auto_switch, initial_message="")
 end
 
 function airepl_noargs(;initial_message, project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=true, tools=DEFAULT_TOOLS)
-    flow = init_flow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, tools)
+    flow = repl_init_flow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, tools)
 
     isdefined(Base, :active_repl) && return initialize_aish_mode(flow, auto_switch, initial_message)
     atreplinit(repl -> initialize_aish_mode(flow, auto_switch, initial_message))
