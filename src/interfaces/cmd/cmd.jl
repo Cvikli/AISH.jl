@@ -1,40 +1,18 @@
 include("cmd_arg_parser.jl")
 
 function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS)
-  !silent && greet(ChatSH)
-  flow = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, tools) : workflow(resume_data)
-  
-  nice_exit_handler(flow.conv_ctx)
-  set_terminal_title("AISH $(basename(rstrip(flow.workspace_context.workspace.root_path, '/')))")
-
-  !silent && isempty(user_question) && (isdefined(Base, :active_repl) ? println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ") : println("Your multiline input (empty line to finish):"))
+  flow = cmd_init_flow(;workflow, resume_data, project_paths, logdir, show_tokens, silent, no_confirm, loop, detached_git_dev, use_julia, tools)
 
   while loop || !isempty(user_question)
     user_question = isempty(user_question) ? wait_user_question(user_question) : user_question
     !silent && println("Thinking...")  # Only print if not silent
-    
-    try
-      _in_loop[] = true
-      result = flow(user_question)
-      result == :MERGE && isdefined(flow, :version_control) && !isnothing(flow.version_control) && merge_git(flow.version_control)
-      _in_loop[] = false
-    catch e
-      if e isa InterruptException
-        println("\nSelf-reflection loop interrupted. Continuing...")
-      else
-        @show e
-        rethrow(e)
-      end
-    end
+    cmd_run_flow(flow, user_question)
 
     user_question = ""
   end
 end
-
-function start(message=""; workflow::DataType, resume_data=nothing, project_paths::Union{String,Vector{String}}=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=DEFAULT_TOOLS)
-  isa(project_paths, String) && (project_paths = [project_paths])
-  start_conversation(message; workflow, loop, resume_data, project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev, use_julia, skills)
-end
+start(message=""; workflow::DataType, resume_data=nothing, project_paths::String="", kwargs...) = start(message; workflow, resume_data, project_paths=[project_paths], kwargs...)
+start(message=""; workflow::DataType, resume_data=nothing, project_paths::Vector{String}=String[], logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, skills=DEFAULT_TOOLS) = start_conversation(message; workflow, loop, resume_data, project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev, use_julia, skills)
 
 function main(;workflow::DataType, tools=DEFAULT_TOOLS, loop=true)
   args = parse_commandline()

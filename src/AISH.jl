@@ -33,6 +33,7 @@ include("config.jl")
 include("utils.jl")
 include("prompt.jl")
 
+include("agents/flow.jl")
 include("agents/std_flow.jl")
 include("agents/selfreflect_flow.jl")
 
