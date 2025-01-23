@@ -59,7 +59,7 @@ function (m::SRWorkFlow)(user_question)
   #   ctx_test       = run_tests(m.test_frame) |> test_ctx_2_string
   # end
   # user_question    = add_tests(user_question, m.test_frame)
-    ctx_shell, ctx_shell_cut = get_tool_results(m.agent)
+    ctx_shell, ctx_shell_cut = get_tool_results(m.agent, filter_tools=[ShellBlockTool])
   m.LLM_reflection = user_question
 
   while !isempty(m.LLM_reflection)
@@ -87,7 +87,7 @@ function (m::SRWorkFlow)(user_question)
         on_error=(error) -> add_error_message!(m.conv_ctx, "ERROR: $error")
     )
     m.conv_ctx(create_AI_message(response.content))
-    ctx_shell, _ = get_tool_results(m.agent)
+    ctx_shell, _ = get_tool_results(m.agent, filter_tools=[ShellBlockTool])
     !isnothing(m.version_control) && commit_changes(m.version_control, context_combiner!(user_question, ctx_shell, last_msg(m.conv_ctx)))
     LLM_answer, decision = LLM_reflect(ctx_question, ctx_shell, last_msg(m.conv_ctx))
     m.LLM_reflection = LLM_reflect_is_continue(decision) ? LLM_answer : ""
