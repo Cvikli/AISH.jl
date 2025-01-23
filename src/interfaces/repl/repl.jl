@@ -16,7 +16,8 @@ reset_flow!(::Workflow)   = @warn "Unimplemented."
     modifiers::REPL.LineEdit.Modifiers=REPL.LineEdit.Modifiers()
 end
 
-function REPL.LineEdit.complete_line(c::PathCompletionProvider, s::REPL.LineEdit.PromptState; kwargs...)
+REPL.LineEdit.setmodifiers!(c::PathCompletionProvider, m::REPL.LineEdit.Modifiers) = c.modifiers = m
+REPL.LineEdit.complete_line(c::PathCompletionProvider, s::REPL.LineEdit.PromptState; kwargs...) = begin
     partial = REPL.beforecursor(s.input_buffer)
     full = REPL.LineEdit.input_string(s)
 
@@ -49,7 +50,6 @@ function REPL.LineEdit.complete_line(c::PathCompletionProvider, s::REPL.LineEdit
     return String[], "", false
 end
 
-REPL.LineEdit.setmodifiers!(c::PathCompletionProvider, m::REPL.LineEdit.Modifiers) = c.modifiers = m
 
 
 function repl_parser(user_question::AbstractString, flow::Workflow)
