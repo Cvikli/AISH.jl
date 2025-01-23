@@ -1,6 +1,7 @@
 # Add at top with imports
 using Memoize
 using EasyContext: format_history_query, QueryWithHistoryAndAIMsg, FluidAgent
+using EasyRAGStore: IndexLogger, log_index
 
 @kwdef mutable struct STDFlow <: Workflow
     workspace_context::WorkspaceCTX
@@ -12,13 +13,15 @@ using EasyContext: format_history_query, QueryWithHistoryAndAIMsg, FluidAgent
     agent::FluidAgent
     no_confirm::Bool=true
     use_julia::Bool=false
-    planner::CodeCriticsArchitectContext=CodeCriticsArchitectContext(model="gem20f", enabled=false)
+    planner::CodeCriticsArchitectContext=CodeCriticsArchitectContext(model="dsreason", enabled=false)
+    ws_index_logger::IndexLogger=IndexLogger("workspace_chunks")
+    jl_index_logger::IndexLogger=IndexLogger("julia_src_chunks")
 end
 function STDFlow(project_paths; model="claude", no_confirm=false, verbose=true, tools=DEFAULT_TOOLS, kwargs...)
 
     m = STDFlow(;
-        workspace_context=init_workspace_context(project_paths; model="gem15f", verbose, top_n=10),
-        julia_context=init_julia_context(excluded_packages=["XC", "QCODE"], model="gem20f"),
+        workspace_context=init_workspace_context(project_paths; model="dscode", verbose, top_n=10),
+        julia_context=init_julia_context(excluded_packages=["XC", "QCODE"], model="dscode"),
         agent=FluidAgent(; tools, model),
         no_confirm,
     )
@@ -48,9 +51,16 @@ function run(flow::STDFlow, user_query, io::IO=devnull)
 
     write(io, ctx_shell)
 
-    ctx_jl_pkg   = @async_showerr process_julia_context(flow.julia_context, embedder_query; enabled=flow.use_julia, rerank_query, age_tracker=flow.age_tracker, io)
-    ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, embedder_query; rerank_query, age_tracker=flow.age_tracker, io)
-    context = context_combiner([fetch(ctx_jl_pkg), fetch(ctx_codebase), ctx_shell],)
+    jl_task = @async_showerr process_julia_context(flow.julia_context, embedder_query; enabled=flow.use_julia, rerank_query, age_tracker=flow.age_tracker, io)
+    ws_task = @async_showerr process_workspace_context(flow.workspace_context, embedder_query; rerank_query, age_tracker=flow.age_tracker, io)
+    src_chunks_reranked, src_chunks = fetch(jl_task)
+    val = fetch(ws_task)
+    @show typeof(val)
+    file_chunks_reranked, file_chunks = val
+    context = context_combiner([src_chunks_reranked, file_chunks_reranked, ctx_shell],)
+
+    # log_index(flow.ws_index_logger, file_chunks, rerank_query, answer=src_chunks_reranked)
+    # log_index(flow.jl_index_logger, src_chunks, rerank_query, answer=src_chunks_reranked)
 
     # Use transform directly if planner is enabled
     plan_context = transform(flow.planner, context, flow.conv_ctx)
