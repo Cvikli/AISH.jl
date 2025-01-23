@@ -38,15 +38,15 @@ get_flags_str(flow::STDFlow) = begin
     isempty(flags) ? "" : " [" * join(flags, " ") * "]"
 end
 
-(flow::STDFlow)(user_question) = run(flow, user_question)
-function run(flow::STDFlow, user_query, io::Union{IO, Nothing}=nothing)
+(flow::STDFlow)(user_question, io::IO=devnull) = run(flow, user_question, io)
+function run(flow::STDFlow, user_query, io::IO=devnull)
     ctx_question = format_history_query(flow.question_acc(user_query))
 
     ctx_shell, ctx_shell_cut = get_tool_results(flow.agent)
     embedder_query = ctx_shell_cut * "\n\n" * ctx_question
     rerank_query = flow.q_history(user_query, flow.conv_ctx, ctx_shell_cut)
 
-    write_event!(io, "context_shell", ctx_shell)
+    write(io, ctx_shell)
 
     ctx_jl_pkg   = @async_showerr process_julia_context(flow.julia_context, embedder_query; enabled=flow.use_julia, rerank_query, age_tracker=flow.age_tracker, io)
     ctx_codebase = @async_showerr process_workspace_context(flow.workspace_context, embedder_query; rerank_query, age_tracker=flow.age_tracker, io)
@@ -55,7 +55,7 @@ function run(flow::STDFlow, user_query, io::Union{IO, Nothing}=nothing)
     # Use transform directly if planner is enabled
     plan_context = transform(flow.planner, context, flow.conv_ctx)
 
-    write_event!(io, "context_plan", plan_context)
+    write(io, plan_context)
 
     flow.conv_ctx(create_user_message(user_query, Dict("context" => context * plan_context)))
 
@@ -65,11 +65,11 @@ function run(flow::STDFlow, user_query, io::Union{IO, Nothing}=nothing)
         on_error=(error) -> begin
             err_msg = "ERROR: $error"
             add_error_message!(flow.conv_ctx, err_msg)
-            write_event!(io, "error", err_msg)
+            write(io, err_msg)
         end
     )
 
-    write_event!(io, "ai_message", response.content)
+    write(io, response.content)
     flow.conv_ctx(create_AI_message(response.content))
 
     log_instant_apply(flow.agent.extractor, ctx_question)
