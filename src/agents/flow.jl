@@ -21,7 +21,7 @@ function repl_run_flow(flow, cmd)
     end
 end
 
-function cmd_init_flow(;workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS)
+function readline_init_flow(;workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS)
     !silent && greet(ChatSH)
     flow = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, tools) : workflow(resume_data)
     
@@ -31,7 +31,7 @@ function cmd_init_flow(;workflow::DataType, resume_data=nothing, project_paths, 
     !silent && isempty(user_question) && (isdefined(Base, :active_repl) ? println("Your first [Enter] will just interrupt the REPL line and get into the conversation after that: ") : println("Your multiline input (empty line to finish):"))
     return flow
 end
-function cmd_run_flow(flow, cmd)
+function readline_run_flow(flow, cmd)
     println("\nProcessing your request...")
     try
         result = run(flow, cmd)

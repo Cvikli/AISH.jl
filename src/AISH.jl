@@ -37,7 +37,7 @@ include("agents/flow.jl")
 include("agents/std_flow.jl")
 include("agents/selfreflect_flow.jl")
 
-include("interfaces/cmd/cmd.jl")
+include("interfaces/readline/readline.jl")
 include("interfaces/repl/repl.jl")
 
 

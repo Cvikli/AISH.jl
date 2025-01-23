@@ -1,12 +1,12 @@
-include("cmd_arg_parser.jl")
+include("readline_arg_parser.jl")
 
 function start_conversation(user_question=""; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS)
-  flow = cmd_init_flow(;workflow, resume_data, project_paths, logdir, show_tokens, silent, no_confirm, loop, detached_git_dev, use_julia, tools)
+  flow = readline_init_flow(;workflow, resume_data, project_paths, logdir, show_tokens, silent, no_confirm, loop, detached_git_dev, use_julia, tools)
 
   while loop || !isempty(user_question)
     user_question = isempty(user_question) ? wait_user_question(user_question) : user_question
     !silent && println("Thinking...")  # Only print if not silent
-    cmd_run_flow(flow, user_question)
+    readline_run_flow(flow, user_question)
 
     user_question = ""
   end
