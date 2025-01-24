@@ -12,8 +12,8 @@ function start_conversation(user_question=""; workflow::DataType, project_paths,
     user_question = ""
   end
 end
-start(message; workflow::DataType, project_paths::Vector{String}, logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS) = start_conversation(message; workflow, loop, project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev, use_julia, tools)
-start(message; workflow::DataType, project_paths::String, kwargs...) = start(message; workflow, project_paths=[project_paths], kwargs...)
+start(message::String=""; workflow::DataType, project_paths::Union{String,Vector{String}}, logdir=LOGDIR, show_tokens=false, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS) = start_conversation(message; workflow, loop, project_paths=project_paths isa String ? [project_paths] : project_paths, logdir, show_tokens, silent=!isempty(message), no_confirm, detached_git_dev, use_julia, tools)
+
 
 function main(;workflow::DataType, tools=DEFAULT_TOOLS, loop=true)
   args = parse_commandline()
