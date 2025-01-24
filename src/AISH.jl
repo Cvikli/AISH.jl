@@ -40,7 +40,7 @@ include("agents/std_flow.jl")
 include("agents/selfreflect_flow.jl")
 
 include("interfaces/readline/readline.jl")
-include("interfaces/repl/repl.jl")
+include("interfaces/repl/repl_aish.jl")
 
 
 # include("precompile_scripts.jl")

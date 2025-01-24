@@ -9,10 +9,6 @@ include("repl_arg_parser.jl")
 include("repl_handler.jl")
 include("repl_utils.jl")
 
-# interface required functions.
-get_flags_str(::Workflow) = " [unimplemented]"  # Base case for generic workflows
-reset_flow!(::Workflow)   = @warn "Unimplemented."
-
 
 function repl_parser(user_question::AbstractString, flow::Workflow)
     cmd = strip(user_question)
