@@ -1,7 +1,7 @@
 
 # To automatically start in airepl(): julia --banner=no -i -e 'using AISH; AISH.airepl(auto_switch=true)'
 
-init_flow(::Val{:SIMPLE}, workflow::DataType=STDFlow; project_paths::Vector{String}=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, tools=DEFAULT_TOOLS) = init_flow(;workflow, project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, tools)
+init_flow(::Val{:SIMPLE}, workflow::DataType=STDFlow; project_paths::Vector{String}=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, tools=DEFAULT_TOOLS) = init_flow(workflow; project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, tools)
 init_flow(workflow::DataType; project_paths::Vector{String}, logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, tools=DEFAULT_TOOLS) = begin
     flow = workflow(project_paths; logdir, show_tokens, silent, no_confirm, detached_git_dev, tools)
     set_editor("meld_pro")
