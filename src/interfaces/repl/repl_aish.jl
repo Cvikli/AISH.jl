@@ -1,6 +1,9 @@
 using REPL
 using ReplMaker
+using REPL.LineEdit: MIState
 using Base.Filesystem
+using Base: AnyDict, basename, rstrip
+using EasyContext: set_editor
 
 include("repl_arg_parser.jl")
 include("repl_handler.jl")
