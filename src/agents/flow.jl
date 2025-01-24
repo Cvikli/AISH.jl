@@ -8,10 +8,10 @@ init_flow(;workflow::DataType=STDFlow, project_paths=String["."], logdir=LOGDIR,
     return flow
 end
 
-init_flow(::Val{:STANDARD}; workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS) = readline_init_flow(;workflow, resume_data, project_paths, logdir, show_tokens, silent, no_confirm, loop, detached_git_dev, use_julia, tools)
-readline_init_flow(;workflow::DataType, resume_data=nothing, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS) = begin
+init_flow(::Val{:STANDARD}; workflow::DataType, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS) = readline_init_flow(;workflow, project_paths, logdir, show_tokens, silent, no_confirm, loop, detached_git_dev, use_julia, tools)
+readline_init_flow(;workflow::DataType, project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS) = begin
     !silent && greet(ChatSH)
-    flow = isnothing(resume_data) ? workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, tools) : workflow(resume_data)
+    flow = workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, tools)
     
     nice_exit_handler(flow.conv_ctx)
   
