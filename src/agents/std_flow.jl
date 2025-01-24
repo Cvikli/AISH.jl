@@ -85,7 +85,7 @@ end
 # Control functions
 update_workspace!(flow::STDFlow, project_paths::Vector{<:AbstractString}) = begin
     flow.workspace_context = init_workspace_context(project_paths)
-    flow.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; tools=flow.agent.tools, guide_strs=[workspace_format_description(flow.workspace_context.workspace), (flow.use_julia ? julia_format_guide : "")])
+    flow.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; tools=flow.agent.tools, guide_strs=[workspace_format_description_raw(flow.workspace_context.workspace), (flow.use_julia ? julia_format_guide : "")])
     return flow
 end
 
