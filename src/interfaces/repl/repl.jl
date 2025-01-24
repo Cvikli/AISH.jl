@@ -71,7 +71,7 @@ function repl_parser(user_question::AbstractString, flow::Workflow)
         return
     end
 
-    repl_run_flow(flow, cmd)
+    run_flow!(flow, cmd)
     return
 end
 
