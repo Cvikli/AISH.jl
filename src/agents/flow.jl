@@ -21,6 +21,7 @@ end
 
 run_flow!(::Val{:STANDARD}; workflow::Workflow, user_question) = run_flow!(workflow, user_question)
 run_flow!(flow, user_question) = begin
+    println("Thinking...")
     try
         run(flow, user_question)
     catch e
@@ -35,6 +36,7 @@ end
 
 run_flow!(::Val{:VERSION_CONTROL}; workflow::Workflow, user_question) = run_flow_version_control!(workflow, user_question)
 run_flow_version_control!(flow, cmd) = begin
+    println("Thinking...")
     try
         result = run(flow, cmd)
         result == :MERGE && isdefined(flow, :version_control) && !isnothing(flow.version_control) && merge_git(flow.version_control)

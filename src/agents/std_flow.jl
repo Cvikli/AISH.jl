@@ -41,15 +41,13 @@ get_flags_str(flow::STDFlow) = begin
     isempty(flags) ? "" : " [" * join(flags, " ") * "]"
 end
 
-(flow::STDFlow)(user_question, io::IO=devnull) = run(flow, user_question, io)
-function run(flow::STDFlow, user_query, io::IO=devnull)
+(flow::STDFlow)(user_question, io::IO=stdout) = run(flow, user_question, io)
+function run(flow::STDFlow, user_query, io::IO=stdout)
     ctx_question = format_history_query(flow.question_acc(user_query))
 
     ctx_shell, ctx_shell_cut = get_tool_results(flow.agent, filter_tools=[ShellBlockTool])
     embedder_query = ctx_shell_cut * "\n\n" * ctx_question
     rerank_query = flow.q_history(user_query, flow.conv_ctx, ctx_shell_cut)
-
-    write(io, ctx_shell)
 
     jl_task = @async_showerr process_julia_context(flow.julia_context, embedder_query; enabled=flow.use_julia, rerank_query, age_tracker=flow.age_tracker, io)
     ws_task = @async_showerr process_workspace_context(flow.workspace_context, embedder_query; rerank_query, age_tracker=flow.age_tracker, io)
@@ -62,10 +60,8 @@ function run(flow::STDFlow, user_query, io::IO=devnull)
     # log_index(flow.ws_index_logger, file_chunks, rerank_query, answer=src_chunks_reranked)
     # log_index(flow.jl_index_logger, src_chunks, rerank_query, answer=src_chunks_reranked)
 
-    # Use transform directly if planner is enabled
-    plan_context = transform(flow.planner, context, flow.conv_ctx)
+    plan_context = transform(flow.planner, context, flow.conv_ctx; io)
 
-    write(io, plan_context)
 
     flow.conv_ctx(create_user_message(user_query, Dict("context" => context * plan_context)))
 
@@ -75,11 +71,10 @@ function run(flow::STDFlow, user_query, io::IO=devnull)
         on_error=(error) -> begin
             err_msg = "ERROR: $error"
             add_error_message!(flow.conv_ctx, err_msg)
-            write(io, err_msg)
+            println(io, err_msg)
         end
     )
 
-    write(io, response.content)
     flow.conv_ctx(create_AI_message(response.content))
 
     log_instant_apply(flow.agent.extractor, ctx_question)

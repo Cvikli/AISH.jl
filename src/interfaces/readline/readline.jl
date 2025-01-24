@@ -6,7 +6,6 @@ function start_conversation(user_question=""; workflow::DataType, project_paths,
 
   while loop || !isempty(user_question)
     user_question = isempty(user_question) ? wait_user_question(user_question) : user_question
-    !silent && println("Thinking...")  # Only print if not silent
     readline_run_flow(flow, user_question)
 
     user_question = ""
