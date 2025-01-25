@@ -53,7 +53,6 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
     ws_task = @async_showerr process_workspace_context(flow.workspace_context, embedder_query; rerank_query, age_tracker=flow.age_tracker, io)
     src_chunks_reranked, src_chunks = fetch(jl_task)
     val = fetch(ws_task)
-    @show typeof(val)
     file_chunks_reranked, file_chunks = val
     context = context_combiner([src_chunks_reranked, file_chunks_reranked, ctx_shell],)
 
@@ -72,7 +71,8 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
             err_msg = "ERROR: $error"
             add_error_message!(flow.conv_ctx, err_msg)
             println(io, err_msg)
-        end
+        end,
+        io
     )
 
     flow.conv_ctx(create_AI_message(response.content))

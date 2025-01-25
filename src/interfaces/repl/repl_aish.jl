@@ -11,7 +11,7 @@ include("repl_utils.jl")
 
 
 function repl_parser(user_question::AbstractString, flow::Workflow)
-    cmd = strip(user_question)
+    cmd = String(strip(user_question))
     isempty(cmd) && return
 
     # Handle command or process as regular input
