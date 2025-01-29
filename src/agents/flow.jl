@@ -19,8 +19,8 @@ readline_init_flow(workflow::DataType; project_paths, logdir, show_tokens, silen
     return flow
 end
 
-run_flow!(::Val{:STANDARD}, workflow::Workflow; user_question::String) = run_flow!(workflow, user_question)
-run_flow!(flow::Workflow, user_question::String) = begin
+run_flow!(::Val{:STANDARD}, workflow::Workflow; user_question::AbstractString) = run_flow!(workflow, user_question)
+run_flow!(flow::Workflow, user_question::AbstractString) = begin
     println("Thinking...")
     try
         run(flow, user_question)
