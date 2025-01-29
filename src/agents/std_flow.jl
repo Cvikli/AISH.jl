@@ -105,7 +105,6 @@ toggle_planner!(flow::STDFlow) = (flow.planner.enabled = !flow.planner.enabled; 
 function reset_flow!(flow::STDFlow)
     # Create a new instance with same settings
     new_flow = STDFlow(flow.workspace_context.workspace.project_paths;
-        model=flow.workspace_context.ws_reranker_filterer.model,
         no_confirm=flow.no_confirm,
         use_planner=flow.planner.enabled,
     )
