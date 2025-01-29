@@ -13,15 +13,16 @@ using EasyRAGStore: IndexLogger, log_index
     agent::FluidAgent
     no_confirm::Bool=true
     use_julia::Bool=false
-    planner::CodeCriticsArchitectContext=CodeCriticsArchitectContext(model="dsreason", enabled=false)
+    planner::AbstractPlanner=ExecutionPlannerContext(model="dsreason", enabled=false)
     ws_index_logger::IndexLogger=IndexLogger("workspace_chunks")
     jl_index_logger::IndexLogger=IndexLogger("julia_src_chunks")
 end
+
 function STDFlow(project_paths; model="claude", no_confirm=false, verbose=true, tools=DEFAULT_TOOLS, kwargs...)
 
     m = STDFlow(;
-        workspace_context=init_workspace_context(project_paths; model="dscode", verbose, top_n=10),
-        julia_context=init_julia_context(excluded_packages=["XC", "QCODE"], model="dscode"),
+        workspace_context=init_workspace_context(project_paths; model=["dscode", "gem20f", "gem15f", "gpt4om"], verbose, top_n=10),
+        julia_context=init_julia_context(excluded_packages=["XC", "QCODE"], model=["dscode", "gem20f", "gem15f", "gpt4om"]),
         agent=FluidAgent(; tools, model),
         no_confirm,
     )
@@ -56,8 +57,8 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
     file_chunks_reranked, file_chunks = val
     context = context_combiner([src_chunks_reranked, file_chunks_reranked, ctx_shell],)
 
-    # log_index(flow.ws_index_logger, file_chunks, rerank_query, answer=src_chunks_reranked)
-    # log_index(flow.jl_index_logger, src_chunks, rerank_query, answer=src_chunks_reranked)
+    log_index(flow.ws_index_logger, file_chunks, rerank_query, answer=src_chunks_reranked)
+    log_index(flow.jl_index_logger, src_chunks, rerank_query, answer=src_chunks_reranked)
 
     plan_context = transform(flow.planner, context, flow.conv_ctx; io)
 
