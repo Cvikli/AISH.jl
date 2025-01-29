@@ -71,7 +71,7 @@ function initialize_aish_mode(flow, auto_switch, initial_message="")
         ReplMaker.enter_mode!(Base.active_repl.mistate, ai_mode)
         
         # Process initial message if provided
-        !isempty(initial_message) && ai_parser(initial_message, flow)
+        !isempty(initial_message) && repl_parser(initial_message, flow)
     end
 end
 
