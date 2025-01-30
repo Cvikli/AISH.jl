@@ -69,7 +69,7 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
     response = work(flow.agent, flow.conv_ctx; cache, flow.no_confirm,
         tool_kwargs=Dict("root_path" => flow.workspace_context.workspace.root_path),
         on_error=(error) -> begin
-            err_msg = "ERROR: $error"
+            err_msg = "ERROR: $error\n$(sprint(showerror, error, catch_backtrace()))"
             add_error_message!(flow.conv_ctx, err_msg)
             println(io, err_msg)
         end,
