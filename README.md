@@ -81,33 +81,18 @@ You will need a diff view for AI proposed diffs. GUI diff views supported:
 - [`monaco-meld`](https://github.com/Sixzero/monaco-meld) electron/web based (AISH developed) diff view (recommended)
 
 ```julia
-using Pkg
-Pkg.add("AISH")
+] 
+add https://github.com/Cvikli/AISH.jl
 ```
 
-## Usage
-
-To start using AISH.jl, run the following commands in Julia:
-
-```julia
-using AISH
-
-AISH.start("../my_project")
-```
-
-or from commandline:
-
-```sh
-julia test/main.jl -p "../myproject" --streaming
-```
 
 This will start an interactive session where you can communicate with the AI assistant.
 
 ## Configuration
 
-The project uses a configuration file (`src/AI_config.jl`) to set up various parameters:
+The project uses a configuration file (`src/prompt.jl`) to set up various parameters:
 
-- `ChatSH`: The name of the AI assistant (default: "Koda")
+- `ChatSH`: The name of the AI assistant (default: "Orion")
 - `SYSTEM_PROMPT`: The initial system prompt for the AI
 
 You can modify these settings to customize the behavior of AISH.jl.
