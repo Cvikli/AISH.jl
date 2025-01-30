@@ -15,8 +15,17 @@ Vscode extension will come.
 
 AISH.jl (AI Shell) is a Julia package that provides an interactive AI-powered command-line interface for assisting users with system tasks using shell commands.
 
-GUI: [AISHApp](https://github.com/Cvikli/AISHApp)
-Backend server for the GUI: [AISHServer](https://github.com/Cvikli/AISHServer)
+# USAGE
+Run in any folder:
+```sh
+julia --banner=no -i -e 'using AISH; AISH.airepl(auto_switch=true)'
+```
+Also see help by typing `-h` in the AISH REPL... you can set fairly many options there to speed up development.
+
+DEPRECATED: GUI: [AISHApp](https://github.com/Cvikli/AISHApp)
+DEPRECATED: Backend server for the GUI: [AISHServer](https://github.com/Cvikli/AISHServer)
+
+Other webversion is coming soon...
 
 It is actually ChatSH but a little bit rethinked version!
 
