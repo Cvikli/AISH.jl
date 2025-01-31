@@ -1,6 +1,7 @@
 # Add at top with imports
 using Memoize
 using EasyContext: format_history_query, QueryWithHistoryAndAIMsg, FluidAgent
+using EasyContext: get_context!
 using EasyRAGStore: IndexLogger, log_index
 
 @kwdef mutable struct STDFlow <: Workflow
@@ -21,8 +22,8 @@ end
 function STDFlow(project_paths; model="claude", no_confirm=false, verbose=true, tools=DEFAULT_TOOLS, kwargs...)
 
     m = STDFlow(;
-        workspace_context=init_workspace_context(project_paths; model=["dscode", "gem20f", "gem15f", "gpt4om"], verbose, top_n=10),
-        julia_context=init_julia_context(excluded_packages=["XC", "QCODE"], model=["dscode", "gem20f", "gem15f", "gpt4om"]),
+        workspace_context=init_workspace_context(project_paths; model=["gem20f", "gem15f", "gpt4om"], verbose, top_n=10),
+        julia_context=init_julia_context(excluded_packages=["XC", "QCODE"], model=["gem20f", "gem15f", "gpt4om"]),
         agent=FluidAgent(; tools, model),
         no_confirm,
     )
@@ -42,13 +43,12 @@ get_flags_str(flow::STDFlow) = begin
     isempty(flags) ? "" : " [" * join(flags, " ") * "]"
 end
 
-(flow::STDFlow)(user_question, io::IO=stdout) = run(flow, user_question, io)
 function run(flow::STDFlow, user_query, io::IO=stdout)
-    ctx_question = format_history_query(flow.question_acc(user_query))
+    ctx_history = get_context!(flow.question_acc, user_query)
 
     ctx_shell, ctx_shell_cut = get_tool_results(flow.agent, filter_tools=[ShellBlockTool])
-    embedder_query = ctx_shell_cut * "\n\n" * ctx_question
-    rerank_query = flow.q_history(user_query, flow.conv_ctx, ctx_shell_cut)
+    embedder_query = ctx_shell_cut * "\n\n" * ctx_history * "\n\n" * user_query
+    rerank_query = get_context!(flow.q_history, user_query, flow.conv_ctx, ctx_shell_cut)
 
     jl_task = @async_showerr process_julia_context(flow.julia_context, embedder_query; enabled=flow.use_julia, rerank_query, age_tracker=flow.age_tracker, io)
     ws_task = @async_showerr process_workspace_context(flow.workspace_context, embedder_query; rerank_query, age_tracker=flow.age_tracker, io)
@@ -56,10 +56,10 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
     val = fetch(ws_task)
     file_chunks_reranked, file_chunks = val
     context = context_combiner([src_chunks_reranked, file_chunks_reranked, ctx_shell],)
-
-    log_index(flow.ws_index_logger, file_chunks, rerank_query, answer=src_chunks_reranked)
+    
+    log_index(flow.ws_index_logger, file_chunks, rerank_query, answer=file_chunks_reranked)
     log_index(flow.jl_index_logger, src_chunks, rerank_query, answer=src_chunks_reranked)
-
+    
     plan_context = transform(flow.planner, context, flow.conv_ctx; io)
 
 
