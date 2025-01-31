@@ -47,7 +47,11 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
     ctx_history = get_context!(flow.question_acc, user_query)
 
     ctx_shell, ctx_shell_cut = get_tool_results(flow.agent, filter_tools=[ShellBlockTool])
-    embedder_query = ctx_shell_cut * "\n\n" * ctx_history * "\n\n" * user_query
+    embedder_query = """
+    $ctx_shell_cut\n\n
+    $ctx_history\n\n
+    $user_query
+    """
     rerank_query = get_context!(flow.q_history, user_query, flow.conv_ctx, ctx_shell_cut)
 
     jl_task = @async_showerr process_julia_context(flow.julia_context, embedder_query; enabled=flow.use_julia, rerank_query, age_tracker=flow.age_tracker, io)
@@ -78,7 +82,7 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
 
     flow.conv_ctx(create_AI_message(response.content))
 
-    log_instant_apply(flow.agent.extractor, ctx_question)
+    log_instant_apply(flow.agent.extractor, ctx_history * "\n\n# User query:\n" * user_query)
     cut_old_conversation_history!(flow.age_tracker, flow.conv_ctx, flow.julia_context, flow.workspace_context)
     return response
 end
