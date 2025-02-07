@@ -75,14 +75,14 @@ function initialize_aish_mode(flow, auto_switch, initial_message="")
     end
 end
 
-function airepl_noargs(;initial_message, project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=true, tools=DEFAULT_TOOLS)
-    flow = init_flow(Val(:SIMPLE), STDFlow; project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, tools)
+function airepl_noargs(;initial_message, project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=true)
+    flow = init_flow(Val(:SIMPLE), STDFlow; project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev)
 
     isdefined(Base, :active_repl) && return initialize_aish_mode(flow, auto_switch, initial_message)
     atreplinit(repl -> initialize_aish_mode(flow, auto_switch, initial_message))
 end
 
-function airepl(;initial_message=nothing, project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=true, tools=DEFAULT_TOOLS)
+function airepl(;initial_message=nothing, project_paths=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, auto_switch=true)
     isnothing(initial_message) && (initial_message = parse_repl_args())
-    airepl_noargs(;initial_message, project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, auto_switch, tools)
+    airepl_noargs(;initial_message, project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, auto_switch)
 end

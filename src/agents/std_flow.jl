@@ -7,7 +7,7 @@ using EasyRAGStore: IndexLogger, log_index
 @kwdef mutable struct STDFlow <: Workflow
     workspace_context::WorkspaceCTX
     julia_context::JuliaCTX
-    conv_ctx::Session=initSession()
+    conv_ctx::Session=Session()
     age_tracker::AgeTracker=AgeTracker(max_history=10, cut_to=4)
     question_acc::QueryWithHistory=QueryWithHistory()
     q_history::QueryWithHistoryAndAIMsg=QueryWithHistoryAndAIMsg()
@@ -19,18 +19,28 @@ using EasyRAGStore: IndexLogger, log_index
     jl_index_logger::IndexLogger=IndexLogger("julia_src_chunks")
 end
 
-function STDFlow(project_paths; model="claude", no_confirm=false, verbose=true, tools=DEFAULT_TOOLS, kwargs...)
+get_default_tools() = [
+    CatFileTool, 
+    CreateFileTool, 
+    ModifyFileTool,
+    ShellBlockTool,
+]
+
+function STDFlow(project_paths; no_confirm=false, verbose=true, kwargs...)
+    tools = get_default_tools()
+    workspace_context = init_workspace_context(project_paths; model=["gem20f", "gem15f", "gpt4om"], verbose, top_n=10)
+    create_sys_msg() = SYSTEM_PROMPT(ChatSH; guide_strs=[
+        workspace_format_description_raw(workspace_context.workspace),
+        # TODO handle (use_julia ? julia_format_guide : "")
+    ]) 
 
     m = STDFlow(;
-        workspace_context=init_workspace_context(project_paths; model=["gem20f", "gem15f", "gpt4om"], verbose, top_n=10),
+        workspace_context,
         julia_context=init_julia_context(excluded_packages=["XC", "QCODE"], model=["gem20f", "gem15f", "gpt4om"]),
-        agent=FluidAgent(; tools, model),
+        agent=create_FluidAgent("claude"; create_sys_msg, tools),
         no_confirm,
     )
-    m.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; tools,
-    guide_strs=[
-        workspace_format_description_raw(m.workspace_context.workspace),
-        ]) # TODO handle (use_julia ? julia_format_guide : "")
+    # m.conv_ctx.system_message.content =  # TODO handle (use_julia ? julia_format_guide : "")
     # print_project_tree(m.workspace_context.workspace, summary_callback=LLM_summary)
     # println(workspace_format_description(m.workspace_context.workspace))
     m
@@ -44,15 +54,22 @@ get_flags_str(flow::STDFlow) = begin
 end
 
 function run(flow::STDFlow, user_query, io::IO=stdout)
-    ctx_history = get_context!(flow.question_acc, user_query)
+    query_history = get_context!(flow.question_acc, user_query)
 
     ctx_shell, ctx_shell_cut = get_tool_results(flow.agent, filter_tools=[ShellBlockTool])
     embedder_query = """
     $ctx_shell_cut\n\n
-    $ctx_history\n\n
+    $query_history\n\n
     $user_query
     """
     rerank_query = get_context!(flow.q_history, user_query, flow.conv_ctx, ctx_shell_cut)
+
+    # jl_chunks = search_julia_pkgs(embedder_query; enabled=flow.use_julia, rerank_query)
+    # ws_chunks = search_workspace(embedder_query; rerank_query)
+    
+    # register_chunks!(flow.chat, jl_chunks, format_prefix="# julia functions:")
+    # register_chunks!(flow.chat, ws_chunks, format_prefix="# workspace files:", need_updates=true)
+
 
     jl_task = @async_showerr process_julia_context(flow.julia_context, embedder_query; enabled=flow.use_julia, rerank_query, age_tracker=flow.age_tracker, io)
     ws_task = @async_showerr process_workspace_context(flow.workspace_context, embedder_query; rerank_query, age_tracker=flow.age_tracker, io)
@@ -66,8 +83,9 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
     
     plan_context = transform(flow.planner, context, flow.conv_ctx; io)
 
+    # push_message!(flow.conv_ctx, ctx_shell_cut * plan_context * user_query)
 
-    flow.conv_ctx(create_user_message(user_query, Dict("context" => context * plan_context)))
+    push_message!(flow.conv_ctx, create_user_message(user_query, Dict("context" => context * plan_context)))
 
     cache = get_cache_setting(flow.age_tracker, flow.conv_ctx)
     response = work(flow.agent, flow.conv_ctx; cache, flow.no_confirm,
@@ -80,17 +98,19 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
         io
     )
 
-    flow.conv_ctx(create_AI_message(response.content))
-
-    log_instant_apply(flow.agent.extractor, ctx_history * "\n\n# User query:\n" * user_query)
+    log_instant_apply(flow.agent.extractor, query_history * "\n\n# User query:\n" * user_query)
     cut_old_conversation_history!(flow.age_tracker, flow.conv_ctx, flow.julia_context, flow.workspace_context)
+    Ding.play(Ding.rand_sound_file(Ding.ding_files))
     return response
 end
 
 # Control functions
 update_workspace!(flow::STDFlow, project_paths::Vector{<:AbstractString}) = begin
-    flow.workspace_context = init_workspace_context(project_paths)
-    flow.conv_ctx.system_message.content = SYSTEM_PROMPT(ChatSH; tools=flow.agent.tools, guide_strs=[workspace_format_description_raw(flow.workspace_context.workspace), (flow.use_julia ? julia_format_guide : "")])
+    workspace_context = init_workspace_context(project_paths)
+    create_sys_msg() = SYSTEM_PROMPT(ChatSH; guide_strs=[
+        workspace_format_description_raw(workspace_context.workspace),
+    ])
+    flow.agent = create_FluidAgent("claude"; create_sys_msg, tools=get_default_tools())
     return flow
 end
 

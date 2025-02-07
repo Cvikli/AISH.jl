@@ -1,17 +1,17 @@
 
 # To automatically start in airepl(): julia --banner=no -i -e 'using AISH; AISH.airepl(auto_switch=true)'
 
-init_flow(::Val{:SIMPLE}, workflow::DataType=STDFlow; project_paths::Vector{String}=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, tools=DEFAULT_TOOLS) = init_flow(workflow; project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, tools)
-init_flow(workflow::DataType; project_paths::Vector{String}, logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true, tools=DEFAULT_TOOLS) = begin
-    flow = workflow(project_paths; logdir, show_tokens, silent, no_confirm, detached_git_dev, tools)
+init_flow(::Val{:SIMPLE}, workflow::DataType=STDFlow; project_paths::Vector{String}=String["."], logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true) = init_flow(workflow; project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev)
+init_flow(workflow::DataType; project_paths::Vector{String}, logdir=LOGDIR, show_tokens=false, silent=false, no_confirm=false, detached_git_dev=true) = begin
+    flow = workflow(project_paths; logdir, show_tokens, silent, no_confirm, detached_git_dev)
     set_editor("meld_pro")
     return flow
 end
 
-init_flow(::Val{:STANDARD}, workflow::DataType; project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS) = readline_init_flow(;workflow, project_paths, logdir, show_tokens, silent, no_confirm, loop, detached_git_dev, use_julia, tools)
-readline_init_flow(workflow::DataType; project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false, tools=DEFAULT_TOOLS) = begin
+init_flow(::Val{:STANDARD}, workflow::DataType; project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false) = readline_init_flow(;workflow, project_paths, logdir, show_tokens, silent, no_confirm, loop, detached_git_dev, use_julia)
+readline_init_flow(workflow::DataType; project_paths, logdir, show_tokens, silent, no_confirm=false, loop=true, detached_git_dev=true, use_julia=false) = begin
     !silent && greet(ChatSH)
-    flow = workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent, tools)
+    flow = workflow(;project_paths, logdir, show_tokens, silent, no_confirm, detached_git_dev, use_julia, verbose=!silent)
     
     nice_exit_handler(flow.conv_ctx)
   

@@ -14,8 +14,8 @@ handle_interrupt(sig::Int32) = begin
     return
 end
 
-function nice_exit_handler(conv::Union{String,Conversation,Session})
-    global _conversation_id[] = conv isa String ? conv : conv isa Conversation ? "" : conv.id
+function nice_exit_handler(conv::Union{String,Session})
+    global _conversation_id[] = conv isa String ? conv : conv.id
     ccall(:signal, Ptr{Cvoid}, (Cint, Ptr{Cvoid}), 2, @cfunction(handle_interrupt, Cvoid, (Int32,)))
 end
 

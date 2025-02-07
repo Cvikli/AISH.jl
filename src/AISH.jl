@@ -19,7 +19,6 @@ using EasyContext: process_julia_context
 using EasyContext: cut_old_conversation_history!
 using EasyContext: workspace_format_description, julia_format_guide
 using EasyContext: last_msg
-using EasyContext: Conversation
 using EasyContext: merge_git
 using EasyContext: WorkspaceCTX, JuliaCTX, julia_ctx_2_string, workspace_ctx_2_string, get_tool_results
 using EasyContext: workspace_format_description_raw
