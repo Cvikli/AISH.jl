@@ -26,7 +26,8 @@ function install_dev_deps()
             dir_path = joinpath(base_path, name)
             cd(dir_path) do
                 println("Rebase now disabled")
-                # run(`git pull --rebase`)
+                cmd = `git pull --rebase --autostash`
+                run(pipeline(cmd, stdout=stdout, stderr=stderr))
             end
             @info "Updated $name"
         end
@@ -37,7 +38,8 @@ function install_dev_deps()
     for (url, name) in missing_repos
         dir_path = joinpath(base_path, name)
         @info "Cloning $name..."
-        run(`git clone $url $dir_path`)
+        cmd = `git clone $url $dir_path`
+        run(pipeline(cmd, stdout=stdout, stderr=stderr))
     end
     
     # Add all repos as dev dependencies
