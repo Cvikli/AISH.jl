@@ -1,8 +1,9 @@
 # Add at top with imports
 using Memoize
 using EasyContext: format_history_query, QueryWithHistoryAndAIMsg, FluidAgent
-using EasyContext: get_context!
+using EasyContext: get_context!, get_tool_results_agent
 using EasyRAGStore: IndexLogger, log_index
+using DingDingDing
 
 @kwdef mutable struct STDFlow <: Workflow
     workspace_context::WorkspaceCTX
@@ -56,7 +57,7 @@ end
 function run(flow::STDFlow, user_query, io::IO=stdout)
     query_history = get_context!(flow.question_acc, user_query)
 
-    ctx_shell, ctx_shell_cut = get_tool_results(flow.agent, filter_tools=[ShellBlockTool])
+    ctx_shell, ctx_shell_cut = get_tool_results_agent(flow.agent, filter_tools=[ShellBlockTool])
     embedder_query = """
     $ctx_shell_cut\n\n
     $query_history\n\n
@@ -100,7 +101,7 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
 
     log_instant_apply(flow.agent.extractor, query_history * "\n\n# User query:\n" * user_query)
     cut_old_conversation_history!(flow.age_tracker, flow.conv_ctx, flow.julia_context, flow.workspace_context)
-    Ding.play(Ding.rand_sound_file(Ding.ding_files))
+    DingDingDing.play(DingDingDing.rand_sound_file(DingDingDing.ding_files))
     return response
 end
 

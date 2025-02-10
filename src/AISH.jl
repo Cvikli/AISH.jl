@@ -24,6 +24,7 @@ using EasyContext: WorkspaceCTX, JuliaCTX, julia_ctx_2_string, workspace_ctx_2_s
 using EasyContext: workspace_format_description_raw
 using EasyContext: execute
 using EasyContext: context_combiner
+using EasyContext: AbstractTool, create_FluidAgent, push_message!
 using EasyContext: ChangeTracker, Context
 using EasyContext
 using ArgParse
