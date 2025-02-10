@@ -107,7 +107,7 @@ end
 
 # Control functions
 update_workspace!(flow::STDFlow, project_paths::Vector{<:AbstractString}) = begin
-    workspace_context = init_workspace_context(project_paths)
+    workspace_context = init_workspace_context(project_paths, model=flow.workspace_context.rag_pipeline.reranker.model, top_n=flow.workspace_context.rag_pipeline.reranker.top_n)
     create_sys_msg() = SYSTEM_PROMPT(ChatSH; guide_strs=[
         workspace_format_description_raw(workspace_context.workspace),
     ])
