@@ -112,6 +112,7 @@ update_workspace!(flow::STDFlow, project_paths::Vector{<:AbstractString}) = begi
         workspace_format_description_raw(workspace_context.workspace),
     ])
     flow.agent = create_FluidAgent("claude"; create_sys_msg, tools=get_default_tools())
+    flow.workspace_context = workspace_context
     return flow
 end
 
