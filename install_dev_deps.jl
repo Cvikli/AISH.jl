@@ -22,7 +22,7 @@ function install_dev_deps()
     existing_repos = filter(((_, name),) -> isdir(joinpath(base_path, name)), repos)
     if !isempty(existing_repos)
         @info "Updating existing repositories..."
-        asyncmap(existing_repos) do (_, name)
+        map(existing_repos) do (_, name)
             dir_path = joinpath(base_path, name)
             cd(dir_path) do
                 println("Rebase now disabled")
