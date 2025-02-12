@@ -71,7 +71,7 @@ end
 function handle_planner(flow, args)
     flow isa STDFlow || return
     model = strip(args)
-    valid_models = ["oro1", "oro1m", "gpt4", "claude", "gemexp", "tqwen25b72"]
+    valid_models = ["oro1", "oro1m", "gpt4", "claude", "gemexp", "o3m"]
     if !isempty(model)
         if !(model in valid_models)
             println("\nUnrecognized model, but might work: ", join(valid_models, ", "))
@@ -112,7 +112,7 @@ const COMMANDS = Dict{String, Tuple{String, Function}}(
     "-y"       => ("Toggle confirmation", handle_confirmation_toggle),
     "-jl"      => ("Toggle Julia package context", handle_julia_context),
     "--reset"  => ("Reset conversation and context", handle_reset),
-    "--plan"   => ("Toggle planner mode, models: [oro1, oro1m, gpt4, claude, gemexp, tqwen25b72, ]", handle_planner)
+    "--plan"   => ("Toggle planner mode, models: [oro1, oro1m, gpt4, claude, gemexp, o3m, ]", handle_planner)
 )
 # Add aliases
 COMMANDS["-e"] = (COMMANDS["--editor"][1], COMMANDS["--editor"][2])
