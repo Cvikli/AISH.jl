@@ -87,6 +87,18 @@ function handle_planner(flow, args)
     flow.planner.enabled ? " with $(flow.planner.model) model" : "")
 end
 
+function handle_status(flow, args)
+    !isempty(strip(args)) && println("\nError: --status doesn't accept additional arguments")
+    
+    println("\nAISH Status:")
+    println("  Model:     ", flow.agent.model)
+    println("  Projects:  ", join(map(p -> abspath(expanduser(p)), flow.workspace_context.workspace.project_paths), "\n            "))
+    if flow isa STDFlow
+        println("  Planner:   ", flow.planner.enabled ? "enabled ($(flow.planner.model))" : "disabled")
+    end
+    println("  Editor:    ", get(ENV, "EDITOR", "default"))
+end
+
 
 function print_help()
     println("\nAvailable commands:")
@@ -97,10 +109,14 @@ function print_help()
                   elseif cmd == "--model" "name"
                   elseif cmd == "--editor" || cmd == "-e" "name[:port]"
                   elseif cmd == "--revise" || cmd == "-r" ""
+                  elseif cmd == "--plan" "model"
+                  elseif cmd == "--status" ""
                   else ""
                   end
         padding = arg_hint == "" ? "" : " "
-        println("  $cmd$padding$arg_hint    : $desc")
+        aliases = join([k for (k,v) in COMMANDS if k != cmd && v[2] === COMMANDS[cmd][2]], ", ")
+        alias_str = isempty(aliases) ? "" : " (aliases: $aliases)"
+        println("  $cmd$padding$arg_hint    : $desc$alias_str")
     end
 end
 
@@ -112,13 +128,15 @@ const COMMANDS = Dict{String, Tuple{String, Function}}(
     "-y"       => ("Toggle confirmation", handle_confirmation_toggle),
     "-jl"      => ("Toggle Julia package context", handle_julia_context),
     "--reset"  => ("Reset conversation and context", handle_reset),
-    "--plan"   => ("Toggle planner mode, models: [oro1, oro1m, gpt4, claude, gemexp, o3m, ]", handle_planner)
+    "--plan"   => ("Toggle planner mode, models: [oro1, oro1m, gpt4, claude, gemexp, o3m, ]", handle_planner),
+    "--status" => ("Show current AISH status", handle_status)
 )
 # Add aliases
 COMMANDS["-e"] = (COMMANDS["--editor"][1], COMMANDS["--editor"][2])
 COMMANDS["--jl"] = (COMMANDS["-jl"][1], COMMANDS["-jl"][2])
 COMMANDS["-j"] = (COMMANDS["-jl"][1], COMMANDS["-jl"][2])
 COMMANDS["-r"] = (COMMANDS["--revise"][1], COMMANDS["--revise"][2])  # Add revise alias
+COMMANDS["-s"] = (COMMANDS["--status"][1], COMMANDS["--status"][2])  # Add status alias
 COMMANDS["--help"] = ("Show help message", (_, _) -> print_help())
 COMMANDS["-h"] = (COMMANDS["--help"][1], COMMANDS["--help"][2])
 
