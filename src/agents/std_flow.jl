@@ -101,7 +101,9 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
 
     log_instant_apply(flow.agent.extractor, query_history * "\n\n# User query:\n" * user_query)
     cut_old_conversation_history!(flow.age_tracker, flow.conv_ctx, flow.julia_context, flow.workspace_context)
-    DingDingDing.play(DingDingDing.rand_sound_file(DingDingDing.ding_files))
+    @static if !Sys.isapple()
+        DingDingDing.play(DingDingDing.rand_sound_file(DingDingDing.ding_files))
+    end
     return response
 end
 
