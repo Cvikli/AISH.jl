@@ -20,7 +20,7 @@ using DingDingDing
     jl_index_logger::IndexLogger=IndexLogger("julia_src_chunks")
 end
 
-get_default_tools() = [
+get_default_tools()::Vector{DataType} = DataType[
     CatFileTool, 
     CreateFileTool, 
     ModifyFileTool,
@@ -38,7 +38,7 @@ function STDFlow(project_paths; no_confirm=false, verbose=true, kwargs...)
     m = STDFlow(;
         workspace_context,
         julia_context=init_julia_context(excluded_packages=["XC", "QCODE"], model=["gem20f", "gem15f", "gpt4om"]),
-        agent=create_FluidAgent("claude"; create_sys_msg, tools),
+        agent=create_FluidAgent("claude"; create_sys_msg, tools, extractor=BlockExtractor(tools)),
         no_confirm,
     )
     # m.conv_ctx.system_message.content =  # TODO handle (use_julia ? julia_format_guide : "")
@@ -96,7 +96,7 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
             add_error_message!(flow.conv_ctx, err_msg)
             println(io, err_msg)
         end,
-        io
+        io,
     )
 
     log_instant_apply(flow.agent.extractor, query_history * "\n\n# User query:\n" * user_query)
