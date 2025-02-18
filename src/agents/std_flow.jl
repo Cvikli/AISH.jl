@@ -38,7 +38,7 @@ function STDFlow(project_paths; no_confirm=false, verbose=true, kwargs...)
     m = STDFlow(;
         workspace_context,
         julia_context=init_julia_context(excluded_packages=["XC", "QCODE"], model=["gem20f", "gem15f", "gpt4om"]),
-        agent=create_FluidAgent("claude"; create_sys_msg, tools, extractor=BlockExtractor(tools)),
+        agent=create_FluidAgent("claude"; create_sys_msg, tools, extractor=ToolTagExtractor()),
         no_confirm,
     )
     # m.conv_ctx.system_message.content =  # TODO handle (use_julia ? julia_format_guide : "")
