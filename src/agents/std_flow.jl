@@ -1,7 +1,7 @@
 # Add at top with imports
 using Memoize
 using EasyContext: format_history_query, QueryWithHistoryAndAIMsg, FluidAgent
-using EasyContext: get_context!, get_tool_results_agent
+using EasyContext: get_context!, get_tool_results_agent, transform
 using EasyRAGStore: IndexLogger, log_index
 using DingDingDing
 
