@@ -57,13 +57,13 @@ end
 function run(flow::STDFlow, user_query, io::IO=stdout)
     query_history = get_context!(flow.question_acc, user_query)
 
-    ctx_shell, ctx_shell_cut = get_tool_results_agent(flow.agent, filter_tools=[ShellBlockTool])
+    ctx_shell = get_tool_results_agent(flow.agent, filter_tools=[ShellBlockTool])
     embedder_query = """
-    $ctx_shell_cut\n\n
-    $query_history\n\n
+    $ctx_shell\n
+    $query_history\n
     $user_query
     """
-    rerank_query = get_context!(flow.q_history, user_query, flow.conv_ctx, ctx_shell_cut)
+    rerank_query = get_context!(flow.q_history, user_query, flow.conv_ctx, ctx_shell)
 
     # jl_chunks = search_julia_pkgs(embedder_query; enabled=flow.use_julia, rerank_query)
     # ws_chunks = search_workspace(embedder_query; rerank_query)
