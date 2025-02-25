@@ -95,6 +95,7 @@ function handle_status(flow, args)
     println("  Projects:  ", join(map(p -> abspath(expanduser(p)), flow.workspace_context.workspace.project_paths), "\n            "))
     if flow isa STDFlow
         println("  Planner:   ", flow.planner.enabled ? "enabled ($(flow.planner.model))" : "disabled")
+        println("  Thinking:  ", isnothing(flow.thinking) ? "disabled" : "enabled ($(flow.thinking) tokens)")
     end
     println("  Editor:    ", get(ENV, "EDITOR", "default"))
 end
@@ -120,6 +121,37 @@ function print_help()
     end
 end
 
+# Add a new command handler for thinking
+function handle_thinking(flow, args)
+    if isempty(strip(args))
+        # Toggle thinking off if it was on
+        if hasfield(typeof(flow), :thinking) && !isnothing(flow.thinking)
+            flow.thinking = nothing
+            println("\nThinking mode disabled")
+        else
+            # Default to 8000 tokens if no value specified
+            flow.thinking = 9000
+            println("\nThinking mode enabled with default budget of 9000 tokens")
+        end
+        return
+    end
+    
+    # Try to parse the argument as an integer
+    try
+        budget = parse(Int, strip(args))
+        if budget <= 0
+            flow.thinking = nothing
+            println("\nThinking mode disabled")
+        else
+            flow.thinking = budget
+            println("\nThinking mode enabled with budget of $budget tokens")
+        end
+    catch
+        println("\nError: Thinking budget must be a positive integer")
+    end
+end
+
+# Add to COMMANDS dictionary
 const COMMANDS = Dict{String, Tuple{String, Function}}(
     "-p"       => ("Switch projects", handle_project_switch),
     "--revise" => ("Run Revise.revise()", handle_revise),
@@ -129,7 +161,8 @@ const COMMANDS = Dict{String, Tuple{String, Function}}(
     "-jl"      => ("Toggle Julia package context", handle_julia_context),
     "--reset"  => ("Reset conversation and context", handle_reset),
     "--plan"   => ("Toggle planner mode, models: [oro1, oro1m, gpt4, claude, gemexp, o3m, ]", handle_planner),
-    "--status" => ("Show current AISH status", handle_status)
+    "--status" => ("Show current AISH status", handle_status),
+    "-t"       => ("Set thinking budget (tokens) or toggle thinking mode", handle_thinking)
 )
 # Add aliases
 COMMANDS["-e"] = (COMMANDS["--editor"][1], COMMANDS["--editor"][2])
@@ -137,6 +170,7 @@ COMMANDS["--jl"] = (COMMANDS["-jl"][1], COMMANDS["-jl"][2])
 COMMANDS["-j"] = (COMMANDS["-jl"][1], COMMANDS["-jl"][2])
 COMMANDS["-r"] = (COMMANDS["--revise"][1], COMMANDS["--revise"][2])  # Add revise alias
 COMMANDS["-s"] = (COMMANDS["--status"][1], COMMANDS["--status"][2])  # Add status alias
+COMMANDS["--think"] = (COMMANDS["-t"][1], COMMANDS["-t"][2])  # Add thinking alias
 COMMANDS["--help"] = ("Show help message", (_, _) -> print_help())
 COMMANDS["-h"] = (COMMANDS["--help"][1], COMMANDS["--help"][2])
 

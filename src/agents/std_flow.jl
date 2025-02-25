@@ -18,6 +18,7 @@ using DingDingDing
     planner::AbstractPlanner=ExecutionPlannerContext(model="dsreason", enabled=false)
     ws_index_logger::IndexLogger=IndexLogger("workspace_chunks")
     jl_index_logger::IndexLogger=IndexLogger("julia_src_chunks")
+    thinking::Union{Nothing,Int}=nothing  # Add thinking parameter
 end
 
 get_default_tools()::Vector{DataType} = DataType[
@@ -29,7 +30,7 @@ get_default_tools()::Vector{DataType} = DataType[
 
 function STDFlow(project_paths; no_confirm=false, verbose=true, kwargs...)
     tools = get_default_tools()
-    workspace_context = init_workspace_context(project_paths; model=["gem20f", "gem15f", "gpt4om"], verbose, top_n=10)
+    workspace_context = init_workspace_context(project_paths; model=["gem20f", "gem15f", "orqwenplus", "gpt4om"], verbose, top_n=10)
     create_sys_msg() = SYSTEM_PROMPT(ChatSH; guide_strs=[
         workspace_format_description_raw(workspace_context.workspace),
         # TODO handle (use_julia ? julia_format_guide : "")
@@ -38,7 +39,7 @@ function STDFlow(project_paths; no_confirm=false, verbose=true, kwargs...)
     m = STDFlow(;
         workspace_context,
         julia_context=init_julia_context(excluded_packages=["XC", "QCODE"], model=["gem20f", "gem15f", "gpt4om"]),
-        agent=create_FluidAgent("claude"; create_sys_msg, tools, extractor=ToolTagExtractor(tools)),
+        agent=create_FluidAgent("claude"; create_sys_msg, tools),
         no_confirm,
     )
     # m.conv_ctx.system_message.content =  # TODO handle (use_julia ? julia_format_guide : "")
@@ -51,6 +52,7 @@ get_flags_str(flow::STDFlow) = begin
     flags = String[]
     flow.planner.enabled && push!(flags, "plan" * (occursin("oro", flow.planner.model) ? "\$" : ""))
     flow.use_julia && push!(flags, "jl")
+    !isnothing(flow.thinking) && push!(flags, "think$(flow.thinking ÷ 1000)k")
     isempty(flags) ? "" : " [" * join(flags, " ") * "]"
 end
 
@@ -97,6 +99,7 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
             println(io, err_msg)
         end,
         io,
+        thinking=flow.thinking
     )
 
     log_instant_apply(flow.agent.extractor, query_history * "\n\n# User query:\n" * user_query)
@@ -113,7 +116,8 @@ update_workspace!(flow::STDFlow, project_paths::Vector{<:AbstractString}) = begi
     create_sys_msg() = SYSTEM_PROMPT(ChatSH; guide_strs=[
         workspace_format_description_raw(workspace_context.workspace),
     ])
-    flow.agent = create_FluidAgent("claude"; create_sys_msg, tools=get_default_tools())
+    tools = get_default_tools()
+    flow.agent = create_FluidAgent("claude"; create_sys_msg, tools)
     flow.workspace_context = workspace_context
     return flow
 end
@@ -137,6 +141,8 @@ function reset_flow!(flow::STDFlow)
         use_planner=flow.planner.enabled,
     )
 
+    # Preserve thinking setting
+    new_flow.thinking = flow.thinking
 
     return new_flow
 end
