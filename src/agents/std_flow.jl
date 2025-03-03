@@ -26,6 +26,8 @@ get_default_tools()::Vector{DataType} = DataType[
     CreateFileTool, 
     ModifyFileTool,
     ShellBlockTool,
+    WorkspaceSearchTool,
+    JuliaSearchTool,
 ]
 
 function STDFlow(project_paths; no_confirm=false, verbose=true, kwargs...)
@@ -121,6 +123,10 @@ update_workspace!(flow::STDFlow, project_paths::Vector{<:AbstractString}) = begi
     flow.workspace_context = workspace_context
     return flow
 end
+
+# Add a simple update_model! function
+update_model!(flow::STDFlow, model_name::AbstractString) = 
+    isempty(model_name) ? false : (flow.agent.model = model_name; true)
 
 function normalize_conversation!(flow::STDFlow)
     if !isempty(flow.conv_ctx.messages) && flow.conv_ctx.messages[end].role == :user
