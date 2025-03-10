@@ -32,7 +32,10 @@ get_default_tools()::Vector{DataType} = DataType[
 
 function STDFlow(project_paths; no_confirm=false, verbose=true, kwargs...)
     tools = get_default_tools()
-    workspace_context = init_workspace_context(project_paths; model=["gem20f", "gem15f", "orqwenplus", "gpt4om"], verbose, top_n=10)
+    workspace_context = init_workspace_context(project_paths; 
+        pipeline=EFFICIENT_PIPELINE(cache_prefix="workspace"), 
+        verbose
+    )
     create_sys_msg() = SYSTEM_PROMPT(ChatSH; guide_strs=[
         workspace_format_description_raw(workspace_context.workspace),
         # TODO handle (use_julia ? julia_format_guide : "")
@@ -40,7 +43,10 @@ function STDFlow(project_paths; no_confirm=false, verbose=true, kwargs...)
 
     m = STDFlow(;
         workspace_context,
-        julia_context=init_julia_context(excluded_packages=["XC", "QCODE"], model=["gem20f", "gem15f", "gpt4om"]),
+        julia_context=init_julia_context(
+            excluded_packages=["XC", "QCODE"],
+            pipeline=HIGH_ACCURACY_PIPELINE(cache_prefix="juliapkgs")
+        ),
         agent=create_FluidAgent("claude"; create_sys_msg, tools),
         no_confirm,
     )
@@ -71,20 +77,14 @@ function run(flow::STDFlow, user_query, io::IO=stdout)
 
     # jl_chunks = search_julia_pkgs(embedder_query; enabled=flow.use_julia, rerank_query)
     # ws_chunks = search_workspace(embedder_query; rerank_query)
-    
     # register_chunks!(flow.chat, jl_chunks, format_prefix="# julia functions:")
     # register_chunks!(flow.chat, ws_chunks, format_prefix="# workspace files:", need_updates=true)
 
-
-    jl_task = @async_showerr process_julia_context(flow.julia_context, embedder_query; enabled=flow.use_julia, rerank_query, age_tracker=flow.age_tracker, io)
-    ws_task = @async_showerr process_workspace_context(flow.workspace_context, embedder_query; rerank_query, age_tracker=flow.age_tracker, io)
-    src_chunks_reranked, src_chunks = fetch(jl_task)
-    val = fetch(ws_task)
-    file_chunks_reranked, file_chunks = val
-    context = context_combiner([src_chunks_reranked, file_chunks_reranked, ctx_shell],)
+    filechunks_str, file_chunks = process_workspace_context(flow.workspace_context, embedder_query; rerank_query, age_tracker=flow.age_tracker, io)
+    @show length(filechunks_str)
+    context = context_combiner([filechunks_str, ctx_shell])
     
-    log_index(flow.ws_index_logger, file_chunks, rerank_query, answer=file_chunks_reranked)
-    log_index(flow.jl_index_logger, src_chunks, rerank_query, answer=src_chunks_reranked)
+    log_index(flow.ws_index_logger, file_chunks, rerank_query, answer=filechunks_str)
     
     plan_context = transform(flow.planner, context, flow.conv_ctx; io)
 
@@ -114,7 +114,15 @@ end
 
 # Control functions
 update_workspace!(flow::STDFlow, project_paths::Vector{<:AbstractString}) = begin
-    workspace_context = init_workspace_context(project_paths, model=flow.workspace_context.rag_pipeline.reranker.model, top_n=flow.workspace_context.rag_pipeline.reranker.top_n)
+    # Create a new pipeline with the same configuration as the current one
+    current_reranker = flow.workspace_context.rag_pipeline.reranker
+    pipeline = EFFICIENT_PIPELINE(
+        model=current_reranker.model,
+        top_n=current_reranker.top_n,
+        rerank_prompt=current_reranker.rerank_prompt
+    )
+    
+    workspace_context = init_workspace_context(project_paths; pipeline)
     create_sys_msg() = SYSTEM_PROMPT(ChatSH; guide_strs=[
         workspace_format_description_raw(workspace_context.workspace),
     ])
