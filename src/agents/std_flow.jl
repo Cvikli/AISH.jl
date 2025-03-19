@@ -21,21 +21,22 @@ using DingDingDing
     thinking::Union{Nothing,Int}=nothing  # Add thinking parameter
 end
 
-get_default_tools()::Vector{DataType} = DataType[
+get_default_tools(workspace_context::WorkspaceCTX) = [
     CatFileTool, 
     CreateFileTool, 
     ModifyFileTool,
     ShellBlockTool,
-    WorkspaceSearchTool,
+    WorkspaceToolGenerator(; workspace_context),
     JuliaSearchTool,
 ]
 
 function STDFlow(project_paths; no_confirm=false, verbose=true, kwargs...)
-    tools = get_default_tools()
+    
     workspace_context = init_workspace_context(project_paths; 
         pipeline=EFFICIENT_PIPELINE(cache_prefix="workspace"), 
         verbose
     )
+    tools = get_default_tools(workspace_context)
     create_sys_msg() = SYSTEM_PROMPT(ChatSH; guide_strs=[
         workspace_format_description_raw(workspace_context.workspace),
         # TODO handle (use_julia ? julia_format_guide : "")
