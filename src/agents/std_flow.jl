@@ -124,10 +124,10 @@ update_workspace!(flow::STDFlow, project_paths::Vector{<:AbstractString}) = begi
     )
     
     workspace_context = init_workspace_context(project_paths; pipeline)
+    tools = get_default_tools(workspace_context)
     create_sys_msg() = SYSTEM_PROMPT(ChatSH; guide_strs=[
         workspace_format_description_raw(workspace_context.workspace),
     ])
-    tools = get_default_tools()
     flow.agent = create_FluidAgent("claude"; create_sys_msg, tools)
     flow.workspace_context = workspace_context
     return flow
