@@ -37,10 +37,10 @@ function STDFlow(project_paths; no_confirm=false, verbose=true, kwargs...)
         verbose
     )
     tools = get_default_tools(workspace_context)
-    create_sys_msg() = SYSTEM_PROMPT(ChatSH; guide_strs=[
-        workspace_format_description_raw(workspace_context.workspace),
-        # TODO handle (use_julia ? julia_format_guide : "")
-    ]) 
+    sys_msg = SYSTEM_PROMPT(ChatSH; ) 
+    # tools = Dict(WORKSPACE_SEARCH_TAG => args -> WorkspaceSearchTool(args..., workspace_context, root_path),
+    #     CatFileTool => args -> CatFileTool(RemoteEdgePath),
+    # )
 
     m = STDFlow(;
         workspace_context,
@@ -48,7 +48,7 @@ function STDFlow(project_paths; no_confirm=false, verbose=true, kwargs...)
             excluded_packages=["XC", "QCODE"],
             pipeline=HIGH_ACCURACY_PIPELINE(cache_prefix="juliapkgs")
         ),
-        agent=create_FluidAgent("claude"; create_sys_msg, tools),
+        agent=create_FluidAgent("claude"; sys_msg, tools),
         no_confirm,
     )
     # m.conv_ctx.system_message.content =  # TODO handle (use_julia ? julia_format_guide : "")
@@ -125,10 +125,9 @@ update_workspace!(flow::STDFlow, project_paths::Vector{<:AbstractString}) = begi
     
     workspace_context = init_workspace_context(project_paths; pipeline)
     tools = get_default_tools(workspace_context)
-    create_sys_msg() = SYSTEM_PROMPT(ChatSH; guide_strs=[
-        workspace_format_description_raw(workspace_context.workspace),
-    ])
-    flow.agent = create_FluidAgent("claude"; create_sys_msg, tools)
+    sys_msg = SYSTEM_PROMPT(ChatSH)
+    
+    flow.agent = create_FluidAgent("claude"; sys_msg, tools)
     flow.workspace_context = workspace_context
     return flow
 end
