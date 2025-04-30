@@ -68,7 +68,7 @@ end
 function run(flow::STDFlow, user_query, io::IO=stdout)
     query_history = get_context!(flow.question_acc, user_query)
 
-    ctx_shell = get_tool_results_agent(flow.agent, filter_tools=[ShellBlockTool])
+    ctx_shell = get_tool_results_agent(flow.agent)
     embedder_query = """
     $ctx_shell\n
     $query_history\n

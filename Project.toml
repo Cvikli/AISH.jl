@@ -17,9 +17,9 @@ ReplMaker = "b873ce64-0db9-51f5-a568-4457d8e49576"
 
 [compat]
 ArgParse = "≥1.2.0"
-BoilerplateCvikli = "1.1.0"
-DingDingDing = "1.0.0"
+BoilerplateCvikli = "≥1.1.0"
+DingDingDing = "≥1.0.0"
 Memoize = "≥0.4.4"
 REPL = "≥1.10.0"
 ReplMaker = "≥0.2.7"
-EasyContext = "0.3, 0.4"
+EasyContext = "≥0.3"
