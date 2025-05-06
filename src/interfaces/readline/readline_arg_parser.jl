@@ -5,8 +5,12 @@ function parse_commandline()
     s = ArgParseSettings()
     
     @add_arg_table! s begin
-        "--message", "-m"
+        "--message", "-i"  # Changed from -m to -i to avoid conflict
             help = "Initial message to start the conversation"
+            arg_type = String
+            default = ""
+        "--model", "-m"  # Added -m as an alias for --model
+            help = "Select model (e.g. claude, gpt4)"
             arg_type = String
             default = ""
         "--project-paths", "-p"

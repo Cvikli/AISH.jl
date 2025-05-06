@@ -171,6 +171,7 @@ COMMANDS["-j"] = (COMMANDS["-jl"][1], COMMANDS["-jl"][2])
 COMMANDS["-r"] = (COMMANDS["--revise"][1], COMMANDS["--revise"][2])  # Add revise alias
 COMMANDS["-s"] = (COMMANDS["--status"][1], COMMANDS["--status"][2])  # Add status alias
 COMMANDS["--think"] = (COMMANDS["-t"][1], COMMANDS["-t"][2])  # Add thinking alias
+COMMANDS["-m"] = (COMMANDS["--model"][1], COMMANDS["--model"][2])  # Add model alias
 COMMANDS["--help"] = ("Show help message", (_, _) -> print_help())
 COMMANDS["-h"] = (COMMANDS["--help"][1], COMMANDS["--help"][2])
 
